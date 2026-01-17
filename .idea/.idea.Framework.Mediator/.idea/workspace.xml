@@ -9,51 +9,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="91e66b76-c7e4-4ef0-91e3-761ac01d083e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.Framework.Mediator/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Framework.ApiGeneratR.sln" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/IMediator.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/IRequest.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/IRequestHandler.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/Mediator.Contract.csproj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/Debug/net10.0/.NETCoreApp,Version=v10.0.AssemblyAttributes.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/Debug/net10.0/Mediator.Contract.AssemblyInfo.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/Debug/net10.0/Mediator.Contract.AssemblyInfoInputs.cache" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/Debug/net10.0/Mediator.Contract.GeneratedMSBuildEditorConfig.editorconfig" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/Debug/net10.0/Mediator.Contract.GlobalUsings.g.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/Debug/net10.0/Mediator.Contract.assets.cache" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/Mediator.Contract.csproj.nuget.dgspec.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/Mediator.Contract.csproj.nuget.g.props" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/Mediator.Contract.csproj.nuget.g.targets" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/project.assets.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/project.nuget.cache" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/project.packagespec.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Contract/obj/rider.project.restore.info" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/ApiGenerator.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/Mediator.Generator.csproj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/MediatorGenerator.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Debug/netstandard2.0/.NETStandard,Version=v2.0.AssemblyAttributes.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Debug/netstandard2.0/Mediator.Generator.AssemblyInfo.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Debug/netstandard2.0/Mediator.Generator.AssemblyInfoInputs.cache" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Debug/netstandard2.0/Mediator.Generator.GeneratedMSBuildEditorConfig.editorconfig" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Debug/netstandard2.0/Mediator.Generator.GlobalUsings.g.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Debug/netstandard2.0/Mediator.Generator.assets.cache" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Debug/netstandard2.0/Mediator.Generator.csproj.AssemblyReference.cache" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Mediator.Generator.csproj.nuget.dgspec.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Mediator.Generator.csproj.nuget.g.props" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Mediator.Generator.csproj.nuget.g.targets" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/project.assets.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/project.nuget.cache" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/project.packagespec.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mediator.Generator/obj/rider.project.restore.info" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ReadMe.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/WebApplication1/Test.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Mediator.Contract/Attributes/ApiDefinition.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Framework.Mediator/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Framework.Mediator/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mediator.Contract/obj/Debug/net10.0/Mediator.Contract.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Mediator.Contract/obj/Debug/net10.0/Mediator.Contract.AssemblyInfo.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mediator.Contract/obj/Debug/net10.0/Mediator.Contract.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/Mediator.Contract/obj/Debug/net10.0/Mediator.Contract.AssemblyInfoInputs.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mediator.Generator/ApiGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Mediator.Generator/ApiGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mediator.Generator/obj/Debug/netstandard2.0/Mediator.Generator.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Debug/netstandard2.0/Mediator.Generator.AssemblyInfo.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mediator.Generator/obj/Debug/netstandard2.0/Mediator.Generator.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/Mediator.Generator/obj/Debug/netstandard2.0/Mediator.Generator.AssemblyInfoInputs.cache" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DpaMonitoringSettings">
+    <option name="firstShow" value="false" />
   </component>
   <component name="EmbeddingIndexingInfo">
     <option name="cachedIndexableFilesCount" value="11" />
@@ -75,8 +45,13 @@
   }
 }]]></component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/D8601CDE08ACE18A3A5296F1/Mediator.Generator/Mediator.Generator.ApiGenerator/ApiExtensions.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/D8601CDE08ACE18A3A5296F1/Mediator.Generator/Mediator.Generator.MediatorGenerator/MediatorExtensions.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/D8601CDE08ACE18A3A5296F1/Mediator.Generator/Mediator.Generator.MediatorGenerator/SourceMediator.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/ILViewer/8879a8e7866244ee9fbec64f39a3df561200/42/329f3bca/02000005pdb1.il" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/fde1a5bf36ca37d7d41f652adda2cf1582ea795886b04236e0fc817a7e7f1/CommonAttributeData.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Mediator.Contract/Attributes/ApiDefinition.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Mediator.Generator/ApiGenerator.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/WebApplication1/Test.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="McpProjectServerCommands">
     <commands />
@@ -93,6 +68,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    ".NET Launch Settings Profile.WebApplication1: http.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -156,8 +132,17 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1768644960181</updated>
-      <workItem from="1768644962238" duration="1046000" />
+      <workItem from="1768644962238" duration="3119000" />
     </task>
+    <task id="LOCAL-00001" summary="Add Mediator Generator with source code generation for IRequestHandler interfaces">
+      <option name="closed" value="true" />
+      <created>1768646161457</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1768646161457</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -167,6 +152,8 @@
   <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+    <MESSAGE value="Add Mediator Generator with source code generation for IRequestHandler interfaces" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add Mediator Generator with source code generation for IRequestHandler interfaces" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

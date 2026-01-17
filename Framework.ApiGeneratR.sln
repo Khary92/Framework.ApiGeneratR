@@ -1,10 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mediator.Generator", "Mediator.Generator\Mediator.Generator.csproj", "{E9E83908-DB05-495B-9CEC-28C68FA24A7A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.Generators", "Framework.Generators\Framework.Generators.csproj", "{E9E83908-DB05-495B-9CEC-28C68FA24A7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mediator.Contract", "Mediator.Contract\Mediator.Contract.csproj", "{3563ED76-6945-40AA-861B-4C9269288F95}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.Contract", "Framework.Contract\Framework.Contract.csproj", "{3563ED76-6945-40AA-861B-4C9269288F95}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication1", "WebApplication1\WebApplication1.csproj", "{C9D101FB-2E9C-4FA6-B1B1-2445A1DFF36E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.Example", "Framework.Example\Framework.Example.csproj", "{C9D101FB-2E9C-4FA6-B1B1-2445A1DFF36E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

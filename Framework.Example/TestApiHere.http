@@ -1,0 +1,13 @@
+@HostAddress = http://localhost:5230
+
+POST {{HostAddress}}/test/
+Content-Type: application/json
+
+{}
+
+###
+
+POST {{HostAddress}}/do-an-async-thing/
+Content-Type: application/json
+
+{}
