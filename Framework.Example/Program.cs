@@ -1,7 +1,8 @@
 using ApiGeneratR.Generated;
-using Framework.Example;
-using Framework.Example.Services;
+using Framework.Contract.Repository;
+using Framework.Example.Entities;
 using Mediator.Generated;
+using Repository.Generated;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +11,9 @@ builder.Services.AddOpenApi();
 //Adds Mediator for request forwarding to handlers
 //Auto registers all handlers. Throws compile time error when handler not available
 builder.Services.AddSingletonMediatorServices();
+builder.Services.AddSingletonRepositoryServices();
 
-builder.Services.AddSingleton<IStringService, StringService>();
+builder.Services.AddSingleton<IRepository<User>, UserMockRepository>();
 
 var app = builder.Build();
 

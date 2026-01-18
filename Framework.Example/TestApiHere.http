@@ -1,13 +1,15 @@
 @HostAddress = http://localhost:5230
 
-POST {{HostAddress}}/test/
+POST {{HostAddress}}/get-users/
 Content-Type: application/json
 
 {}
 
 ###
 
-POST {{HostAddress}}/do-an-async-thing/
+POST {{HostAddress}}/create-user/
 Content-Type: application/json
 
-{}
+{
+  "name": "I am another guy"
+}
