@@ -30,7 +30,7 @@ public class SourceCodeBuilder
         AddLine("}" + customEnd);
     }
 
-    public void AddLine(string line)
+    public void AddLine(string line = "")
     {
         if (string.IsNullOrWhiteSpace(line))
         {

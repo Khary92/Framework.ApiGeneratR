@@ -86,29 +86,29 @@ public class RepositoryGenerator : IIncrementalGenerator
                 $"public class {entityType}MockRepository : global::Framework.Contract.Repository.IRepository<{fullyQualifiedEntity}>");
 
             scb.AddLine($"private readonly List<{fullyQualifiedEntity}> {entityType}List = [];");
-            scb.AddLine("");
+            scb.AddLine();
 
             scb.StartScope($"public Task AddAsync({fullyQualifiedEntity} entity)");
             scb.AddLine($"{entityType}List.Add(entity);");
             scb.AddLine("return Task.CompletedTask;");
             scb.EndScope();
-            scb.AddLine("");
+            scb.AddLine();
 
             scb.StartScope($"public Task<{fullyQualifiedEntity}> GetByIdAsync(Guid id)");
             scb.AddLine($"return Task.FromResult({entityType}List.FirstOrDefault(e => e.Id == id));");
             scb.EndScope();
-            scb.AddLine("");
+            scb.AddLine();
 
             scb.AddLine(
                 $"public Task<List<{fullyQualifiedEntity}>> GetAllAsync() => Task.FromResult({entityType}List);");
-            scb.AddLine("");
+            scb.AddLine();
 
             scb.StartScope($"public Task UpdateAsync({fullyQualifiedEntity} entity)");
             scb.AddLine($"var index = {entityType}List.FindIndex(e => e.Id == entity.Id);");
             scb.AddLine($"if(index != -1) {entityType}List[index] = entity;");
             scb.AddLine("return Task.CompletedTask;");
             scb.EndScope();
-            scb.AddLine("");
+            scb.AddLine();
 
             scb.StartScope("public Task DeleteAsync(Guid id)");
             scb.AddLine($"var {entityType}Item = {entityType}List.FirstOrDefault(e => e.Id == id);");
@@ -116,7 +116,7 @@ public class RepositoryGenerator : IIncrementalGenerator
             scb.AddLine($"{entityType}List.Remove({entityType}Item);");
             scb.AddLine("return Task.CompletedTask;");
             scb.EndScope();
-            scb.AddLine("");
+            scb.AddLine();
 
             scb.AddLine(
                 $"public Task<bool> ExistsAsync(Guid id) => Task.FromResult({entityType}List.Any(e => e.Id == id));");

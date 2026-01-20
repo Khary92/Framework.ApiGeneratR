@@ -70,7 +70,6 @@ public class MediatorGenerator : IIncrementalGenerator
         ImmutableArray<INamedTypeSymbol?> handlers)
     {
         var scb = new SourceCodeBuilder();
-
         scb.SetUsings([
             "System", "System.Collections.Generic", "System.Threading",
             "System.Threading.Tasks", "Microsoft.Extensions.DependencyInjection"
@@ -82,13 +81,13 @@ public class MediatorGenerator : IIncrementalGenerator
         scb.AddLine(
             "private readonly Dictionary<Type, Func<object, CancellationToken, Task<object>>> _handlers = new();");
         scb.AddLine("private readonly IServiceProvider _serviceProvider;");
-        scb.AddLine("");
+        scb.AddLine();
 
         scb.StartScope("public SourceMediator(IServiceProvider serviceProvider)");
         scb.AddLine("_serviceProvider = serviceProvider;");
         scb.AddLine("RegisterHandlers();");
         scb.EndScope();
-        scb.AddLine("");
+        scb.AddLine();
 
         scb.StartScope("private void RegisterHandlers()");
 
@@ -117,21 +116,21 @@ public class MediatorGenerator : IIncrementalGenerator
 
                 if (!SymbolEqualityComparer.Default.Equals(handler, handlers.Last()))
                 {
-                    scb.AddLine("");
+                    scb.AddLine();
                 }
             }
         }
 
         scb.EndScope();
-        scb.AddLine("");
+        scb.AddLine();
 
         scb.StartScope(
             "public async Task<TResponse> HandleAsync<TResponse>(global::Framework.Contract.Mediator.IRequest<TResponse> request, CancellationToken ct = default)");
         scb.AddLine("if (request == null) throw new ArgumentNullException(\"request is null\");");
-        scb.AddLine("");
+        scb.AddLine();
         scb.AddLine("if (!_handlers.TryGetValue(request.GetType(), out var handlerWrapper))");
         scb.AddLine("    throw new Exception($\"Handler for type {request.GetType()} not found\");");
-        scb.AddLine("");
+        scb.AddLine();
         scb.AddLine("return (TResponse)await handlerWrapper(request, ct);");
         scb.EndScope();
 
