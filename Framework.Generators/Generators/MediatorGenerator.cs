@@ -1,38 +1,21 @@
 using System.Collections.Immutable;
 using System.Text;
 using Framework.Generators.Builder;
+using Framework.Generators.Helpers;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Framework.Generators;
+namespace Framework.Generators.Generators;
 
 [Generator(LanguageNames.CSharp)]
 public class MediatorGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var handlerDeclarations = context.SyntaxProvider
-            .CreateSyntaxProvider(
-                predicate: static (s, _) => s is ClassDeclarationSyntax { BaseList: not null },
-                transform: static (ctx, _) => GetSemanticTarget(ctx))
-            .Where(static m => m is not null);
-
-        var collectedHandlers = handlerDeclarations.Collect();
-
-        context.RegisterSourceOutput(collectedHandlers,
+        context.RegisterSourceOutput(context.GetInterfaceImplementingClassSymbols("IRequestHandler"),
             static (spc, handlers) => Execute(spc, handlers));
     }
-
-    private static INamedTypeSymbol? GetSemanticTarget(GeneratorSyntaxContext ctx)
-    {
-        var classSymbol = ctx.SemanticModel.GetDeclaredSymbol((ClassDeclarationSyntax)ctx.Node) as INamedTypeSymbol;
-
-        return classSymbol != null && classSymbol.AllInterfaces.Any(i => i.Name == "IRequestHandler")
-            ? classSymbol
-            : null;
-    }
-
+    
     private static void Execute(SourceProductionContext context, ImmutableArray<INamedTypeSymbol?> handlers)
     {
         CreateSourceMediator(context, handlers);

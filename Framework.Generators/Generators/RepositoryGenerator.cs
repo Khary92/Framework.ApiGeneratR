@@ -1,42 +1,19 @@
 using System.Collections.Immutable;
 using System.Text;
 using Framework.Generators.Builder;
+using Framework.Generators.Helpers;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Framework.Generators;
+namespace Framework.Generators.Generators;
 
 [Generator(LanguageNames.CSharp)]
 public class RepositoryGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var handlerDeclarations = context.SyntaxProvider
-            .CreateSyntaxProvider(
-                predicate: static (s, _) => s is ClassDeclarationSyntax c &&
-                                            c.AttributeLists.Count > 0,
-                transform: static (ctx, _) => GetSemanticTarget(ctx))
-            .Where(static m => m is not null);
-
-        var collectedHandlers = handlerDeclarations.Collect();
-
-        context.RegisterSourceOutput(collectedHandlers,
+        context.RegisterSourceOutput(context.GetAttributeAnnotatedClassSymbols("DomainEntity"),
             static (spc, handlers) => Execute(spc, handlers));
-    }
-
-    private static INamedTypeSymbol? GetSemanticTarget(GeneratorSyntaxContext ctx)
-    {
-        var classDecl = (ClassDeclarationSyntax)ctx.Node;
-        var classSymbol = ctx.SemanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
-
-        if (classSymbol == null) return null;
-
-        var hasDomainEntityAttr = classSymbol.GetAttributes()
-            .Any(ad => ad.AttributeClass?.Name == "DomainEntity" ||
-                       ad.AttributeClass?.Name == "DomainEntityAttribute");
-
-        return hasDomainEntityAttr ? classSymbol : null;
     }
 
     private static void Execute(SourceProductionContext context, ImmutableArray<INamedTypeSymbol?> handlers)
