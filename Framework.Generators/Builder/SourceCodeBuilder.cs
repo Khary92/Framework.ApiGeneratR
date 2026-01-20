@@ -30,6 +30,12 @@ public class SourceCodeBuilder
         AddLine("}" + customEnd);
     }
 
+    public void AddIndentedLine(string line)
+    {
+        _sb.Append(' ', (_indentLevel + 1) * IndentSize);
+        _sb.AppendLine(line);
+    }
+
     public void AddLine(string line = "")
     {
         if (string.IsNullOrWhiteSpace(line))

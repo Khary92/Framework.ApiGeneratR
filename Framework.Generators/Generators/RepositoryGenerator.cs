@@ -13,17 +13,17 @@ public class RepositoryGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterSourceOutput(context.GetAttributeAnnotatedClassSymbols("DomainEntity"),
-            static (spc, handlers) => Execute(spc, handlers));
+            static (spc, domainEntities) => Execute(spc, domainEntities));
     }
 
-    private static void Execute(SourceProductionContext context, ImmutableArray<INamedTypeSymbol?> handlers)
+    private static void Execute(SourceProductionContext context, ImmutableArray<INamedTypeSymbol?> domainEntities)
     {
-        CreateRepositories(context, handlers);
-        CreateExtensionMethod(context, handlers);
+        CreateRepositories(context, domainEntities);
+        CreateExtensionMethod(context, domainEntities);
     }
 
     private static void CreateExtensionMethod(SourceProductionContext context,
-        ImmutableArray<INamedTypeSymbol?> handlers)
+        ImmutableArray<INamedTypeSymbol?> domainEntities)
     {
         var scb = new SourceCodeBuilder();
 
@@ -36,13 +36,14 @@ public class RepositoryGenerator : IIncrementalGenerator
         scb.StartScope("public static class RepositoryExtensions");
         scb.StartScope("public static void AddSingletonRepositoryServices(this IServiceCollection services)");
 
-        if (!handlers.IsDefaultOrEmpty)
+        if (!domainEntities.IsDefaultOrEmpty)
         {
-            foreach (var handler in handlers)
+            foreach (var domainEntity in domainEntities)
             {
-                if (handler == null) continue;
+                if (domainEntity == null) continue;
 
-                var interfaceSymbol = handler.AllInterfaces.FirstOrDefault(i =>
+                // TODO something wrong here. Fix that
+                var interfaceSymbol = domainEntity.AllInterfaces.FirstOrDefault(i =>
                     i.Name == "IRepository" &&
                     i.ContainingNamespace.ToDisplayString().Contains("Framework.Contract"));
 
@@ -50,10 +51,10 @@ public class RepositoryGenerator : IIncrementalGenerator
 
                 var entityType = interfaceSymbol.TypeArguments[0]
                     .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                var repositoryType = handler.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var repositoryType = domainEntity.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
                 scb.AddLine(
-                    $"services.AddSingleton<global::Framework.Contract.Repository.IRepository<{entityType}>, {repositoryType}>();");
+                    $"services.AddSingleton<global::Framework.Contract.Repository.IRepository<{domainEntity.Name}>, {entityType}MockRepository>();");
             }
         }
 

@@ -13,7 +13,6 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingletonMediatorServices();
 builder.Services.AddSingletonRepositoryServices();
 
-builder.Services.AddSingleton<IRepository<User>, UserMockRepository>();
 
 var app = builder.Build();
 

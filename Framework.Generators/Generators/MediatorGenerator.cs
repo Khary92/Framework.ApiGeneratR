@@ -109,7 +109,7 @@ public class MediatorGenerator : IIncrementalGenerator
 
                 scb.StartScope($"_handlers.Add(typeof({requestType}), async (req, ct) =>");
                 scb.AddLine($"var handler = (_serviceProvider.GetService(typeof({handlerType})) as {handlerType})");
-                scb.AddLine($"              ?? ActivatorUtilities.CreateInstance<{handlerType}>(_serviceProvider);");
+                scb.AddIndentedLine($"?? ActivatorUtilities.CreateInstance<{handlerType}>(_serviceProvider);");
                 scb.AddLine($"var result = await handler.HandleAsync(({requestType})req);");
                 scb.AddLine("return (object)result;");
                 scb.EndScope(");");
@@ -129,7 +129,7 @@ public class MediatorGenerator : IIncrementalGenerator
         scb.AddLine("if (request == null) throw new ArgumentNullException(\"request is null\");");
         scb.AddLine();
         scb.AddLine("if (!_handlers.TryGetValue(request.GetType(), out var handlerWrapper))");
-        scb.AddLine("    throw new Exception($\"Handler for type {request.GetType()} not found\");");
+        scb.AddIndentedLine("throw new Exception($\"Handler for type {request.GetType()} not found\");");
         scb.AddLine();
         scb.AddLine("return (TResponse)await handlerWrapper(request, ct);");
         scb.EndScope();
