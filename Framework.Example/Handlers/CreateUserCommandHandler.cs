@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Framework.Contract.Mediator;
+﻿using Framework.Contract.Mediator;
 using Framework.Contract.Repository;
 using Framework.Example.Commands;
 using Framework.Example.Entities;
@@ -8,11 +6,11 @@ using Framework.Example.Entities;
 namespace Framework.Example.Handlers;
 
 public class CreateUserCommandHandler(IRepository<User> userRepository)
-    : IRequestHandler<CreateUserCommand, CommandResponse>
+    : IRequestHandler<CreateUserCommand, bool>
 {
-    public async Task<CommandResponse> HandleAsync(CreateUserCommand request)
+    public async Task<bool> HandleAsync(CreateUserCommand request)
     {
         await userRepository.AddAsync(new User(Guid.NewGuid(), request.Name));
-        return new CommandResponse(true);
+        return true;
     }
 }
