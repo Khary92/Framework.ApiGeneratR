@@ -43,7 +43,6 @@ public class RepositoryGenerator : IIncrementalGenerator
                 if (domainEntity == null) continue;
                 
                 var globalEntityString = domainEntity.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                var globalRepositoryString = $"global::Framework{globalEntityString}MockRepository";
                 
                 scb.AddLine(
                     $"services.AddSingleton<global::Framework.Contract.Repository.IRepository<{globalEntityString}>, {domainEntity.Name}MockRepository>();");
