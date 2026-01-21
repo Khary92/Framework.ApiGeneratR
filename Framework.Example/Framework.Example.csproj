@@ -14,12 +14,12 @@
     <ItemGroup>
         <ProjectReference Include="..\Framework.Contract\Framework.Contract.csproj" />
 
-        <!-- ProjectReference Include="..\Framework.Generators\Framework.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" /-->
+        <ProjectReference Include="..\Framework.Generators\Framework.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
-    <PropertyGroup>
+    <!--PropertyGroup>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
-    </PropertyGroup>
+    </PropertyGroup-->
     
 </Project>
