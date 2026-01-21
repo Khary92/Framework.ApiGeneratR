@@ -12,7 +12,13 @@ public class ApiGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterSourceOutput(context.GetAttributeAnnotatedClassSymbols("ApiDefinition"),
+        var left = context.GetAttributeAnnotatedClassSymbols("ApiDefinition");
+        var right = context.GetAttributeAnnotatedRecordSymbols("ApiDefinition");
+        
+        var combined = left.Combine(right)
+            .Select((pair, _) => pair.Left.AddRange(pair.Right));
+        
+        context.RegisterSourceOutput(combined,
             static (spc, handlers) => Execute(spc, handlers));
     }
 

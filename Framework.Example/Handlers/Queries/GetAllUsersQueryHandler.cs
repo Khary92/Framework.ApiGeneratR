@@ -1,9 +1,12 @@
-﻿using Framework.Contract.Mediator;
+﻿using Framework.Contract.Attributes;
+using Framework.Contract.Mediator;
 using Framework.Contract.Repository;
 using Framework.Example.Entities;
-using Framework.Example.Queries;
 
-namespace Framework.Example.Handlers;
+namespace Framework.Example.Handlers.Queries;
+
+[ApiDefinition("/get-users", false)]
+public record GetAllUsersQuery : IRequest<List<User>>;
 
 public class GetAllUsersQueryHandler(IRepository<User> userRepo) : IRequestHandler<GetAllUsersQuery, List<User>>
 {

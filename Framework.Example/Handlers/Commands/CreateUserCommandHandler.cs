@@ -1,9 +1,12 @@
-﻿using Framework.Contract.Mediator;
+﻿using Framework.Contract.Attributes;
+using Framework.Contract.Mediator;
 using Framework.Contract.Repository;
-using Framework.Example.Commands;
 using Framework.Example.Entities;
 
-namespace Framework.Example.Handlers;
+namespace Framework.Example.Handlers.Commands;
+
+[ApiDefinition("/create-user", false)]
+public record CreateUserCommand(string Name) : IRequest<bool>;
 
 public class CreateUserCommandHandler(IRepository<User> userRepository)
     : IRequestHandler<CreateUserCommand, bool>
