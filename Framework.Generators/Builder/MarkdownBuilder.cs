@@ -13,9 +13,23 @@ public class MarkdownBuilder
         _sb.AppendLine();
     }
 
-    public void AddLine(string text = "")
+    private const int IndentSize = 4;
+
+    public void AddLine(string line = "", int indentLevel = 3)
     {
-        _sb.AppendLine(text);
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            _sb.AppendLine();
+            return;
+        }
+
+        _sb.Append(' ', indentLevel * IndentSize);
+        _sb.AppendLine(line);
+    }
+
+    public void AddRawLine(string line)
+    {
+        _sb.AppendLine(line);
     }
 
     public void AddParagraph(string text)

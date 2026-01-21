@@ -12,10 +12,15 @@ public class MediatorGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterSourceOutput(context.GetInterfaceImplementingClassSymbols("IRequestHandler"),
-            static (spc, handlers) => Execute(spc, handlers));
+        var handlers = context.GetInterfaceImplementingClassSymbols("IRequestHandler");
+
+        context.RegisterSourceOutput(handlers,
+            static (spc, h) => Execute(spc, h));
+
+        context.RegisterSourceOutput(handlers,
+            static (spc, h) => ExecuteDocuGeneration(spc, h));
     }
-    
+
     private static void Execute(SourceProductionContext context, ImmutableArray<INamedTypeSymbol?> handlers)
     {
         CreateSourceMediator(context, handlers);
@@ -35,6 +40,10 @@ public class MediatorGenerator : IIncrementalGenerator
         scb.StartScope("public static class MediatorExtensions");
         scb.StartScope("extension(IServiceCollection services)");
         scb.StartScope("public void AddSingletonMediatorServices()");
+        scb.AddLine(
+            "services.AddSingleton<global::Framework.Contract.Documentation.IDocumentation, MediatorDocumentation>();");
+        scb.AddLine(
+            "services.AddSingleton<global::Framework.Contract.Documentation.IDocumentation, ApiDocumentation>();");
         scb.AddLine("services.AddSingleton<global::Framework.Contract.Mediator.IMediator, SourceMediator>();");
         if (!handlers.IsDefaultOrEmpty)
         {
@@ -137,5 +146,88 @@ public class MediatorGenerator : IIncrementalGenerator
         scb.EndScope();
 
         context.AddSource("SourceMediator.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+    }
+
+    private static void ExecuteDocuGeneration(SourceProductionContext context,
+        ImmutableArray<INamedTypeSymbol?> handlers)
+    {
+        var mdb = new MarkdownBuilder();
+
+        mdb.AddHeader("Mediator Registry Documentation");
+        mdb.AddParagraph(
+            "This document lists all automatically registered Request Handlers and their associated types.");
+
+        if (handlers.IsDefaultOrEmpty)
+        {
+            mdb.AddParagraph("_No Request Handlers found in the solution._");
+        }
+        else
+        {
+            mdb.AddHeader("Registered Handlers", 2);
+
+            var rows = new List<List<string>>();
+            foreach (var handler in handlers)
+            {
+                if (handler == null) continue;
+
+                var interfaceSymbol = handler.AllInterfaces.FirstOrDefault(i =>
+                    i.Name == "IRequestHandler" &&
+                    i.ContainingNamespace.ToDisplayString().Contains("Framework.Contract"));
+
+                if (interfaceSymbol == null || interfaceSymbol.TypeArguments.Length != 2) continue;
+
+                var requestName = interfaceSymbol.TypeArguments[0].Name;
+                var responseName = interfaceSymbol.TypeArguments[1].Name;
+                var handlerName = handler.Name;
+
+                rows.Add([handlerName, requestName, responseName]);
+            }
+
+            mdb.AddTable(["Handler Class", "Request Type", "Response Type"], rows);
+
+            mdb.AddHorizontalRule();
+            mdb.AddHeader("Detailed Handler Mapping", 2);
+
+            foreach (var handler in handlers)
+            {
+                if (handler == null) continue;
+
+                var interfaceSymbol = handler.AllInterfaces.FirstOrDefault(i =>
+                    i.Name == "IRequestHandler" &&
+                    i.ContainingNamespace.ToDisplayString().Contains("Framework.Contract"));
+
+                if (interfaceSymbol == null) continue;
+
+                mdb.AddHeader(handler.Name, 3);
+                mdb.AddListItem($"**Handler:** `{handler.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}`",
+                    0);
+                mdb.AddListItem(
+                    $"**Request:** `{interfaceSymbol.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}`",
+                    0);
+                mdb.AddListItem(
+                    $"**Response:** `{interfaceSymbol.TypeArguments[1].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}`",
+                    0);
+                mdb.AddLine();
+            }
+        }
+
+        SourceCodeBuilder scb = new();
+        scb.SetNamespace("Framework.Generated");
+        scb.StartScope("public class MediatorDocumentation : global::Framework.Contract.Documentation.IDocumentation");
+        scb.AddLine();
+
+        scb.AddLine("public string FileName => \"MediatorDocumentation.md\";");
+        scb.AddLine("public string Markdown => \"\"\"");
+
+        var lines = mdb.ToString().Split(["\n", "\r"], StringSplitOptions.None);
+        foreach (var line in lines)
+        {
+            scb.AddLine(line);
+        }
+
+        scb.AddLine("\"\"\";");
+        scb.EndScope();
+
+        context.AddSource("MediatorDocumentation.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 }

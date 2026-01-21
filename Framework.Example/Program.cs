@@ -1,3 +1,4 @@
+using Framework.Contract.Documentation;
 using Framework.Generated;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,4 +23,25 @@ app.UseHttpsRedirection();
 //Adds auto generated minimal api endpoints
 app.AddApiEndpoints();
 
+new DocumentationWriter(app.Services.GetServices<IDocumentation>()).Write();
+
 app.Run();
+
+class DocumentationWriter(IEnumerable<IDocumentation> documents)
+{
+    public void Write()
+    {
+        var folderName = "Doku";
+
+        if (!Directory.Exists(folderName))
+        {
+            Directory.CreateDirectory(folderName);
+        }
+
+        foreach (var doc in documents)
+        {
+            var filePath = Path.Combine(folderName, doc.FileName);
+            File.WriteAllText(filePath, doc.Markdown);
+        }
+    }
+}

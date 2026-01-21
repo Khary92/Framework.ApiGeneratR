@@ -29,8 +29,6 @@ public class ApiGenerator : IIncrementalGenerator
         ImmutableArray<INamedTypeSymbol?> apiDefinitions)
     {
         var mdb = new MarkdownBuilder();
-        mdb.AddLine("/*"); 
-        
         mdb.AddHeader("API Documentation");
         mdb.AddParagraph(
             $"Auto-generated documentation for the available endpoints. Total endpoints: {apiDefinitions.Length}");
@@ -53,11 +51,12 @@ public class ApiGenerator : IIncrementalGenerator
 
                 var route = attribute.ConstructorArguments[0].Value?.ToString() ?? "/unknown";
                 var requiresAuth = attribute.NamedArguments.Any(a => a.Key == "RequiresAuth");
-                var httpMethod = attribute.NamedArguments.FirstOrDefault(a => a.Key == "Method").Value.Value?.ToString() ?? "POST";
+                var httpMethod =
+                    attribute.NamedArguments.FirstOrDefault(a => a.Key == "Method").Value.Value?.ToString() ?? "POST";
                 var name = handler.Name;
                 var type = handler.IsRecord ? "Record" : "Class";
 
-                rows.Add([$"`{httpMethod}`",$"{requiresAuth}",  $"`{route}`", name, type]);
+                rows.Add([$"`{httpMethod}`", $"{requiresAuth}", $"`{route}`", name, type]);
             }
 
             mdb.AddTable(["Method", "Requires Auth", "Route", "Command/Record", "Type"], rows);
@@ -84,9 +83,24 @@ public class ApiGenerator : IIncrementalGenerator
             }
         }
 
-        mdb.AddLine("*/");
+        SourceCodeBuilder scb = new();
+        scb.SetNamespace("Framework.Generated");
+        scb.StartScope("public class ApiDocumentation : global::Framework.Contract.Documentation.IDocumentation");
+        scb.AddLine();
 
-        context.AddSource("ApiDocumentation.g.md", SourceText.From(mdb.ToString(), Encoding.UTF8));
+        scb.AddLine("public string FileName => \"ApiDocumentation.md\";");
+        scb.AddLine("public string Markdown => \"\"\"");
+        
+        var lines = mdb.ToString().Split(["\n", "\r"], StringSplitOptions.None);
+        foreach (var line in lines)
+        {
+            scb.AddLine(line);
+        }
+
+        scb.AddLine("\"\"\";"); 
+        scb.EndScope();
+
+        context.AddSource("ApiDocumentation.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
     private static void ExecuteCodeGeneration(SourceProductionContext context,
