@@ -13,7 +13,7 @@ Add this to your consuming project .csproj file
     </ItemGroup>
 ```
 
-Add the following attribute to your commands or query classes (only class, no record as of now)
+Add the following attribute to your commands or query classes or records.
 ```bash
 [ApiDefinition("/do-an-async-thing", false)]
 ```
