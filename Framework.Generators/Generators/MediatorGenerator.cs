@@ -31,7 +31,7 @@ public class MediatorGenerator : IIncrementalGenerator
             "System", "System.Collections.Generic", "System.Threading", "System.Threading.Tasks",
             "Microsoft.Extensions.DependencyInjection"
         ]);
-        scb.SetNamespace("Mediator.Generated");
+        scb.SetNamespace("Framework.Generated");
         scb.StartScope("public static class MediatorExtensions");
         scb.StartScope("extension(IServiceCollection services)");
         scb.StartScope("public void AddSingletonMediatorServices()");
@@ -74,7 +74,7 @@ public class MediatorGenerator : IIncrementalGenerator
             "System", "System.Collections.Generic", "System.Threading",
             "System.Threading.Tasks", "Microsoft.Extensions.DependencyInjection"
         ]);
-        scb.SetNamespace("Mediator.Generated");
+        scb.SetNamespace("Framework.Generated");
 
         scb.StartScope("public class SourceMediator : global::Framework.Contract.Mediator.IMediator");
 

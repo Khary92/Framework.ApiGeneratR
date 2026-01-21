@@ -1,8 +1,4 @@
-using ApiGeneratR.Generated;
-using Framework.Contract.Repository;
-using Framework.Example.Entities;
-using Mediator.Generated;
-using Repository.Generated;
+using Framework.Generated;
 
 var builder = WebApplication.CreateBuilder(args);
 

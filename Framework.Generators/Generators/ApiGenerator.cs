@@ -27,7 +27,7 @@ public class ApiGenerator : IIncrementalGenerator
         var scb = new SourceCodeBuilder();
 
         scb.SetUsings(["Microsoft.AspNetCore.Builder"]);
-        scb.SetNamespace("ApiGeneratR.Generated");
+        scb.SetNamespace("Framework.Generated");
 
         scb.StartScope("public static class ApiExtensions");
         scb.StartScope("public static void AddApiEndpoints(this WebApplication app)");

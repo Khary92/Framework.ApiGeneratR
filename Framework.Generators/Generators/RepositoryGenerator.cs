@@ -31,7 +31,7 @@ public class RepositoryGenerator : IIncrementalGenerator
             "System", "System.Collections.Generic", "System.Threading",
             "System.Threading.Tasks", "Microsoft.Extensions.DependencyInjection"
         ]);
-        scb.SetNamespace("Repository.Generated");
+        scb.SetNamespace("Framework.Generated");
 
         scb.StartScope("public static class RepositoryExtensions");
         scb.StartScope("public static void AddSingletonRepositoryServices(this IServiceCollection services)");
@@ -41,20 +41,12 @@ public class RepositoryGenerator : IIncrementalGenerator
             foreach (var domainEntity in domainEntities)
             {
                 if (domainEntity == null) continue;
-
-                // TODO something wrong here. Fix that
-                var interfaceSymbol = domainEntity.AllInterfaces.FirstOrDefault(i =>
-                    i.Name == "IRepository" &&
-                    i.ContainingNamespace.ToDisplayString().Contains("Framework.Contract"));
-
-                if (interfaceSymbol == null || interfaceSymbol.TypeArguments.Length != 1) continue;
-
-                var entityType = interfaceSymbol.TypeArguments[0]
-                    .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                var repositoryType = domainEntity.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
+                
+                var globalEntityString = domainEntity.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var globalRepositoryString = $"global::Framework{globalEntityString}MockRepository";
+                
                 scb.AddLine(
-                    $"services.AddSingleton<global::Framework.Contract.Repository.IRepository<{domainEntity.Name}>, {entityType}MockRepository>();");
+                    $"services.AddSingleton<global::Framework.Contract.Repository.IRepository<{globalEntityString}>, {domainEntity.Name}MockRepository>();");
             }
         }
 
@@ -81,7 +73,7 @@ public class RepositoryGenerator : IIncrementalGenerator
                 "System", "System.Collections.Generic", "System.Linq", "System.Threading.Tasks",
                 "Framework.Contract.Repository"
             ]);
-            scb.SetNamespace("ApiGeneratR.Generated");
+            scb.SetNamespace("Framework.Generated");
 
             scb.StartScope(
                 $"public class {entityType}MockRepository : global::Framework.Contract.Repository.IRepository<{fullyQualifiedEntity}>");
