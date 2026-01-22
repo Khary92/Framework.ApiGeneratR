@@ -6,7 +6,7 @@ namespace Framework.Generators.Helpers;
 
 public static class NamedTypeSymbolExtensions
 {
-    public static IncrementalValueProvider<ImmutableArray<INamedTypeSymbol?>> GetAttributeAnnotatedClassSymbols(
+    public static IncrementalValueProvider<ImmutableArray<INamedTypeSymbol?>> GetGeneralAttributeAnnotatedClassSymbols(
         this IncrementalGeneratorInitializationContext context, string attributeName)
     {
         var shortName = attributeName.EndsWith("Attribute")
@@ -39,7 +39,7 @@ public static class NamedTypeSymbolExtensions
         return hasAttribute ? classSymbol : null;
     }
 
-    public static IncrementalValueProvider<ImmutableArray<INamedTypeSymbol?>> GetAttributeAnnotatedRecordSymbols(
+    public static IncrementalValueProvider<ImmutableArray<INamedTypeSymbol?>> GetGeneralAttributeAnnotatedRecordSymbols(
         this IncrementalGeneratorInitializationContext context, string attributeName)
     {
         var shortName = attributeName.EndsWith("Attribute")

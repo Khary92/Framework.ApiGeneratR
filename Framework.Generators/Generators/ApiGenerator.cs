@@ -12,21 +12,17 @@ public class ApiGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var left = context.GetAttributeAnnotatedClassSymbols("ApiDefinition");
-        var right = context.GetAttributeAnnotatedRecordSymbols("ApiDefinition");
+        var apiSourceData = context.GetApiSourceData("ApiDefinition");
 
-        var combined = left.Combine(right)
-            .Select((pair, _) => pair.Left.AddRange(pair.Right));
-
-        context.RegisterSourceOutput(combined,
+        context.RegisterSourceOutput(apiSourceData,
             static (spc, apiDefinitions) => ExecuteCodeGeneration(spc, apiDefinitions));
 
-        context.RegisterSourceOutput(combined,
+        context.RegisterSourceOutput(apiSourceData,
             static (spc, apiDefinitions) => ExecuteDocuGeneration(spc, apiDefinitions));
     }
 
     private static void ExecuteDocuGeneration(SourceProductionContext context,
-        ImmutableArray<INamedTypeSymbol?> apiDefinitions)
+        ImmutableArray<ApiSourceData> apiDefinitions)
     {
         var mdb = new MarkdownBuilder();
         mdb.AddHeader("API Documentation");
@@ -44,19 +40,10 @@ public class ApiGenerator : IIncrementalGenerator
             var rows = new List<List<string>>();
             foreach (var handler in apiDefinitions)
             {
-                if (handler == null) continue;
-
-                var attribute = handler.GetAttributes()
-                    .First(a => a.AttributeClass?.Name.StartsWith("ApiDefinition") == true);
-
-                var route = attribute.ConstructorArguments[0].Value?.ToString() ?? "/unknown";
-                var requiresAuth = attribute.NamedArguments.Any(a => a.Key == "RequiresAuth");
-                var httpMethod =
-                    attribute.NamedArguments.FirstOrDefault(a => a.Key == "Method").Value.Value?.ToString() ?? "POST";
-                var name = handler.Name;
-                var type = handler.IsRecord ? "Record" : "Class";
-
-                rows.Add([$"`{httpMethod}`", $"{requiresAuth}", $"`{route}`", name, type]);
+                rows.Add([
+                    $"`{handler.HttpMethod}`", $"{handler.RequiresAuth}", $"`{handler.Route}`", handler.ShortName,
+                    handler.Type
+                ]);
             }
 
             mdb.AddTable(["Method", "Requires Auth", "Route", "Command/Record", "Type"], rows);
@@ -64,19 +51,19 @@ public class ApiGenerator : IIncrementalGenerator
             mdb.AddHorizontalRule();
             mdb.AddHeader("Request Definitions", 2);
 
-            foreach (var handler in apiDefinitions)
+            foreach (var definition in apiDefinitions)
             {
-                if (handler == null) continue;
+                if (definition == null) continue;
 
-                mdb.AddHeader(handler.Name, 3);
-                mdb.AddParagraph($"Full Type: `{handler.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}` ");
+                mdb.AddHeader(definition.ShortName, 3);
+                mdb.AddParagraph($"Full Type: `{definition.FullName}` ");
 
                 mdb.StartCodeBlock();
-                mdb.AddLine($"// Structure of {handler.Name}");
+                mdb.AddLine($"// Structure of {definition.ShortName}");
 
-                foreach (var member in handler.GetMembers().OfType<IPropertySymbol>())
+                foreach (var member in definition.Members)
                 {
-                    mdb.AddLine($"public {member.Type.Name} {member.Name} {{ get; }}");
+                    mdb.AddLine(member);
                 }
 
                 mdb.EndCodeBlock();
@@ -90,21 +77,21 @@ public class ApiGenerator : IIncrementalGenerator
 
         scb.AddLine("public string FileName => \"ApiDocumentation.md\";");
         scb.AddLine("public string Markdown => \"\"\"");
-        
+
         var lines = mdb.ToString().Split(["\n", "\r"], StringSplitOptions.None);
         foreach (var line in lines)
         {
             scb.AddLine(line);
         }
 
-        scb.AddLine("\"\"\";"); 
+        scb.AddLine("\"\"\";");
         scb.EndScope();
 
         context.AddSource("ApiDocumentation.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
     private static void ExecuteCodeGeneration(SourceProductionContext context,
-        ImmutableArray<INamedTypeSymbol?> apiDefinitions)
+        ImmutableArray<ApiSourceData> apiDefinitions)
     {
         var scb = new SourceCodeBuilder();
 
@@ -116,18 +103,11 @@ public class ApiGenerator : IIncrementalGenerator
 
         if (!apiDefinitions.IsDefaultOrEmpty)
         {
-            foreach (var handler in apiDefinitions)
+            foreach (var definition in apiDefinitions)
             {
-                if (handler == null) continue;
-
-                var attribute = handler.GetAttributes()
-                    .First(a => a.AttributeClass?.Name.StartsWith("ApiDefinition") == true);
-
-                var route = attribute.ConstructorArguments[0].Value?.ToString();
-                var handlerType = handler.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
+                if (definition == null) continue;
                 scb.StartScope(
-                    $"app.MapPost(\"{route}\", async ({handlerType} request, global::Framework.Contract.Mediator.IMediator mediator) =>");
+                    $"app.MapPost(\"{definition.Route}\", async ({definition.RequestType} request, global::Framework.Contract.Mediator.IMediator mediator) =>");
                 scb.AddLine("return await mediator.HandleAsync(request);");
                 scb.EndScope(");");
             }

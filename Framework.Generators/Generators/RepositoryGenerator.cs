@@ -12,7 +12,7 @@ public class RepositoryGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var entities = context.GetAttributeAnnotatedClassSymbols("DomainEntity");
+        var entities = context.GetGeneralAttributeAnnotatedClassSymbols("DomainEntity");
 
         context.RegisterSourceOutput(entities,
             static (spc, domainEntities) => Execute(spc, domainEntities));

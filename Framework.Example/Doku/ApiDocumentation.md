@@ -19,8 +19,7 @@ Full Type: `global::Framework.Example.Handlers.Commands.CreateUserCommand`
 
 ```csharp
             // Structure of CreateUserCommand
-            public Type EqualityContract { get; }
-            public String Name { get; }
+            public string Name { get; }
 ```
 
 ### GetAllUsersQuery
@@ -29,6 +28,5 @@ Full Type: `global::Framework.Example.Handlers.Queries.GetAllUsersQuery`
 
 ```csharp
             // Structure of GetAllUsersQuery
-            public Type EqualityContract { get; }
 ```
 
