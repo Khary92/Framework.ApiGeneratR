@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text;
 using Framework.Generators.Builder;
+using Framework.Generators.Generators.Mapper;
 using Framework.Generators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -12,7 +13,7 @@ public class MediatorGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var handlers = context.GetInterfaceImplementingClassSymbols("IRequestHandler");
+        var handlers = context.GetRequestHandlerClassSymbols();
 
         context.RegisterSourceOutput(handlers,
             static (spc, h) => Execute(spc, h));
@@ -21,14 +22,14 @@ public class MediatorGenerator : IIncrementalGenerator
             static (spc, h) => ExecuteDocuGeneration(spc, h));
     }
 
-    private static void Execute(SourceProductionContext context, ImmutableArray<INamedTypeSymbol?> handlers)
+    private static void Execute(SourceProductionContext context, ImmutableArray<RequestHandlerSourceData> handlers)
     {
         CreateSourceMediator(context, handlers);
         CreateExtensionMethod(context, handlers);
     }
 
     private static void CreateExtensionMethod(SourceProductionContext context,
-        ImmutableArray<INamedTypeSymbol?> handlers)
+        ImmutableArray<RequestHandlerSourceData> handlers)
     {
         var scb = new SourceCodeBuilder();
 
@@ -50,21 +51,8 @@ public class MediatorGenerator : IIncrementalGenerator
             foreach (var handler in handlers)
             {
                 if (handler == null) continue;
-
-                var interfaceSymbol = handler.AllInterfaces.FirstOrDefault(i =>
-                    i.Name == "IRequestHandler" &&
-                    i.ContainingNamespace.ToDisplayString().Contains("Framework.Contract"));
-
-                if (interfaceSymbol == null || interfaceSymbol.TypeArguments.Length != 2) continue;
-
-                var requestType = interfaceSymbol.TypeArguments[0]
-                    .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                var responseType = interfaceSymbol.TypeArguments[1]
-                    .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                var handlerType = handler.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
                 scb.AddLine(
-                    $"services.AddSingleton<global::Framework.Contract.Mediator.IRequestHandler<{requestType}, {responseType}>, {handlerType}>();");
+                    $"services.AddSingleton<global::Framework.Contract.Mediator.IRequestHandler<{handler.RequestType}, {handler.ResponseType}>, {handler.HandlerType}>();");
             }
         }
 
@@ -76,7 +64,7 @@ public class MediatorGenerator : IIncrementalGenerator
     }
 
     private static void CreateSourceMediator(SourceProductionContext context,
-        ImmutableArray<INamedTypeSymbol?> handlers)
+        ImmutableArray<RequestHandlerSourceData> handlers)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -106,24 +94,15 @@ public class MediatorGenerator : IIncrementalGenerator
             {
                 if (handler == null) continue;
 
-                var interfaceSymbol = handler.AllInterfaces.FirstOrDefault(i =>
-                    i.Name == "IRequestHandler" &&
-                    i.ContainingNamespace.ToDisplayString().Contains("Framework.Contract"));
-
-                if (interfaceSymbol == null || interfaceSymbol.TypeArguments.Length != 2) continue;
-
-                var requestType = interfaceSymbol.TypeArguments[0]
-                    .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                var handlerType = handler.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-                scb.StartScope($"_handlers.Add(typeof({requestType}), async (req, ct) =>");
-                scb.AddLine($"var handler = (_serviceProvider.GetService(typeof({handlerType})) as {handlerType})");
-                scb.AddIndentedLine($"?? ActivatorUtilities.CreateInstance<{handlerType}>(_serviceProvider);");
-                scb.AddLine($"var result = await handler.HandleAsync(({requestType})req);");
+                scb.StartScope($"_handlers.Add(typeof({handler.RequestType}), async (req, ct) =>");
+                scb.AddLine(
+                    $"var handler = (_serviceProvider.GetService(typeof({handler.HandlerType})) as {handler.HandlerType})");
+                scb.AddIndentedLine($"?? ActivatorUtilities.CreateInstance<{handler.HandlerType}>(_serviceProvider);");
+                scb.AddLine($"var result = await handler.HandleAsync(({handler.RequestType})req);");
                 scb.AddLine("return (object)result;");
                 scb.EndScope(");");
 
-                if (!SymbolEqualityComparer.Default.Equals(handler, handlers.Last()))
+                if (!Equals(handler, handlers.Last()))
                 {
                     scb.AddLine();
                 }
@@ -149,7 +128,7 @@ public class MediatorGenerator : IIncrementalGenerator
     }
 
     private static void ExecuteDocuGeneration(SourceProductionContext context,
-        ImmutableArray<INamedTypeSymbol?> handlers)
+        ImmutableArray<RequestHandlerSourceData> handlers)
     {
         var mdb = new MarkdownBuilder();
 
@@ -169,18 +148,7 @@ public class MediatorGenerator : IIncrementalGenerator
             foreach (var handler in handlers)
             {
                 if (handler == null) continue;
-
-                var interfaceSymbol = handler.AllInterfaces.FirstOrDefault(i =>
-                    i.Name == "IRequestHandler" &&
-                    i.ContainingNamespace.ToDisplayString().Contains("Framework.Contract"));
-
-                if (interfaceSymbol == null || interfaceSymbol.TypeArguments.Length != 2) continue;
-
-                var requestName = interfaceSymbol.TypeArguments[0].Name;
-                var responseName = interfaceSymbol.TypeArguments[1].Name;
-                var handlerName = handler.Name;
-
-                rows.Add([handlerName, requestName, responseName]);
+                rows.Add([handler.HandlerShortName, handler.RequestShortName, handler.ResponseShortName]);
             }
 
             mdb.AddTable(["Handler Class", "Request Type", "Response Type"], rows);
@@ -192,21 +160,10 @@ public class MediatorGenerator : IIncrementalGenerator
             {
                 if (handler == null) continue;
 
-                var interfaceSymbol = handler.AllInterfaces.FirstOrDefault(i =>
-                    i.Name == "IRequestHandler" &&
-                    i.ContainingNamespace.ToDisplayString().Contains("Framework.Contract"));
-
-                if (interfaceSymbol == null) continue;
-
-                mdb.AddHeader(handler.Name, 3);
-                mdb.AddListItem($"**Handler:** `{handler.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}`",
-                    0);
-                mdb.AddListItem(
-                    $"**Request:** `{interfaceSymbol.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}`",
-                    0);
-                mdb.AddListItem(
-                    $"**Response:** `{interfaceSymbol.TypeArguments[1].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}`",
-                    0);
+                mdb.AddHeader(handler.HandlerShortName, 3);
+                mdb.AddListItem($"**Handler:** `{handler.HandlerType}`");
+                mdb.AddListItem($"**Request:** `{handler.RequestType}`");
+                mdb.AddListItem($"**Response:** `{handler.ResponseType}`");
                 mdb.AddLine();
             }
         }

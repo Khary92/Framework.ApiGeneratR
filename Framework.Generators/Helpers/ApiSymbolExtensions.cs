@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using Framework.Generators.Generators;
+using Framework.Generators.Generators.Mapper;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 

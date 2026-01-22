@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace Framework.Generators.Generators;
+namespace Framework.Generators.Generators.Mapper;
 
 public class ApiSourceData(
     string route,
