@@ -1,12 +1,47 @@
 using System.Collections.Immutable;
+using Framework.Generators.Generators.Mapper;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Framework.Generators.Helpers;
 
-public static class NamedTypeSymbolExtensions
+public static class RepositorySymbolExtensions
 {
-    public static IncrementalValueProvider<ImmutableArray<INamedTypeSymbol?>> GetGeneralAttributeAnnotatedClassSymbols(
+    public static IncrementalValueProvider<ImmutableArray<RepositorySourceData>> GetRepositorySourceData(
+        this IncrementalGeneratorInitializationContext context, string attributeName)
+    {
+        var classSymbols = context.GetAttributeAnnotatedClassSymbols(attributeName);
+        var recordSymbols = context.GetAttributeAnnotatedRecordSymbols(attributeName);
+
+        var combined = classSymbols.Combine(recordSymbols);
+
+        return combined.Select((pair, _) =>
+        {
+            var (classes, records) = pair;
+            var all = classes.AddRange(records);
+
+            var builder = ImmutableArray.CreateBuilder<RepositorySourceData>(all.Length);
+            foreach (var symbol in all)
+            {
+                if (symbol == null) continue;
+
+                var attr = symbol.GetAttributes().FirstOrDefault(a =>
+                    a.AttributeClass?.ToDisplayString() == "Framework.Contract.Attributes.DomainEntityAttribute"
+                    || a.AttributeClass?.ToDisplayString() == "Framework.Contract.Attributes.DomainEntity");
+
+                if (attr == null || attr.ConstructorArguments[0].Value == null) continue;
+
+                builder.Add(new RepositorySourceData(symbol.Name,
+                    symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    symbol.ContainingNamespace.ToDisplayString(), attr.ConstructorArguments[0].Value!.ToString()));
+            }
+
+            return builder.ToImmutable();
+        });
+    }
+
+
+    private static IncrementalValueProvider<ImmutableArray<INamedTypeSymbol?>> GetAttributeAnnotatedClassSymbols(
         this IncrementalGeneratorInitializationContext context, string attributeName)
     {
         var shortName = attributeName.EndsWith("Attribute")
@@ -17,7 +52,7 @@ public static class NamedTypeSymbolExtensions
             .CreateSyntaxProvider(
                 predicate: static (s, _) => s is ClassDeclarationSyntax { AttributeLists.Count: > 0 },
                 transform: (ctx, _) => GetSemanticClassTarget(ctx, shortName))
-            .Where(static m => m is not null)!;
+            .Where(static m => m is not null);
 
         return handlerDeclarations.Collect();
     }
@@ -39,7 +74,7 @@ public static class NamedTypeSymbolExtensions
         return hasAttribute ? classSymbol : null;
     }
 
-    public static IncrementalValueProvider<ImmutableArray<INamedTypeSymbol?>> GetGeneralAttributeAnnotatedRecordSymbols(
+    private static IncrementalValueProvider<ImmutableArray<INamedTypeSymbol?>> GetAttributeAnnotatedRecordSymbols(
         this IncrementalGeneratorInitializationContext context, string attributeName)
     {
         var shortName = attributeName.EndsWith("Attribute")
@@ -50,7 +85,7 @@ public static class NamedTypeSymbolExtensions
             .CreateSyntaxProvider(
                 predicate: static (s, _) => s is RecordDeclarationSyntax { AttributeLists.Count: > 0 },
                 transform: (ctx, _) => GetSemanticRecordTarget(ctx, shortName))
-            .Where(static m => m is not null)!;
+            .Where(static m => m is not null);
 
         return handlerDeclarations.Collect();
     }

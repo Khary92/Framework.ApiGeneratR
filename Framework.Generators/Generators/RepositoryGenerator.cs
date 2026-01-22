@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text;
 using Framework.Generators.Builder;
+using Framework.Generators.Generators.Mapper;
 using Framework.Generators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -12,23 +13,37 @@ public class RepositoryGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var entities = context.GetGeneralAttributeAnnotatedClassSymbols("DomainEntity");
+        var entities = context.GetRepositorySourceData("DomainEntity");
 
         context.RegisterSourceOutput(entities,
-            static (spc, domainEntities) => Execute(spc, domainEntities));
+            static (spc, domainEntities) =>
+            {
+                try
+                {
+                    Execute(spc, domainEntities);
+                }
+                catch (Exception ex)
+                {
+                    spc.ReportDiagnostic(Diagnostic.Create(
+                        new DiagnosticDescriptor("REPOGEN001", "Generator crashed", "{0}", "RepositoryGenerator",
+                            DiagnosticSeverity.Error, isEnabledByDefault: true),
+                        Location.None,
+                        ex.ToString()));
+                }
+            });
 
         context.RegisterSourceOutput(entities,
             static (spc, domainEntities) => ExecuteDocuGeneration(spc, domainEntities));
     }
 
-    private static void Execute(SourceProductionContext context, ImmutableArray<INamedTypeSymbol?> domainEntities)
+    private static void Execute(SourceProductionContext context, ImmutableArray<RepositorySourceData> domainEntities)
     {
         CreateRepositories(context, domainEntities);
         CreateExtensionMethod(context, domainEntities);
     }
 
     private static void CreateExtensionMethod(SourceProductionContext context,
-        ImmutableArray<INamedTypeSymbol?> domainEntities)
+        ImmutableArray<RepositorySourceData> domainEntities)
     {
         var scb = new SourceCodeBuilder();
 
@@ -42,17 +57,17 @@ public class RepositoryGenerator : IIncrementalGenerator
         scb.StartScope("public static void AddSingletonRepositoryServices(this IServiceCollection services)");
         scb.AddLine(
             "services.AddSingleton<global::Framework.Contract.Documentation.IDocumentation, RepositoryDocumentation>();");
-       
+
         if (!domainEntities.IsDefaultOrEmpty)
         {
             foreach (var domainEntity in domainEntities)
             {
                 if (domainEntity == null) continue;
-                
-                var globalEntityString = domainEntity.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                
+
+                var globalEntityString = domainEntity.EntityFullName;
+
                 scb.AddLine(
-                    $"services.AddSingleton<global::Framework.Contract.Repository.IRepository<{globalEntityString}>, {domainEntity.Name}MockRepository>();");
+                    $"services.AddSingleton<global::Framework.Contract.Repository.IRepository<{globalEntityString}>, {domainEntity.RepositoryShortName()}>();");
             }
         }
 
@@ -63,7 +78,7 @@ public class RepositoryGenerator : IIncrementalGenerator
     }
 
     private static void CreateRepositories(SourceProductionContext context,
-        ImmutableArray<INamedTypeSymbol?> entities)
+        ImmutableArray<RepositorySourceData> entities)
     {
         if (entities.IsDefaultOrEmpty) return;
 
@@ -71,9 +86,8 @@ public class RepositoryGenerator : IIncrementalGenerator
         {
             if (entity == null) continue;
 
-            var entityType = entity.Name;
-            var fullyQualifiedEntity = entity.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
+            var entityType = entity.EntityShortName;
+            var fullyQualifiedEntity = entity.EntityFullName;
             var scb = new SourceCodeBuilder();
             scb.SetUsings([
                 "System", "System.Collections.Generic", "System.Linq", "System.Threading.Tasks",
@@ -82,7 +96,7 @@ public class RepositoryGenerator : IIncrementalGenerator
             scb.SetNamespace("Framework.Generated");
 
             scb.StartScope(
-                $"public class {entityType}MockRepository : global::Framework.Contract.Repository.IRepository<{fullyQualifiedEntity}>");
+                $"public class {entity.RepositoryShortName()} : global::Framework.Contract.Repository.IRepository<{fullyQualifiedEntity}>");
 
             scb.AddLine($"private readonly List<{fullyQualifiedEntity}> {entityType}List = [];");
             scb.AddLine();
@@ -122,11 +136,12 @@ public class RepositoryGenerator : IIncrementalGenerator
 
             scb.EndScope();
 
-            context.AddSource($"{entityType}MockRepository.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+            context.AddSource($"{entity.RepositoryShortName()}.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         }
     }
 
-    private static void ExecuteDocuGeneration(SourceProductionContext context, ImmutableArray<INamedTypeSymbol?> entities)
+    private static void ExecuteDocuGeneration(SourceProductionContext context,
+        ImmutableArray<RepositorySourceData> entities)
     {
         var mdb = new MarkdownBuilder();
 
@@ -140,15 +155,15 @@ public class RepositoryGenerator : IIncrementalGenerator
         else
         {
             mdb.AddHeader("Persistence Overview", 2);
-            
+
             var rows = new List<List<string>>();
             foreach (var entity in entities)
             {
                 if (entity == null) continue;
 
-                var entityName = entity.Name;
+                var entityName = entity.EntityShortName;
                 var repoName = $"{entityName}MockRepository";
-                var @namespace = entity.ContainingNamespace.ToDisplayString();
+                var @namespace = entity.Namespace;
 
                 rows.Add([entityName, repoName, @namespace]);
             }
@@ -162,20 +177,23 @@ public class RepositoryGenerator : IIncrementalGenerator
             {
                 if (entity == null) continue;
 
-                mdb.AddHeader(entity.Name, 3);
-                mdb.AddParagraph($"The entity `{entity.Name}` has an automatically generated In-Memory Repository for testing and local development.");
-                
-                mdb.AddListItem($"**Repository Class:** `{entity.Name}MockRepository`", 0);
-                mdb.AddListItem($"**Interface:** `IRepository<{entity.Name}>`", 0);
-                mdb.AddListItem($"**Full Entity Path:** `{entity.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}`", 0);
-                
+                mdb.AddHeader(entity.EntityShortName, 3);
+                mdb.AddParagraph(
+                    $"The entity `{entity.EntityShortName}` has an automatically generated In-Memory Repository for testing and local development.");
+
+                mdb.AddListItem($"**Repository Class:** `{entity.EntityShortName}MockRepository`", 0);
+                mdb.AddListItem($"**Interface:** `IRepository<{entity.EntityShortName}>`", 0);
+                mdb.AddListItem(
+                    $"**Full Entity Path:** `{entity.EntityFullName}`", 0);
+
                 mdb.AddLine();
             }
         }
-        
+
         SourceCodeBuilder scb = new();
         scb.SetNamespace("Framework.Generated");
-        scb.StartScope("public class RepositoryDocumentation : global::Framework.Contract.Documentation.IDocumentation");
+        scb.StartScope(
+            "public class RepositoryDocumentation : global::Framework.Contract.Documentation.IDocumentation");
         scb.AddLine();
 
         scb.AddLine("public string FileName => \"RepositoryDocumentation.md\";");
