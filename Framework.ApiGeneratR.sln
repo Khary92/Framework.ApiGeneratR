@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.Contract", "Frame
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.Example", "Framework.Example\Framework.Example.csproj", "{C9D101FB-2E9C-4FA6-B1B1-2445A1DFF36E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.Reusables", "Framework.Reusables\Framework.Reusables.csproj", "{5BD685CB-60A0-4FB8-9593-294E0D94FA8E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{C9D101FB-2E9C-4FA6-B1B1-2445A1DFF36E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C9D101FB-2E9C-4FA6-B1B1-2445A1DFF36E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C9D101FB-2E9C-4FA6-B1B1-2445A1DFF36E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BD685CB-60A0-4FB8-9593-294E0D94FA8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BD685CB-60A0-4FB8-9593-294E0D94FA8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BD685CB-60A0-4FB8-9593-294E0D94FA8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BD685CB-60A0-4FB8-9593-294E0D94FA8E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

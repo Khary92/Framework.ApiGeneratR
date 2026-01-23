@@ -1,5 +1,6 @@
 using Framework.Contract.Documentation;
 using Framework.Generated;
+using Framework.Reusables.Websocket;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,9 @@ builder.Services.AddOpenApi();
 //Auto registers all handlers. Throws compile time error when handler not available
 builder.Services.AddSingletonMediatorServices();
 builder.Services.AddSingletonRepositoryServices();
+
+// WebSocket Registry
+builder.Services.AddSingleton<WebsocketRegistry>();
 
 
 var app = builder.Build();
@@ -22,6 +26,7 @@ app.UseHttpsRedirection();
 
 //Adds auto generated minimal api endpoints
 app.AddApiEndpoints();
+app.AddWebsocket();
 
 new DocumentationWriter(app.Services.GetServices<IDocumentation>()).Write();
 

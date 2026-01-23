@@ -45,6 +45,8 @@ public class MediatorGenerator : IIncrementalGenerator
             "services.AddSingleton<global::Framework.Contract.Documentation.IDocumentation, MediatorDocumentation>();");
         scb.AddLine(
             "services.AddSingleton<global::Framework.Contract.Documentation.IDocumentation, ApiDocumentation>();");
+        scb.AddLine(
+            "services.AddSingleton<global::Framework.Contract.Documentation.IDocumentation, WebsocketDocumentation>();");
         scb.AddLine("services.AddSingleton<global::Framework.Contract.Mediator.IMediator, SourceMediator>();");
         if (!handlers.IsDefaultOrEmpty)
         {

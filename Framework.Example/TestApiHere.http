@@ -13,3 +13,15 @@ Content-Type: application/json
 {
   "name": "I am another guy"
 }
+
+###
+
+WEBSOCKET ws://localhost:5230/ws
+
+{"type": "create-user", "data": {"name": "Max via WebSocket"}}
+
+###
+
+WEBSOCKET ws://localhost:5230/ws
+
+{"type": "get-users", "data": {}}

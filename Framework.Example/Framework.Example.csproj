@@ -8,13 +8,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Framework.Contract\Framework.Contract.csproj" />
 
         <ProjectReference Include="..\Framework.Generators\Framework.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+
+        <ProjectReference Include="..\Framework.Reusables\Framework.Reusables.csproj" />
     </ItemGroup>
 
     <!--PropertyGroup>

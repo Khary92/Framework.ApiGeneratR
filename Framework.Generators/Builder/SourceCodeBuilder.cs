@@ -14,6 +14,8 @@ public class SourceCodeBuilder
     {
         foreach (var u in usings) _usings.Add(u);
     }
+    
+    public void AddUsing(string ns) => _usings.Add(ns);
 
     public void SetNamespace(string ns) => _namespace = ns;
 
