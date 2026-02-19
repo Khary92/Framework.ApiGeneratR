@@ -1,0 +1,102 @@
+﻿@using Api.Definitions.Generated
+@using Api.Definitions.Requests.Commands
+@using Presentation.Web.Models
+@using Presentation.Web.State.Messaging
+@inject IMessageService MessageService
+@inject CommandSender CommandSender
+
+<MudItem xs="12" md="6" Class="d-flex flex-column" Style="height: 100%; min-height: 0;">
+
+    <MudPaper Elevation="0" Class="pa-3 d-flex align-center gap-4 flex-none"
+              Style="border: 1px solid var(--mud-palette-divider); border-bottom: none; border-radius: 8px 8px 0 0;">
+        <MudAvatar Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
+            @GetInitials(SelectedUser?.FullName)
+        </MudAvatar>
+        <MudText Typo="Typo.subtitle1">@(SelectedUser?.FullName ?? "Select a conversation")</MudText>
+        <MudSpacer/>
+    </MudPaper>
+
+    <MudPaper Elevation="2" Class="flex-grow-1 d-flex flex-column overflow-hidden" Style="border-radius: 0 0 8px 8px;">
+
+        <div class="flex-grow-1 pa-4 overflow-y-auto d-flex flex-column gap-2"
+             style="background-color: var(--mud-palette-background-gray);">
+            @if (SelectedUser == null)
+            {
+                <div class="d-flex flex-column align-center justify-center h-100" style="opacity: 0.5;">
+                    <MudIcon Icon="@Icons.Material.Outlined.Forum" Size="Size.Large" Class="mb-2"/>
+                    <MudText Typo="Typo.body2">Pick a contact to start messaging</MudText>
+                </div>
+            }
+            else
+            {
+                @foreach (var msg in MessageModels)
+                {
+                    <CustomChatBubble Message="msg"/>
+                }
+            }
+        </div>
+
+        <div class="pa-4 flex-none" style="border-top: 1px solid var(--mud-palette-divider);">
+            <div class="d-flex align-center gap-2">
+                <MudTextField @bind-Value="NewMessage"
+                              Placeholder="@(SelectedUser == null ? "Select user first..." : "Type a message...")"
+                              FullWidth="true"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Disabled="@(SelectedUser == null)"
+                              Immediate="true"
+                              OnKeyDown="@OnKeyDownHandler"/>
+                <MudIconButton Icon="@Icons.Material.Filled.Send"
+                               Color="Color.Primary"
+                               OnClick="@SendMessage"
+                               Disabled="@(string.IsNullOrWhiteSpace(NewMessage) || SelectedUser == null)"/>
+            </div>
+        </div>
+    </MudPaper>
+</MudItem>
+
+@code {
+    private string NewMessage { get; set; } = string.Empty;
+    [Parameter] public UserModel? SelectedUser { get; set; }
+    private List<MessageModel> MessageModels { get; set; } = [];
+
+    private string GetInitials(string? fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName)) return "?";
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 1 ? parts[0].Substring(0, 1).ToUpper() : (parts[0][0].ToString() + parts[^1][0]).ToUpper();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (SelectedUser != null)
+        {
+            MessageModels = await MessageService.GetMessagesForSelectedUser(SelectedUser);
+        }
+
+        await base.OnParametersSetAsync();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        MessageService.OnMessageReceived += async () => await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnKeyDownHandler(KeyboardEventArgs e)
+    {
+        if (e is { Key: "Enter", ShiftKey: false }) await SendMessage();
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(NewMessage) || SelectedUser == null) return;
+
+        await CommandSender.SendAsync(new SendMessageToUserCommand(NewMessage, SelectedUser.UserId));
+        NewMessage = string.Empty;
+
+        MessageModels = await MessageService.GetMessagesForSelectedUser(SelectedUser);
+        await InvokeAsync(StateHasChanged);
+    }
+
+}

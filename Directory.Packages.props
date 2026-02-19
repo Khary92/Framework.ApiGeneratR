@@ -1,0 +1,43 @@
+﻿<Project>
+    <PropertyGroup>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <BuildMobileProjects Condition="$([MSBuild]::IsOSPlatform('Linux'))">false</BuildMobileProjects>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1"/>
+        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1"/>
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
+        <PackageVersion Include="Heron.MudCalendar" Version="3.4.0"/>
+        <PackageVersion Include="MudBlazor" Version="8.15.0"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Identity" Version="2.3.1"/>
+        <PackageVersion Include="Microsoft.Extensions.Identity.Stores" Version="10.0.1"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1"/>
+
+        <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.1"/>
+        <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0"/>
+
+        <PackageVersion Include="Microsoft.AspNetCore.Components" Version="10.0.1"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.1"/>
+        <PackageVersion Include="ReactiveUI" Version="22.3.1"/>
+        
+        <PackageVersion Include="coverlet.collector" Version="6.0.4"/>
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.0"/>
+        <PackageVersion Include="Moq" Version="4.20.72"/>
+        <PackageVersion Include="NUnit" Version="4.3.2"/>
+        <PackageVersion Include="NUnit.Analyzers" Version="4.7.0"/>
+        <PackageVersion Include="NUnit3TestAdapter" Version="5.0.0"/>
+        
+        <PackageVersion Include="Microsoft.Maui.Controls" Version="8.0.100"/>
+        <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0"/>
+        <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.1"/>
+
+        <PackageVersion Include="Riok.Mapperly" Version="4.3.1"/>
+        <PackageVersion Include="BCrypt.Net-Next" Version="4.0.3"/>
+    </ItemGroup>
+</Project>

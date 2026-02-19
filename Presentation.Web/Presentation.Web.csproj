@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>Presentation.Web</RootNamespace>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+        <PackageReference Include="Heron.MudCalendar"/>
+        <PackageReference Include="MudBlazor"/>
+    </ItemGroup>
+
+
+    <ItemGroup>
+        <ProjectReference Include="..\Api.Definitions\Api.Definitions.csproj"/>
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Components\Elements\Dialog\CancelAppointmentDialog.razor" />
+      <_ContentIncludedByDefault Remove="Components\Elements\Dialog\CreateAppointmentDialog.razor" />
+      <_ContentIncludedByDefault Remove="Components\Elements\Dialog\Error.razor" />
+      <_ContentIncludedByDefault Remove="Components\Elements\Dialog\LockAppointmentDialog.razor" />
+      <_ContentIncludedByDefault Remove="Components\Elements\Dialog\MoveAppointmentDialog.razor" />
+      <_ContentIncludedByDefault Remove="Components\Elements\Dialog\SuggestAppointmentDialog.razor" />
+      <_ContentIncludedByDefault Remove="Components\Elements\Dialog\SwitchAppointmentDialog.razor" />
+      <_ContentIncludedByDefault Remove="Components\Elements\Dialog\UnlockAppointmentDialog.razor" />
+      <_ContentIncludedByDefault Remove="Components\Elements\Scheduler\LeftClickMenu.razor" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+</Project>

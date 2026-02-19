@@ -1,0 +1,148 @@
+@page "/user/create"
+@using Api.Definitions.Generated
+@using Api.Definitions.Requests.Commands
+@using Presentation.Web.Models
+@using Presentation.Web.Services
+@inject CommandSender CommandSender
+@inject NavigationManager NavigationManager
+@inject IPasswordGenerator PasswordGenerator
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Small"
+              Class="d-flex flex-column align-center justify-center my-auto py-2"
+              Style="flex-grow: 1;">
+
+    <MudPaper Elevation="4"
+              Class="pa-4 pa-sm-6 rounded-lg"
+              Style="width: 100%; max-height: 95dvh; display: flex; flex-direction: column;">
+
+        <div class="text-center mb-4">
+            <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Color="Color.Primary" Size="Size.Medium"/>
+            <MudText Typo="Typo.h6" Class="fw-bold">Create Account</MudText>
+        </div>
+
+        <div style="overflow-y: auto; flex-grow: 1; padding: 4px;" class="hide-scrollbar">
+            <EditForm Model="@_userModel" OnValidSubmit="HandleCreate">
+                <DataAnnotationsValidator/>
+
+                <MudGrid Spacing="1">
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_userModel.LoginName" Label="LoginName Address"
+                                      Variant="Variant.Outlined" Margin="Margin.Dense"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Outlined.Email"/>
+                    </MudItem>
+                    <MudItem xs="6" Class="mt-2">
+                        <MudTextField @bind-Value="_userModel.FirstName" Label="First Name"
+                                      Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                    </MudItem>
+                    <MudItem xs="6" Class="mt-2">
+                        <MudTextField @bind-Value="_userModel.LastName" Label="Last Name"
+                                      Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                    </MudItem>
+
+                    <MudItem xs="6" Class="mt-2">
+                        <MudTextField @bind-Value="_tempPassword" Label="Generated Password"
+                                      Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                    </MudItem>
+
+                    @if (!string.IsNullOrEmpty(_errorMessage))
+                    {
+                        <MudItem xs="12" Class="mt-2">
+                            <MudAlert Severity="Severity.Error" Dense="true" Variant="Variant.Filled"
+                                      Class="rounded-lg">
+                                <small>@_errorMessage</small>
+                            </MudAlert>
+                        </MudItem>
+                    }
+
+                    <MudItem xs="12" Class="mt-4">
+                        <MudStack Spacing="1">
+                            <MudButton ButtonType="ButtonType.Submit"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       FullWidth="true"
+                                       Disabled="@_isProcessing"
+                                       Style="height: 44px; font-weight: bold;">
+                                @if (_isProcessing)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
+                                }
+                                else
+                                {
+                                    <span>Create Account</span>
+                                }
+                            </MudButton>
+                            <MudButton Variant="Variant.Text"
+                                       Color="Color.Default"
+                                       Size="Size.Small"
+                                       FullWidth="true"
+                                       OnClick="@(() => NavigationManager.NavigateTo("/"))">
+                                Cancel
+                            </MudButton>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </EditForm>
+        </div>
+    </MudPaper>
+</MudContainer>
+
+<style>
+    .hide-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .hide-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+    }
+</style>
+
+@code {
+    private readonly UserModel _userModel = UserModel.Empty;
+    private string _errorMessage = string.Empty;
+    private bool _isProcessing;
+    private string _tempPassword = string.Empty;
+
+    private async Task HandleCreate()
+    {
+        _isProcessing = true;
+        _errorMessage = string.Empty;
+
+        try
+        {
+            if (!_userModel.IsValid())
+            {
+                _errorMessage = "Please fix errors.";
+                return;
+            }
+
+            var adminCreateUserCommand = new CreateUserCommand(
+                _userModel.LoginName,
+                PasswordGenerator.Generate(6),
+                _userModel.FirstName,
+                _userModel.LastName);
+
+            _tempPassword = adminCreateUserCommand.InitialPassword;
+
+            var result = await CommandSender.SendAsync(adminCreateUserCommand);
+
+            if (!result.IsSuccessFull)
+            {
+                _errorMessage = result.Message;
+                return;
+            }
+
+            Snackbar.Add("Account created!", Severity.Success);
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Error occurred.";
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+}

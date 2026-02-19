@@ -1,0 +1,30 @@
+﻿services:
+  blazor:
+    build:
+      context: .
+      dockerfile: Presentation.Web/Dockerfile
+    container_name: blazor
+    ports:
+      - "5002:8080"
+    depends_on:
+      - core-server
+    networks:
+      - app-network
+    volumes:
+      - ./Certs:/certs:rw,z
+  
+  core-server:
+    build:
+      context: .
+      dockerfile: Core.Host/Dockerfile
+    container_name: core-server
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    volumes:
+      - ./Certs:/certs:rw,z
+
+networks:
+  app-network:
+    driver: bridge

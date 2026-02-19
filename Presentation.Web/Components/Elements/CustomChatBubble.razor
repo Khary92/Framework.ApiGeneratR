@@ -1,0 +1,66 @@
+@using Presentation.Web.Models
+<div class="d-flex mb-2 @(GetJustifyClass(Message.MessageOriginator))">
+    <MudPaper Elevation="1"
+              Class="@BubbleClass"
+              Style="@BubbleStyle">
+
+        <div
+            class="d-flex flex-column @(Message.MessageOriginator == MessageOriginator.System ? "align-center text-center" : "")">
+
+            <MudText Typo="Typo.caption"
+                     Color="@(Message.MessageOriginator == MessageOriginator.System ? Color.Tertiary : Color.Secondary)"
+                     Align="@(Message.MessageOriginator == MessageOriginator.System ? Align.Center : Align.Left)">
+                @MessageOriginatorText · @Message.Timestamp.ToLocalTime().ToString("HH:mm")
+            </MudText>
+
+            <div style="height:0.25rem;"></div>
+
+            <MudText Typo="Typo.body1">
+                @Message.Text
+            </MudText>
+
+        </div>
+    </MudPaper>
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public MessageModel Message { get; set; } = default!;
+
+    private string BubbleStyle =>
+        Message.MessageOriginator == MessageOriginator.System
+            ? "width:50%; max-width:50%; padding:0.5rem 0.75rem;"
+            : "max-width:75%; padding:0.5rem 0.75rem;";
+
+    private string BubbleClass =>
+        Message.MessageOriginator switch
+        {
+            MessageOriginator.Admin =>
+                "rounded-xl --mud-palette-black text-white",
+            MessageOriginator.User =>
+                "rounded-xl --mud-palette-black text-body",
+            MessageOriginator.System =>
+                "rounded-lg mud-theme-background text-body",
+            _ => "rounded-xl mud-theme-background text-body"
+        };
+
+    private string MessageOriginatorText =>
+        Message.MessageOriginator switch
+        {
+            MessageOriginator.Admin => "You",
+            MessageOriginator.User => "User",
+            MessageOriginator.System => "System",
+            _ => "Unknown"
+        };
+
+    private string GetJustifyClass(MessageOriginator originator)
+    {
+        return originator switch
+        {
+            MessageOriginator.Admin => "justify-start", // links
+            MessageOriginator.User => "justify-end", // rechts
+            MessageOriginator.System => "justify-center", // mitte
+            _ => "justify-start"
+        };
+    }
+
+}
