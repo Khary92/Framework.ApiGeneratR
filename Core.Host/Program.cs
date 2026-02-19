@@ -40,7 +40,7 @@ public static class Program
         builder.Services.AddAntiforgery(options => { options.Cookie.Name = "AntiforgeryCookie"; });
 
         builder.Services.AddSingletonMediatorServices();
-        builder.Services.AddDatabaseServices();
+        builder.Services.AddPersistenceServices();
 
         builder.Services.AddApplicationServices();
         builder.Services.AddEndpointsApiExplorer();
@@ -91,7 +91,7 @@ public static class Program
         app.AddApiEndpoints();
 
         // Websockets
-        app.AddAdminWebSocketEndpoints();
+        app.AddWebSocketEndpoints();
 
         return app;
     }

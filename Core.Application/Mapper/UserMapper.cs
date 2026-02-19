@@ -10,14 +10,12 @@ public partial class UserMapper
 {
     public User ToDomainEntity(CreateUserCommand command)
     {
-        return new User(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), command.LoginName,
-            command.FirstName, command.LastName);
+        return new User(Guid.NewGuid(), Guid.NewGuid(), command.LoginName, command.FirstName, command.LastName);
     }
 
-    public UserDto ToAdminDto(User user)
+    public UserDto ToDto(User user)
     {
         return new UserDto(user.Id,
-            user.ConversationId,
             user.LoginName,
             user.FirstName,
             user.LastName);

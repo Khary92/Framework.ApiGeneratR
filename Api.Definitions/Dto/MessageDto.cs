@@ -2,7 +2,7 @@ namespace Api.Definitions.Dto;
 
 public class MessageDto(
     Guid id,
-    Guid conversationId,
+    string conversationId,
     Guid originUserId,
     string text,
     DateTime timeStamp,
@@ -13,5 +13,5 @@ public class MessageDto(
     public string Text { get; set; } = text;
     public Guid OriginUserId { get; set; } = originUserId;
     public DateTime TimeStamp { get; set; } = timeStamp;
-    public Guid ConversationId { get; set; } = conversationId;
+    public string ConversationId { get; set; } = conversationId;
 }

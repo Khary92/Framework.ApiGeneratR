@@ -36,8 +36,8 @@ public class CreateUserCommandHandler(
                 domainUser.IdentityId = newIdentityId;
                 db.Users.Add(domainUser);
 
-                var userCreatedEvent = new UserCreatedEvent(mapper.ToAdminDto(domainUser));
-                await socket.BroadcastToAllAdmins(userCreatedEvent.ToWebsocketMessage(), ct);
+                var userCreatedEvent = new UserCreatedEvent(mapper.ToDto(domainUser));
+                await socket.BroadcastToAllUsers(userCreatedEvent.ToWebsocketMessage(), ct);
 
                 return new CommandResponse(true, "User created successfully");
             }, ct);

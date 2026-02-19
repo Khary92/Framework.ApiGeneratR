@@ -10,8 +10,8 @@
     <MudCard Elevation="4" Class="pa-8 rounded-lg" Style="width: 100%;">
         <MudCardHeader>
             <CardHeaderContent>
-                <MudText Typo="Typo.h4" Align="Align.Center" Class="mud-primary-text fw-bold">Admin Login</MudText>
-                <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">Login to backend system
+                <MudText Typo="Typo.h4" Align="Align.Center" Class="mud-primary-text fw-bold">Chat Login</MudText>
+                <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">Come in and find your friends
                 </MudText>
             </CardHeaderContent>
         </MudCardHeader>
@@ -53,7 +53,7 @@
 </MudContainer>
 
 @code {
-    private string _userName = "admin";
+    private string _userName = "user";
     private string _password = "password";
 
     private bool _passwordVisible;
@@ -78,7 +78,7 @@
 
     private async Task HandleLogin()
     {
-        var response = await QuerySender.SendAsync(new SharedLoginQuery(_userName, _password));
+        var response = await QuerySender.SendAsync(new LoginQuery(_userName, _password));
 
         if (!response.IsLoginSuccessful)
         {

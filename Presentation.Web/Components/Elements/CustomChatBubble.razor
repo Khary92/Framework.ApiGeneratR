@@ -1,15 +1,14 @@
 @using Presentation.Web.Models
-<div class="d-flex mb-2 @(GetJustifyClass(Message.MessageOriginator))">
+<div class="d-flex mb-2 @(GetJustifyClass())">
     <MudPaper Elevation="1"
               Class="@BubbleClass"
               Style="@BubbleStyle">
 
-        <div
-            class="d-flex flex-column @(Message.MessageOriginator == MessageOriginator.System ? "align-center text-center" : "")">
+        <div>
 
             <MudText Typo="Typo.caption"
-                     Color="@(Message.MessageOriginator == MessageOriginator.System ? Color.Tertiary : Color.Secondary)"
-                     Align="@(Message.MessageOriginator == MessageOriginator.System ? Align.Center : Align.Left)">
+                     Color="@(Message.IsOwnMessage ? Color.Tertiary : Color.Secondary)"
+                     Align="@(Message.IsOwnMessage ? Align.Center : Align.Left)">
                 @MessageOriginatorText · @Message.Timestamp.ToLocalTime().ToString("HH:mm")
             </MudText>
 
@@ -26,41 +25,18 @@
 @code {
     [Parameter] [EditorRequired] public MessageModel Message { get; set; } = default!;
 
-    private string BubbleStyle =>
-        Message.MessageOriginator == MessageOriginator.System
-            ? "width:50%; max-width:50%; padding:0.5rem 0.75rem;"
-            : "max-width:75%; padding:0.5rem 0.75rem;";
+    private string BubbleStyle => Message.IsOwnMessage ? "width:50%; max-width:50%; padding:0.5rem 0.75rem;" : "max-width:75%; padding:0.5rem 0.75rem;";
+
+    private string GetJustifyClass() =>
+        Message.IsOwnMessage ? "justify-start" : "justify-end";
+
 
     private string BubbleClass =>
-        Message.MessageOriginator switch
-        {
-            MessageOriginator.Admin =>
-                "rounded-xl --mud-palette-black text-white",
-            MessageOriginator.User =>
-                "rounded-xl --mud-palette-black text-body",
-            MessageOriginator.System =>
-                "rounded-lg mud-theme-background text-body",
-            _ => "rounded-xl mud-theme-background text-body"
-        };
+        Message.IsOwnMessage ? "rounded-xl --mud-palette-black text-body" : "rounded-xl --mud-palette-black text-white";
+
 
     private string MessageOriginatorText =>
-        Message.MessageOriginator switch
-        {
-            MessageOriginator.Admin => "You",
-            MessageOriginator.User => "User",
-            MessageOriginator.System => "System",
-            _ => "Unknown"
-        };
+        Message.IsOwnMessage ? "You" : "The other guy";
 
-    private string GetJustifyClass(MessageOriginator originator)
-    {
-        return originator switch
-        {
-            MessageOriginator.Admin => "justify-start", // links
-            MessageOriginator.User => "justify-end", // rechts
-            MessageOriginator.System => "justify-center", // mitte
-            _ => "justify-start"
-        };
-    }
 
 }

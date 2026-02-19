@@ -5,4 +5,4 @@ using Shared.Contracts.Mediator;
 namespace Api.Definitions.Requests.Queries;
 
 [Request("login", false, RequestType.Query)]
-public record SharedLoginQuery(string Email, string Password) : IRequest<SharedLoginResponse>;
+public record LoginQuery(string Email, string Password) : IRequest<LoginResponse>;

@@ -34,7 +34,7 @@ public static class WebModuleExtensions
 
     extension(IServiceCollection services)
     {
-        public void AddAdminBlazorServices()
+        public void AddBlazorServices()
         {
             services.AddRazorComponents()
                 .AddInteractiveServerComponents();

@@ -6,13 +6,13 @@ using Shared.Contracts.Mediator;
 
 namespace Core.Application.Handlers;
 
-public class GetAllUsersQueryRequestHandler(IUnitOfWork db, UserMapper mapper)
+public class GetAllUsersQueryHandler(IUnitOfWork db, UserMapper mapper)
     : IRequestHandler<GetAllUsersQuery, List<UserDto>>
 {
     public Task<List<UserDto>> HandleAsync(GetAllUsersQuery query, CancellationToken ct = default)
     {
         return Task.FromResult(db.Users
-            .Select(mapper.ToAdminDto)
+            .Select(mapper.ToDto)
             .ToList());
     }
 }

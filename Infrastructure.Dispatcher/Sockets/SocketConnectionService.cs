@@ -12,11 +12,12 @@ using Shared.Contracts.EventBus;
 namespace Infrastructure.Dispatcher.Sockets;
 
 public class SocketConnectionService(
+    IUnitOfWork db,
     ILogger<SocketConnectionService> logger,
     TokenValidationParameters tokenValidationParameters)
     : ISocketConnectionService
 {
-    private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _connections = new();
+ private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _connections = new();
 
     public async Task HandleConnection(string authHeader, WebSocket webSocket)
     {
@@ -27,11 +28,11 @@ public class SocketConnectionService(
             return;
         }
 
-        string userId;
+        string identityId;
         string role;
         try
         {
-            (userId, role) = ValidateToken(authHeader.Substring("Bearer ".Length).Trim());
+            (identityId, role) = ValidateToken(authHeader.Substring("Bearer ".Length).Trim());
         }
         catch
         {
@@ -39,7 +40,11 @@ public class SocketConnectionService(
             return;
         }
 
-        var connectionKey = $"{role}:{userId}";
+        var user = db.Users.FirstOrDefault(u => u.IdentityId == Guid.Parse(identityId));
+
+        if (user == null) return;
+
+        var connectionKey = $"{role}:{user.Id}";
         var userSockets = _connections.GetOrAdd(connectionKey, _ => new ConcurrentDictionary<WebSocket, byte>());
         userSockets.TryAdd(webSocket, 0);
 
@@ -70,20 +75,46 @@ public class SocketConnectionService(
         }
     }
 
-    public async Task BroadcastToAllAdmins(EventEnvelope eventEnvelope, CancellationToken ct = default)
+    public async Task SendMessageToUser(EventEnvelope envelope, Guid userId,
+        CancellationToken ct = default)
     {
-        var openAdminSockets = _connections
-            .Where(kvp => kvp.Key.StartsWith("admin:"))
+        if (!_connections.TryGetValue($"user:{userId}", out var userSockets)) return;
+
+        var json = JsonSerializer.Serialize(envelope);
+        var bytes = Encoding.UTF8.GetBytes(json);
+        var segment = new ArraySegment<byte>(bytes);
+
+        var tasks = userSockets.Keys
+            .Where(s => s.State == WebSocketState.Open)
+            .Select(async socket =>
+            {
+                try
+                {
+                    await socket.SendAsync(segment, WebSocketMessageType.Text, true, ct);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Could not send message to specific socket for user {UserId}", userId);
+                }
+            });
+
+        await Task.WhenAll(tasks);
+    }
+
+    public async Task BroadcastToAllUsers(EventEnvelope eventEnvelope, CancellationToken ct = default)
+    {
+        var openSockets = _connections
+            .Where(kvp => kvp.Key.StartsWith("user:"))
             .SelectMany(kvp => kvp.Value.Keys)
             .Where(socket => socket.State == WebSocketState.Open)
             .ToList();
 
-        if (openAdminSockets.Count == 0) return;
+        if (openSockets.Count == 0) return;
 
         var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(eventEnvelope));
         var segment = new ArraySegment<byte>(bytes);
 
-        var tasks = openAdminSockets.Select(async socket =>
+        var tasks = openSockets.Select(async socket =>
         {
             try
             {
@@ -104,14 +135,14 @@ public class SocketConnectionService(
         var tokenHandler = new JwtSecurityTokenHandler();
         var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out _);
 
-        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
+        var identityId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(identityId))
             throw new SecurityTokenException("Token does not contain user ID");
 
         var role = principal.FindFirst(ClaimTypes.Role)?.Value;
 
         return string.IsNullOrEmpty(role)
             ? throw new SecurityTokenException("Token does not contain role")
-            : (userId, role);
+            : (userId: identityId, role);
     }
 }

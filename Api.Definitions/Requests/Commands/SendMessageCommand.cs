@@ -6,5 +6,5 @@ using Shared.Contracts.Mediator;
 namespace Api.Definitions.Requests.Commands;
 
 [Request("send-message", true, RequestType.Command)]
-public record SendMessageToUserCommand(string Message, Guid TargetUserId, Guid IdentityId = default)
+public record SendMessageCommand(string Message, Guid TargetUserId, Guid IdentityId = default)
     : IRequest<CommandResponse>;

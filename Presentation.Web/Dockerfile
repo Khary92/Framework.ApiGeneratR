@@ -8,10 +8,13 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Directory.Packages.props", "./"]
+COPY ["Shared.Contracts.Generator/Shared.Contracts.Generator.csproj", "Shared.Contracts.Generator/"]
+RUN dotnet restore "Shared.Contracts.Generator/Shared.Contracts.Generator.csproj"
+COPY ["Shared.Contracts.Generator/", "Shared.Contracts.Generator/"]
+RUN dotnet build "Shared.Contracts.Generator/Shared.Contracts.Generator.csproj" -c $BUILD_CONFIGURATION
 COPY ["Presentation.Web/Presentation.Web.csproj", "Presentation.Web/"]
 COPY ["Api.Definitions/Api.Definitions.csproj", "Api.Definitions/"]
 COPY ["Shared.Contracts/Shared.Contracts.csproj", "Shared.Contracts/"]
-COPY ["Shared.Contracts.Generator/Shared.Contracts.Generator.csproj", "Shared.Contracts.Generator/"]
 RUN dotnet restore "Presentation.Web/Presentation.Web.csproj"
 COPY . .
 WORKDIR "/src/Presentation.Web"

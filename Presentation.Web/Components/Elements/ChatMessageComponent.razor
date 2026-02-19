@@ -92,11 +92,9 @@
     {
         if (string.IsNullOrWhiteSpace(NewMessage) || SelectedUser == null) return;
 
-        await CommandSender.SendAsync(new SendMessageToUserCommand(NewMessage, SelectedUser.UserId));
-        NewMessage = string.Empty;
+        await CommandSender.SendAsync(new SendMessageCommand(NewMessage, SelectedUser.UserId));
 
-        MessageModels = await MessageService.GetMessagesForSelectedUser(SelectedUser);
-        await InvokeAsync(StateHasChanged);
+        NewMessage = string.Empty;
     }
 
 }

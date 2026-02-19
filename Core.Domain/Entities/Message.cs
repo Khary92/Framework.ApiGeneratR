@@ -1,15 +1,15 @@
-namespace Core.Domain.Entities.Messages;
+namespace Core.Domain.Entities;
 
 public class Message(
     Guid id,
-    Guid conversationId,
+    string conversationId,
     Guid originUserId,
     string text,
     DateTime timeStamp)
 {
-    public Guid ConversationId = conversationId;
+    public readonly string ConversationId = conversationId;
     public Guid Id = id;
     public Guid OriginUserId = originUserId;
-    public string Text = text;
+    public readonly string Text = text;
     public DateTime TimeStamp = timeStamp;
 }

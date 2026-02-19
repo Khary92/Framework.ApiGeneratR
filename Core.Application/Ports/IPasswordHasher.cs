@@ -1,4 +1,4 @@
-namespace Core.Application.Services;
+namespace Core.Application.Ports;
 
 public interface IPasswordHasher
 {

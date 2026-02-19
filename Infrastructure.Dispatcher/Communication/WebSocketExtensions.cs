@@ -6,7 +6,7 @@ namespace Infrastructure.Dispatcher.Communication;
 
 public static class WebSocketExtensions
 {
-    public static void AddAdminWebSocketEndpoints(this WebApplication app)
+    public static void AddWebSocketEndpoints(this WebApplication app)
     {
         var eventWebSocketHandler = app.Services.GetRequiredService<ISocketConnectionService>();
 
