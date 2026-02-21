@@ -1,6 +1,6 @@
 namespace Shared.Contract.Generator.Mapper;
 
-public class RequestHandlerSourceData(
+public class MediatorHandlerData(
     string handlerShortName,
     string requestType,
     string requestShortName,

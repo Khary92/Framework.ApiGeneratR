@@ -15,7 +15,7 @@ public class MediatorGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var handlers = context.GetRequestHandlerClassSymbols();
+        var handlers = context.GetMediatorRequestHandlers();
 
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
@@ -39,7 +39,7 @@ public class MediatorGenerator : IIncrementalGenerator
             });
     }
 
-    private static void Execute(SourceProductionContext context, ImmutableArray<RequestHandlerSourceData> handlers,
+    private static void Execute(SourceProductionContext context, ImmutableArray<MediatorHandlerData> handlers,
         string? projectNamespace)
     {
         if (handlers.IsDefaultOrEmpty) return;
@@ -51,7 +51,7 @@ public class MediatorGenerator : IIncrementalGenerator
     }
 
     private static void CreateExtensionMethod(SourceProductionContext context,
-        ImmutableArray<RequestHandlerSourceData> handlers, string projectNamespace)
+        ImmutableArray<MediatorHandlerData> handlers, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
 
@@ -82,7 +82,7 @@ public class MediatorGenerator : IIncrementalGenerator
     }
 
     private static void CreateSourceMediator(SourceProductionContext context,
-        ImmutableArray<RequestHandlerSourceData> handlers, string projectNamespace)
+        ImmutableArray<MediatorHandlerData> handlers, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([

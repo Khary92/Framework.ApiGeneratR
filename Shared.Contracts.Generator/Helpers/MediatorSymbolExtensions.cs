@@ -8,7 +8,7 @@ namespace Shared.Contract.Generator.Helpers;
 
 public static class MediatorSymbolExtensions
 {
-    public static IncrementalValueProvider<ImmutableArray<RequestHandlerSourceData>> GetRequestHandlerClassSymbols(
+    public static IncrementalValueProvider<ImmutableArray<MediatorHandlerData>> GetMediatorRequestHandlers(
         this IncrementalGeneratorInitializationContext context)
     {
         return context.SyntaxProvider.CreateSyntaxProvider(
@@ -30,7 +30,7 @@ public static class MediatorSymbolExtensions
                     var requestSymbol = interfaceSymbol.TypeArguments[0];
                     var responseSymbol = interfaceSymbol.TypeArguments[1];
 
-                    return new RequestHandlerSourceData(
+                    return new MediatorHandlerData(
                         typeSymbol.Name,
                         requestSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         requestSymbol.Name,
