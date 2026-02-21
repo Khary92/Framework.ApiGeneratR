@@ -42,26 +42,26 @@ public class EventMapperGenerator : IIncrementalGenerator
 
         if (projectNamespace is not "Api.Definitions") return;
 
-        foreach (var eventData in events)
+        foreach (var @event in events)
         {
-            if (eventData == null) continue;
+            if (@event == null) continue;
 
             var scb = new SourceCodeBuilder();
 
             scb.SetUsings(["System.Text.Json"]);
 
-            scb.SetNamespace($"{eventData.Namespace}.Generated");
+            scb.SetNamespace($"{@event.Namespace}.Generated");
 
-            scb.StartScope($"public static class {eventData.TypeName}WebsocketExtensions");
+            scb.StartScope($"public static class {@event.TypeName}WebsocketExtensions");
 
             scb.StartScope(
-                $"public static global::Shared.Contracts.EventBus.EventEnvelope ToWebsocketMessage(this {eventData.FullTypeName} @event)");
+                $"public static global::Shared.Contracts.EventBus.EventEnvelope ToWebsocketMessage(this {@event.FullTypeName} @event)");
             scb.AddLine(
-                $"return new(\"{eventData.EventType}\", JsonSerializer.Serialize(@event), DateTime.UtcNow);");
+                $"return new(\"{@event.EventType}\", JsonSerializer.Serialize(@event), DateTime.UtcNow);");
             scb.EndScope();
             scb.EndScope();
 
-            spc.AddSource($"{eventData.TypeName}WebsocketsExtensions.g.cs",
+            spc.AddSource($"{@event.TypeName}WebsocketsExtensions.g.cs",
                 SourceText.From(scb.ToString(), Encoding.UTF8));
         }
     }

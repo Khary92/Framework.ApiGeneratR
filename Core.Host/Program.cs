@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using Api.Definitions.Generated;
 using ApiDefinitions.Generated;
 using Core.Application;
 using Core.Application.Ports;
@@ -23,12 +24,14 @@ public static class Program
 
     private static WebApplication BuildServerApp(string[] args)
     {
+        //ApiDocumentation.PrintToPath();
+        
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
             Args = args,
             ContentRootPath = Directory.GetCurrentDirectory()
         });
-
+        
         builder.Logging.AddSimpleConsole();
         builder.Logging.SetMinimumLevel(LogLevel.Trace);
 

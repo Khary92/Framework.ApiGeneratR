@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -39,22 +40,122 @@ public class ConsumerApiGenerator : IIncrementalGenerator
             });
     }
 
-    private static void Execute(SourceProductionContext context, ImmutableArray<RequestData> apiDefinitions,
+    private static void Execute(SourceProductionContext context, ImmutableArray<RequestData> requestData,
         string? projectNamespace, ImmutableArray<EventSourceData> eventData)
     {
-        if (apiDefinitions.IsDefaultOrEmpty || eventData.IsDefaultOrEmpty ||
+        if (requestData.IsDefaultOrEmpty || eventData.IsDefaultOrEmpty ||
             projectNamespace is not "Api.Definitions") return;
 
         ExecuteHttpClientGeneration(context, projectNamespace);
         ExecuteWebsocketInterfaceGeneration(context, projectNamespace);
 
-        ExecuteCommandSenderGeneration(context, apiDefinitions, projectNamespace);
-        ExecuteQuerySenderGeneration(context, apiDefinitions, projectNamespace);
+        ExecuteCommandSenderGeneration(context, requestData, projectNamespace);
+        ExecuteQuerySenderGeneration(context, requestData, projectNamespace);
         ExecuteWebsocketReceiverGeneration(context, eventData, projectNamespace);
+        ExecuteDocumentationGeneration(context, eventData, requestData, projectNamespace);
+    }
+
+    private static void ExecuteDocumentationGeneration(SourceProductionContext context,
+        ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests, string projectNamespace)
+    {
+        var mdb = new MarkdownBuilder();
+        mdb.AddHeader("API Documentation");
+        mdb.AddParagraph(
+            $"Auto-generated documentation for the available endpoints. Total endpoints: {requests.Length}");
+
+        if (requests.IsDefaultOrEmpty)
+        {
+            mdb.AddParagraph("_No endpoints defined._");
+        }
+        else
+        {
+            mdb.AddHeader("Endpoints Overview", 2);
+
+            var rows = new List<List<string>>();
+            foreach (var handler in requests)
+                rows.Add([
+                    $"`{handler.HttpMethod}`", $"{handler.RequiresAuth}", $"`{handler.Route}`",
+                    handler.RequestShortName,
+                    handler.DataStructureType
+                ]);
+
+            mdb.AddTable(new List<string> { "Method", "Requires Auth", "Route", "Command/Record", "Type" }, rows);
+
+            mdb.AddHorizontalRule();
+            mdb.AddHeader("Request Definitions", 2);
+
+            foreach (var request in requests)
+            {
+                if (request == null) continue;
+
+                mdb.AddHeader(request.RequestShortName, 3);
+                mdb.AddParagraph($"Full Type: `{request.RequestFullName}` ");
+
+                mdb.StartCodeBlock();
+                mdb.AddLine($"// Structure of {request.RequestShortName}");
+
+                foreach (var member in request.Members) mdb.AddLine(member);
+
+                mdb.EndCodeBlock();
+            }
+        }
+
+        mdb.AddHorizontalRule();
+        
+        mdb.AddHeader("Event Documentation");
+        mdb.AddParagraph(
+            $"Auto-generated documentation for the distributed events. Total events: {events.Length}");
+        
+        if (events.IsDefaultOrEmpty)
+        {
+            mdb.AddParagraph("_No endpoints defined._");
+        }
+        else
+        {
+            foreach (var @event in events)
+            {
+                if (@event == null) continue;
+
+                mdb.AddHeader(@event.TypeName, 3);
+                mdb.AddParagraph($"Full Type: `{@event.FullTypeName}` ");
+                mdb.AddParagraph($"Deserialization reference: `{@event.EventType}` ");
+                
+                mdb.StartCodeBlock();
+                mdb.AddLine($"// Structure of {@event.TypeName}");
+
+                foreach (var member in @event.Properties)
+                {
+                    mdb.AddLine($"public {member.Type} {member.Name} " + "{ get; }");
+                }
+
+                mdb.EndCodeBlock();
+            }
+        }
+
+        SourceCodeBuilder scb = new();
+        scb.SetNamespace($"{projectNamespace}.Generated");
+        scb.StartScope("public static class ApiDocumentation");
+        scb.AddLine();
+
+        scb.AddLine("private static string Markdown => \"\"\"");
+
+        var lines = mdb.ToString().Split(["\n", "\r"], StringSplitOptions.None);
+        foreach (var line in lines) scb.AddLine(line);
+
+        scb.AddLine("\"\"\";");
+
+        scb.AddLine();
+        scb.StartScope("public static void PrintToPath(string path)");
+        scb.AddLine("File.WriteAllText(path, Markdown);");
+        scb.EndScope();
+        scb.EndScope();
+
+        context.AddSource("ApiDocumentation.g.cs",
+            SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
     private static void ExecuteWebsocketReceiverGeneration(SourceProductionContext context,
-        ImmutableArray<EventSourceData> eventData, string projectNamespace)
+        ImmutableArray<EventSourceData> events, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -95,8 +196,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.AddLine("_ws.Dispose();");
         scb.EndScope();
         scb.AddLine();
-
-
+        
         scb.StartScope("private async Task ReceiveLoop()");
         scb.AddLine("var buffer = new byte[1024 * 4];");
         scb.StartScope("while (_ws.State == WebSocketState.Open)");
@@ -122,7 +222,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.StartScope("private async Task PublishEvent(EventEnvelope envelope)");
         scb.StartScope("switch (envelope.Type)");
 
-        foreach (var eventType in eventData)
+        foreach (var eventType in events)
         {
             if (eventType == null) continue;
 
@@ -172,7 +272,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
     }
 
     private static void ExecuteCommandSenderGeneration(SourceProductionContext context,
-        ImmutableArray<RequestData> apiDefinitions, string projectNamespace)
+        ImmutableArray<RequestData> requests, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -189,20 +289,20 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.AddLine();
 
-        foreach (var definition in apiDefinitions)
+        foreach (var request in requests)
         {
-            if (definition == null || definition.CqsType != "Command") continue;
+            if (request == null || request.CqsType != "Command") continue;
 
             scb.StartScope(
-                $"public async Task<{definition.ReturnValueFullName}> SendAsync({definition.RequestFullName} command, CancellationToken ct = default)");
+                $"public async Task<{request.ReturnValueFullName}> SendAsync({request.RequestFullName} command, CancellationToken ct = default)");
 
-            if (definition.RequiresAuth)
+            if (request.RequiresAuth)
             {
                 scb.AddLine("if (string.IsNullOrEmpty(_token))");
                 scb.AddIndentedLine(
                     "throw new InvalidOperationException(\"Token is null or empty. Make sure you are logged in.\");");
                 scb.AddLine();
-                scb.StartScope($"var httpRequest = new HttpRequestMessage(HttpMethod.Post, \"{definition.Route}\");");
+                scb.StartScope($"var httpRequest = new HttpRequestMessage(HttpMethod.Post, \"{request.Route}\");");
                 scb.AddLine("httpRequest.Content = JsonContent.Create(command);");
                 scb.EndScope();
                 scb.AddLine();
@@ -212,17 +312,17 @@ public class ConsumerApiGenerator : IIncrementalGenerator
                 scb.AddLine();
                 scb.AddLine("response.EnsureSuccessStatusCode();");
                 scb.AddLine(
-                    $"return (await response.Content.ReadFromJsonAsync<{definition.ReturnValueFullName}>(ct))!;");
+                    $"return (await response.Content.ReadFromJsonAsync<{request.ReturnValueFullName}>(ct))!;");
                 scb.EndScope();
                 scb.AddLine();
                 continue;
             }
 
-            scb.AddLine($"var response = await http.Client.PostAsJsonAsync(\"{definition.Route}\", command);");
+            scb.AddLine($"var response = await http.Client.PostAsJsonAsync(\"{request.Route}\", command);");
             scb.AddLine();
             scb.AddLine("response.EnsureSuccessStatusCode();");
             scb.AddLine();
-            scb.AddLine($"var result = await response.Content.ReadFromJsonAsync<{definition.ReturnValueFullName}>();");
+            scb.AddLine($"var result = await response.Content.ReadFromJsonAsync<{request.ReturnValueFullName}>();");
             scb.AddLine("return result!;");
             scb.EndScope();
         }
@@ -233,7 +333,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
     }
 
     private static void ExecuteQuerySenderGeneration(SourceProductionContext context,
-        ImmutableArray<RequestData> apiDefinitions, string projectNamespace)
+        ImmutableArray<RequestData> requests, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -250,20 +350,20 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.AddLine();
 
-        foreach (var definition in apiDefinitions)
+        foreach (var request in requests)
         {
-            if (definition == null || definition.CqsType == "Command") continue;
+            if (request == null || request.CqsType == "Command") continue;
 
             scb.StartScope(
-                $"public async Task<{definition.ReturnValueFullName}> SendAsync({definition.RequestFullName} query, CancellationToken ct = default)");
+                $"public async Task<{request.ReturnValueFullName}> SendAsync({request.RequestFullName} query, CancellationToken ct = default)");
 
-            if (definition.RequiresAuth)
+            if (request.RequiresAuth)
             {
                 scb.AddLine("if (string.IsNullOrEmpty(_token))");
                 scb.AddIndentedLine(
                     "throw new InvalidOperationException(\"Token is null or empty. Make sure you are logged in.\");");
                 scb.AddLine();
-                scb.StartScope($"var httpRequest = new HttpRequestMessage(HttpMethod.Post, \"{definition.Route}\");");
+                scb.StartScope($"var httpRequest = new HttpRequestMessage(HttpMethod.Post, \"{request.Route}\");");
                 scb.AddLine("httpRequest.Content = JsonContent.Create(query);");
                 scb.EndScope();
                 scb.AddLine();
@@ -273,18 +373,18 @@ public class ConsumerApiGenerator : IIncrementalGenerator
                 scb.AddLine();
                 scb.AddLine("response.EnsureSuccessStatusCode();");
                 scb.AddLine(
-                    $"return (await response.Content.ReadFromJsonAsync<{definition.ReturnValueFullName}>(ct))!;");
+                    $"return (await response.Content.ReadFromJsonAsync<{request.ReturnValueFullName}>(ct))!;");
                 scb.EndScope();
                 scb.AddLine();
 
                 continue;
             }
 
-            scb.AddLine($"var response = await http.Client.PostAsJsonAsync(\"{definition.Route}\", query);");
+            scb.AddLine($"var response = await http.Client.PostAsJsonAsync(\"{request.Route}\", query);");
             scb.AddLine();
             scb.AddLine("response.EnsureSuccessStatusCode();");
             scb.AddLine();
-            scb.AddLine($"var result = await response.Content.ReadFromJsonAsync<{definition.ReturnValueFullName}>();");
+            scb.AddLine($"var result = await response.Content.ReadFromJsonAsync<{request.ReturnValueFullName}>();");
             scb.AddLine("return result!;");
             scb.EndScope();
             scb.AddLine();
