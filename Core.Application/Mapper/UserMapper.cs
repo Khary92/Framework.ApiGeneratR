@@ -1,4 +1,5 @@
 ﻿using Api.Definitions.Dto;
+using Api.Definitions.Events.User;
 using Api.Definitions.Requests.Commands;
 using Core.Domain.Entities;
 using Riok.Mapperly.Abstractions;
@@ -16,6 +17,14 @@ public partial class UserMapper
     public UserDto ToDto(User user)
     {
         return new UserDto(user.Id,
+            user.LoginName,
+            user.FirstName,
+            user.LastName);
+    }
+
+    public UserCreatedEvent ToCreatedEvent(User user)
+    {
+        return new UserCreatedEvent(user.Id,
             user.LoginName,
             user.FirstName,
             user.LastName);

@@ -5,5 +5,5 @@ using Shared.Contracts.Mediator;
 
 namespace Api.Definitions.Requests.Queries;
 
-[Request("get-own-user-id", true, RequestType.Query)]
+[Request("get-own-user-Id", true, RequestType.Query)]
 public record GetMyUserIdQuery(Guid IdentityId = default) : IRequest<UserIdDto>;

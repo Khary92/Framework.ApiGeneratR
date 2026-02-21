@@ -28,16 +28,16 @@ public class UserService(
         // check if already subscribed
         if (_subscriptions.Count != 0) return;
 
-        var createdSub = eventSubscriber.Subscribe<UserCreatedEvent>(async notification =>
+        var createdSub = eventSubscriber.Subscribe<UserCreatedEvent>(async @event =>
         {
-            Users.Add(notification.User.ToUserModel());
+            Users.Add(@event.ToUserModel());
             if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
         });
         _subscriptions.Add(createdSub);
 
-        var deletedSub = eventSubscriber.Subscribe<UserDeletedEvent>(async notification =>
+        var deletedSub = eventSubscriber.Subscribe<UserDeletedEvent>(async @event =>
         {
-            var user = Users.FirstOrDefault(user => user.UserId == notification.User.Id);
+            var user = Users.FirstOrDefault(user => user.UserId == @event.Id);
 
             if (user == null) return;
 
@@ -47,14 +47,14 @@ public class UserService(
         });
         _subscriptions.Add(deletedSub);
 
-        var updatedSub = eventSubscriber.Subscribe<UserUpdatedEvent>(async notification =>
+        var updatedSub = eventSubscriber.Subscribe<UserUpdatedEvent>(async @event =>
         {
-            var user = Users.FirstOrDefault(user => user.UserId == notification.User.Id);
+            var user = Users.FirstOrDefault(user => user.UserId == @event.Id);
 
             if (user == null) return;
 
             Users.Remove(user);
-            Users.Add(notification.User.ToUserModel());
+            Users.Add(@event.ToUserModel());
 
             if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
         });

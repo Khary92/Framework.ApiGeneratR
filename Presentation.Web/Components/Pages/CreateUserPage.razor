@@ -15,14 +15,14 @@
 
     <MudPaper Elevation="4"
               Class="pa-4 pa-sm-6 rounded-lg"
-              Style="width: 100%; max-height: 95dvh; display: flex; flex-direction: column;">
+              Style="wIdth: 100%; max-height: 95dvh; display: flex; flex-direction: column;">
 
         <div class="text-center mb-4">
             <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Color="Color.Primary" Size="Size.Medium"/>
             <MudText Typo="Typo.h6" Class="fw-bold">Create Account</MudText>
         </div>
 
-        <div style="overflow-y: auto; flex-grow: 1; padding: 4px;" class="hide-scrollbar">
+        <div style="overflow-y: auto; flex-grow: 1; padding: 4px;" class="hIde-scrollbar">
             <EditForm Model="@_userModel" OnValidSubmit="HandleCreate">
                 <DataAnnotationsValidator/>
 
@@ -96,11 +96,11 @@
 </MudContainer>
 
 <style>
-    .hide-scrollbar::-webkit-scrollbar {
-        width: 4px;
+    .hIde-scrollbar::-webkit-scrollbar {
+        wIdth: 4px;
     }
 
-    .hide-scrollbar::-webkit-scrollbar-thumb {
+    .hIde-scrollbar::-webkit-scrollbar-thumb {
         background: rgba(0, 0, 0, 0.1);
         border-radius: 10px;
     }

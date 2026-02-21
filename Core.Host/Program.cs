@@ -24,7 +24,7 @@ public static class Program
 
     private static WebApplication BuildServerApp(string[] args)
     {
-        //ApiDocumentation.PrintToPath();
+        ApiDocumentation.PrintToPath("/home/jannic/Documents/Documentation.md");
         
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {

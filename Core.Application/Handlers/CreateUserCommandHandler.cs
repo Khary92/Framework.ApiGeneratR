@@ -1,5 +1,4 @@
 using Api.Definitions.Dto;
-using Api.Definitions.Events.User;
 using Api.Definitions.Events.User.Generated;
 using Api.Definitions.Requests.Commands;
 using Core.Application.Mapper;
@@ -36,8 +35,7 @@ public class CreateUserCommandHandler(
                 domainUser.IdentityId = newIdentityId;
                 db.Users.Add(domainUser);
 
-                var userCreatedEvent = new UserCreatedEvent(mapper.ToDto(domainUser));
-                await socket.BroadcastToAllUsers(userCreatedEvent.ToWebsocketMessage(), ct);
+                await socket.BroadcastToAllUsers(mapper.ToCreatedEvent(domainUser).ToWebsocketMessage(), ct);
 
                 return new CommandResponse(true, "User created successfully");
             }, ct);

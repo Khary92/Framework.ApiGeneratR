@@ -5,7 +5,7 @@ using Shared.Contracts.Mediator;
 
 namespace Api.Definitions.Requests.Commands;
 
-[Request("create-user-command", true, RequestType.Command)]
+[Request("create-user", true, RequestType.Command)]
 public record CreateUserCommand(
     string LoginName,
     string InitialPassword,
