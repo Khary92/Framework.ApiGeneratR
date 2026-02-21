@@ -33,8 +33,8 @@ public static class Program
         builder.Logging.SetMinimumLevel(LogLevel.Trace);
 
         builder.Services.AddDataProtection()
-            .PersistKeysToFileSystem(new DirectoryInfo("/certs/dataprotection-keys"))
-            .SetApplicationName("PublicBlazorApp")
+            .PersistKeysToFileSystem(new DirectoryInfo("/Certs/dataprotection-keys"))
+            .SetApplicationName("BlazorApp")
             .SetDefaultKeyLifetime(TimeSpan.FromDays(14));
 
         builder.Services.AddAntiforgery(options => { options.Cookie.Name = "AntiforgeryCookie"; });

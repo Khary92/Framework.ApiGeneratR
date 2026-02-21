@@ -1,0 +1,27 @@
+@page "/chat"
+@using Presentation.Web.Components.Elements
+@using Presentation.Web.Models
+
+<div style="height: calc(100vh - 64px); display: flex; flex-direction: column;">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4 d-flex flex-column" Style="flex-grow: 1; min-height: 0;">
+
+        <MudGrid Style="flex-grow: 1; min-height: 0;" Class="pb-3">
+
+            <ChatUserComponent OnUserSelected="@SetSelectedUser"></ChatUserComponent>
+
+            <ChatMessageComponent SelectedUser="_selectedUser"></ChatMessageComponent>
+
+        </MudGrid>
+    </MudContainer>
+</div>
+
+@code {
+    private UserModel? _selectedUser;
+
+    private async Task SetSelectedUser(UserModel? user)
+    {
+        _selectedUser = user;
+        await Task.CompletedTask;
+    }
+
+}

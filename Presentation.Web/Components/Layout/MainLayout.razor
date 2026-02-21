@@ -1,4 +1,10 @@
-﻿@inherits LayoutComponentBase
+﻿@using Presentation.Web.Events
+@using Presentation.Web.State.Login
+@using Shared.Contracts.EventBus
+@inherits LayoutComponentBase
+@inject IEventSubscriber EventSubsService
+@inject ILoginService LoginService
+@inject NavigationManager NavigationManager
 
 <style>
     html, body, .mud-layout, .mud-main-content {
@@ -18,26 +24,28 @@
 <MudSnackbarProvider/>
 
 <MudLayout>
-    <MudAppBar Elevation="0" variant="Variant.Outlined">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
-                       OnClick="@DrawerToggle"/>
+    @if (_isLoggedIn)
+    {
+        <MudAppBar Elevation="0" variant="Variant.Outlined">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                           OnClick="@DrawerToggle"/>
 
-        <MudText Typo="Typo.h6" Class="ml-3 font-weight-bold">Super awesome chat</MudText>
+            <MudText Typo="Typo.h6" Class="ml-3 font-weight-bold">Super awesome chat</MudText>
 
-        <MudSpacer/>
+            <MudSpacer/>
 
-        <div class="d-flex align-center gap-2">
-            <MudTooltip Text="Administrator Mode">
-                <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Color="Color.Primary" Size="Size.Small"/>
-            </MudTooltip>
+            <div class="d-flex align-center gap-2">
+                <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Primary" OnClick="@Logout"
+                               Size="Size.Medium"/>
 
-            <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle"/>
-        </div>
-    </MudAppBar>
+                <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle"/>
+            </div>
+        </MudAppBar>
 
-    <MudDrawer id="nav-drawer" @bind-Open="_isSideMenuOpen" ClipMode="DrawerClipMode.Always" Elevation="1">
-        <NavMenu/>
-    </MudDrawer>
+        <MudDrawer id="nav-drawer" @bind-Open="_isSideMenuOpen" ClipMode="DrawerClipMode.Always" Elevation="1">
+            <NavMenu/>
+        </MudDrawer>
+    }
 
     <MudMainContent Class="flex-grow-1 d-flex flex-column" Style="height: 100vh">
         <div class="flex-grow-1 overflow-hidden d-flex flex-column pa-4">
@@ -56,6 +64,24 @@
     private bool _isSideMenuOpen;
     private bool _isDarkMode = true;
     private MudTheme? _theme;
+    private bool _isLoggedIn;
+
+    protected override Task OnInitializedAsync()
+    {
+        EventSubsService.Subscribe<UserLoggedInEvent>(async _ =>
+        {
+            _isLoggedIn = true;
+            await InvokeAsync(StateHasChanged);
+        });
+
+        EventSubsService.Subscribe<UserLoggedOutEvent>(async _ =>
+        {
+            _isLoggedIn = false;
+            await InvokeAsync(StateHasChanged);
+        });
+
+        return Task.CompletedTask;
+    }
 
     protected override void OnInitialized()
     {
@@ -75,6 +101,12 @@
     private void DarkModeToggle()
     {
         _isDarkMode = !_isDarkMode;
+    }
+
+    private void Logout()
+    {
+        LoginService.Logout();
+        NavigationManager.NavigateTo("/");
     }
 
     private string DarkLightModeButtonIcon => _isDarkMode ? Icons.Material.Rounded.LightMode : Icons.Material.Outlined.DarkMode;

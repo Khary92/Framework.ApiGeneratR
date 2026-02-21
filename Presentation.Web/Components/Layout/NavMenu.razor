@@ -1,63 +1,28 @@
-﻿@using Presentation.Web.Events
-@using Shared.Contracts.EventBus
-@implements IDisposable
-@inject IEventSubscriber EventSubsService
+﻿<div class="d-flex flex-column" style="height: 100%;">
 
-@if (_isLoggedIn)
-{
-    <div class="d-flex flex-column" style="height: 100%;">
+    <MudNavMenu Color="Color.Primary" Bordered="true" Rounded="true" Margin="Margin.Normal" Class="pa-2">
 
-        <MudNavMenu Color="Color.Primary" Bordered="true" Rounded="true" Margin="Margin.Normal" Class="pa-2">
+        <MudText Typo="Typo.overline" Color="Color.Secondary" Class="px-4 mt-4 mb-2">Management</MudText>
 
-            <MudText Typo="Typo.overline" Color="Color.Secondary" Class="px-4 mt-4 mb-2">Management</MudText>
+        <MudNavLink Href="/chat" Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Outlined.Chat">
+            <div class="d-flex align-center justify-space-between w-100">
+                <MudText>Messages</MudText>
+            </div>
+        </MudNavLink>
 
-            <MudNavLink Href="/chat" Match="NavLinkMatch.Prefix"
-                        Icon="@Icons.Material.Outlined.Chat">
-                <div class="d-flex align-center justify-space-between w-100">
-                    <MudText>Messages</MudText>
-                </div>
-            </MudNavLink>
+        <MudText Typo="Typo.overline" Color="Color.Secondary" Class="px-4 mt-6 mb-2">Settings</MudText>
 
-            <MudText Typo="Typo.overline" Color="Color.Secondary" Class="px-4 mt-6 mb-2">Settings</MudText>
+        <MudNavLink Href="/user/create" Match="NavLinkMatch.All"
+                    Icon="@Icons.Material.Outlined.Badge">
+            Create User
+        </MudNavLink>
+        <MudNavLink Href="/user/change-password" Match="NavLinkMatch.All"
+                    Icon="@Icons.Material.Outlined.Password">
+            Change Password
+        </MudNavLink>
 
-            <MudNavLink Href="/user/create" Match="NavLinkMatch.All"
-                        Icon="@Icons.Material.Outlined.Badge">
-                Create User
-            </MudNavLink>
+    </MudNavMenu>
 
-        </MudNavMenu>
-
-    </div>
-}
-
-@code {
-    private bool _isLoggedIn;
-    private readonly List<IDisposable> _disposables = [];
-
-    protected override Task OnInitializedAsync()
-    {
-        var logInSub = EventSubsService.Subscribe<UserLoggedInEvent>(async _ =>
-        {
-            _isLoggedIn = true;
-            await InvokeAsync(StateHasChanged);
-        });
-        _disposables.Add(logInSub);
-
-        var logoutSub = EventSubsService.Subscribe<UserLoggedOutEvent>(async _ =>
-        {
-            _isLoggedIn = false;
-            await InvokeAsync(StateHasChanged);
-        });
-        _disposables.Add(logoutSub);
-        return Task.CompletedTask;
-    }
-
-    public void Dispose()
-    {
-        foreach (var disposable in _disposables)
-        {
-            disposable.Dispose();
-        }
-    }
-
+</div>
 }

@@ -61,6 +61,17 @@ public class AuthService(IPasswordHasher passwordHasher) : IAuthService
         return true;
     }
 
+    public bool ChangePassword(Guid identityId, string newPassword, string oldPassword)
+    {
+        var user = IdentityUsers.FirstOrDefault(iu => iu.Id == identityId.ToString());
+
+        if (user?.PasswordHash == null ||
+            !passwordHasher.Verify(oldPassword, user.PasswordHash)) return false;
+
+        user.PasswordHash = passwordHasher.Hash(newPassword);
+        return true;
+    }
+
     public void DeleteIdentityUser(Guid userIdentityId)
     {
         var user = IdentityUsers.FirstOrDefault(iu => iu.Id == userIdentityId.ToString());
