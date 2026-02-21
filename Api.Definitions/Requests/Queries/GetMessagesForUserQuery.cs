@@ -6,4 +6,4 @@ using Shared.Contracts.Mediator;
 namespace Api.Definitions.Requests.Queries;
 
 [Request("get-messages-for-id", true,RequestType.Query)]
-public record GetMessagesForUserQuery(Guid UserId, Guid IdentityId = default) : IRequest<List<MessageDto>>;
+public record GetMessagesForUserQuery(Guid UserId, Guid IdentityId = default) : IRequest<MessagesWrapper>;

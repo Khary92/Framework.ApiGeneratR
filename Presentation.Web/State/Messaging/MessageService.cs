@@ -12,7 +12,7 @@ namespace Presentation.Web.State.Messaging;
 public class MessageService : IMessageService
 {
     private readonly List<IDisposable> _disposables = [];
-    private readonly ConcurrentDictionary<Guid, List<MessageModel>> _messagesDict = new();
+    private readonly ConcurrentDictionary<string, List<MessageModel>> _messagesDict = new();
     private readonly QuerySender _querySender;
 
     public MessageService(QuerySender querySender, IEventSubscriber eventSubscriber, ILoginService loginService)
@@ -21,9 +21,12 @@ public class MessageService : IMessageService
 
         var newMessageSub = eventSubscriber.Subscribe<MessageReceivedEvent>(@event =>
         {
-            var messageModel = @event.ToMessageModel(loginService.IsCurrentUser(@event.OriginUserId));
-            var list = _messagesDict.GetOrAdd(@event.OriginUserId, _ => []);
+            var isCurrentUser = loginService.IsCurrentUser(@event.OriginUserId);
+            var messageModel = @event.ToMessageModel(isCurrentUser);
+
+            var list = _messagesDict.GetOrAdd(@event.ConversationId, _ => []);
             list.Add(messageModel);
+
             OnMessageReceived?.Invoke();
             return Task.CompletedTask;
         });
@@ -34,8 +37,14 @@ public class MessageService : IMessageService
 
     public async Task<List<MessageModel>> GetMessagesForSelectedUser(UserModel selectedUser)
     {
-        var messages = await _querySender.SendAsync(new GetMessagesForUserQuery(selectedUser.UserId));
-        return messages.Select(m => m.ToMessageModel()).ToList();
+        var messageWrapper = await _querySender.SendAsync(new GetMessagesForUserQuery(selectedUser.UserId));
+
+        if (_messagesDict.TryGetValue(messageWrapper.ConversationId, out var cached))
+            return cached;
+
+        var messageModels = messageWrapper.Messages.Select(m => m.ToMessageModel()).ToList();
+        _messagesDict[messageWrapper.ConversationId] = messageModels;
+        return messageModels;
     }
 
     public void Dispose()

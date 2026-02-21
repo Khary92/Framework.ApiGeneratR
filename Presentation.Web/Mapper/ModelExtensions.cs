@@ -14,11 +14,12 @@ public static class ModelExtensions
 
     public static MessageModel ToMessageModel(this MessageDto messageDto, bool isOwnMessage = false)
     {
-        return new MessageModel(messageDto.Text, messageDto.TimeStamp, isOwnMessage);
+        return new MessageModel(messageDto.ConversationId, messageDto.Text, messageDto.TimeStamp, isOwnMessage);
     }
 
     public static MessageModel ToMessageModel(this MessageReceivedEvent messageReceivedEvent, bool isOwnMessage = false)
     {
-        return new MessageModel(messageReceivedEvent.Text, DateTime.Now, isOwnMessage);
+        return new MessageModel(messageReceivedEvent.ConversationId, messageReceivedEvent.Text, DateTime.Now,
+            isOwnMessage);
     }
 }

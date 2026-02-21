@@ -10,9 +10,9 @@ public class GetMessagesForUserQueryHandler(
     IUnitOfWork db,
     IConversationIdService conversationIdService,
     MessageMapper mapper)
-    : IRequestHandler<GetMessagesForUserQuery, List<MessageDto>>
+    : IRequestHandler<GetMessagesForUserQuery, MessagesWrapper>
 {
-    public Task<List<MessageDto>> HandleAsync(GetMessagesForUserQuery query,
+    public Task<MessagesWrapper> HandleAsync(GetMessagesForUserQuery query,
         CancellationToken ct = default)
     {
         try
@@ -24,14 +24,16 @@ public class GetMessagesForUserQueryHandler(
 
             var conversationId = conversationIdService.GetConversationId(targetUser, originUser);
 
-            return Task.FromResult(db.Messages
+            var messages = db.Messages
                 .Where(m => m.ConversationId == conversationId)
                 .Select(mapper.ToDto)
-                .ToList());
+                .ToList();
+
+            return Task.FromResult(new MessagesWrapper(conversationId, messages));
         }
         catch (Exception)
         {
-            return Task.FromResult(new List<MessageDto>());
+            return Task.FromResult(new MessagesWrapper(string.Empty, new List<MessageDto>()));
         }
     }
 }
