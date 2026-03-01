@@ -1,6 +1,6 @@
+using Api.Definitions.Generated;
 using Core.Application.Mapper;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Contracts.EventBus;
 
 namespace Core.Application;
 

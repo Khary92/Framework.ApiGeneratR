@@ -9,8 +9,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Shared.Contracts\Shared.Contracts.csproj"/>
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore"/>
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt"/>
+    </ItemGroup>
 
+    <ItemGroup>
         <ProjectReference Include="..\Shared.Contracts.Generator\Shared.Contracts.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 </Project>

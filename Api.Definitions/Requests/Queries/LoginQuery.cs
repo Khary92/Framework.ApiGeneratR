@@ -1,6 +1,4 @@
-﻿using Shared.Contracts.Attributes;
-using Shared.Contracts.Attributes.Enums;
-using Shared.Contracts.Mediator;
+﻿using Api.Definitions.Generated;
 
 namespace Api.Definitions.Requests.Queries;
 

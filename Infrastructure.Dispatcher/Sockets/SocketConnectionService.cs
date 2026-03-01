@@ -17,7 +17,7 @@ public class SocketConnectionService(
     TokenValidationParameters tokenValidationParameters)
     : ISocketConnectionService
 {
- private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _connections = new();
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _connections = new();
 
     public async Task HandleConnection(string authHeader, WebSocket webSocket)
     {

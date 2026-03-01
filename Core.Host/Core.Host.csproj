@@ -13,14 +13,9 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Core.Application\Core.Application.csproj"/>
-        <ProjectReference Include="..\Infrastructure.Dispatcher\Infrastructure.Dispatcher.csproj"/>
         <ProjectReference Include="..\Infrastructure.Persistence\Infrastructure.Persistence.csproj"/>
         <ProjectReference Include="..\Core.Domain\Core.Domain.csproj"/>
         <ProjectReference Include="..\Infrastructure.Identity\Infrastructure.Identity.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Shared.Contracts\Shared.Contracts.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

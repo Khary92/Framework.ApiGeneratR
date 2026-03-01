@@ -9,10 +9,10 @@ namespace Shared.Contract.Generator.Helpers;
 public static class EventSymbolExtensions
 {
     public static IncrementalValueProvider<ImmutableArray<EventSourceData>> GetEventSourceData(
-        this IncrementalGeneratorInitializationContext context)
+        this IncrementalGeneratorInitializationContext context, string nameSpace)
     {
         return context.SyntaxProvider.ForAttributeWithMetadataName(
-                "Shared.Contracts.Attributes.EventAttribute",
+                $"{nameSpace}.Generated.EventAttribute",
                 (node, _) => node is ClassDeclarationSyntax or RecordDeclarationSyntax,
                 (ctx, _) =>
                 {

@@ -1,7 +1,7 @@
 using Api.Definitions.Dto;
+using Api.Definitions.Generated;
 using Api.Definitions.Requests.Commands;
 using Core.Application.Ports;
-using Shared.Contracts.Mediator;
 
 namespace Core.Application.Handlers;
 

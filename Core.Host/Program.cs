@@ -4,8 +4,6 @@ using ApiDefinitions.Generated;
 using Core.Application;
 using Core.Application.Ports;
 using CoreApplication.Generated;
-using Infrastructure.Dispatcher;
-using Infrastructure.Dispatcher.Communication;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

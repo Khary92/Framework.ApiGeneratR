@@ -14,7 +14,7 @@ public class ServerApiGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var apiSourceData = context.GetRequestSourceData();
+        var apiSourceData = context.GetRequestSourceData("Api.Definitions");
 
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
@@ -32,7 +32,7 @@ public class ServerApiGenerator : IIncrementalGenerator
                 {
                     spc.ReportDiagnostic(Diagnostic.Create(
                         new DiagnosticDescriptor("GEN001", "ServerApiGenerator Error",
-                            "Error generating api code: {0}", "Generator", DiagnosticSeverity.Error, true),
+                            "Error generating server api code: {0}", "Generator", DiagnosticSeverity.Error, true),
                         Location.None, ex.Message));
                 }
             });

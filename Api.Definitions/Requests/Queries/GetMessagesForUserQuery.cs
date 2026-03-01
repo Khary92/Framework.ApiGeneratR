@@ -1,9 +1,7 @@
 using Api.Definitions.Dto;
-using Shared.Contracts.Attributes;
-using Shared.Contracts.Attributes.Enums;
-using Shared.Contracts.Mediator;
+using Api.Definitions.Generated;
 
 namespace Api.Definitions.Requests.Queries;
 
-[Request("get-messages-for-Id", true,RequestType.Query)]
+[Request("get-messages-for-Id", true, RequestType.Query)]
 public record GetMessagesForUserQuery(Guid UserId, Guid IdentityId = default) : IRequest<MessagesWrapper>;

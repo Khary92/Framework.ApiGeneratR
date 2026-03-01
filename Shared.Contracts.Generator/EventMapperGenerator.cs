@@ -14,7 +14,7 @@ public class EventMapperGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var socketEvents = context.GetEventSourceData();
+        var socketEvents = context.GetEventSourceData("Api.Definitions");
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
 

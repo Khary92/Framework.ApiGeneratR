@@ -15,12 +15,12 @@ public class ConsumerApiGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var apiSourceData = context.GetRequestSourceData();
-        var eventSourceData = context.GetEventSourceData();
-
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
-
+        
+        var apiSourceData = context.GetRequestSourceData("Api.Definitions");
+        var eventSourceData = context.GetEventSourceData("Api.Definitions");
+        
         var combined = apiSourceData.Combine(assemblyName).Combine(eventSourceData);
 
         context.RegisterSourceOutput(combined,
@@ -34,7 +34,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
                 {
                     spc.ReportDiagnostic(Diagnostic.Create(
                         new DiagnosticDescriptor("GEN001", "ServerApiGenerator Error",
-                            "Error generating api code: {0}", "Generator", DiagnosticSeverity.Error, true),
+                            "Error generating consumer api code: {0}", "Generator", DiagnosticSeverity.Error, true),
                         Location.None, ex.Message));
                 }
             });

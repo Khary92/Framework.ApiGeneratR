@@ -9,10 +9,10 @@ namespace Shared.Contract.Generator.Helpers;
 public static class RequestSymbolExtensions
 {
     public static IncrementalValueProvider<ImmutableArray<RequestData>> GetRequestSourceData(
-        this IncrementalGeneratorInitializationContext context)
+        this IncrementalGeneratorInitializationContext context, string nameSpace)
     {
         return context.SyntaxProvider.ForAttributeWithMetadataName(
-                "Shared.Contracts.Attributes.RequestAttribute",
+                $"{nameSpace}.RequestAttribute",
                 (node, _) =>
                     node is ClassDeclarationSyntax or StructDeclarationSyntax or RecordDeclarationSyntax,
                 (ctx, _) =>
