@@ -13,7 +13,6 @@
         <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1"/>
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
-        <PackageVersion Include="Heron.MudCalendar" Version="3.4.0"/>
         <PackageVersion Include="MudBlazor" Version="8.15.0"/>
         <PackageVersion Include="Microsoft.AspNetCore.Identity" Version="2.3.1"/>
         <PackageVersion Include="Microsoft.Extensions.Identity.Stores" Version="10.0.1"/>
