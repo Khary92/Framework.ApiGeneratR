@@ -61,7 +61,7 @@ public class MediatorGenerator : IIncrementalGenerator
         scb.SetNamespace($"{projectNamespace}.Generated");
         scb.StartScope("public static class MediatorExtensions");
         scb.StartScope("extension(IServiceCollection services)");
-        scb.StartScope("public void AddSingletonMediatorServices()");
+        scb.StartScope("public void AddGeneratedMediator()");
         scb.AddLine(
             "services.AddSingleton<ApiGeneratR.Definitions.Mediator.IMediator, SourceMediator>();");
 

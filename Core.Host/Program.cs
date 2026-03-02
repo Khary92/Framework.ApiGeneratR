@@ -20,7 +20,7 @@ public static class Program
 
     private static WebApplication BuildServerApp(string[] args)
     {
-        //ApiDocumentation.PrintToPath("/home/jannic/Documents/Documentation.md");
+        ApiDocumentation.PrintToPath("Documentation.md");
 
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
@@ -38,13 +38,13 @@ public static class Program
 
         builder.Services.AddAntiforgery(options => { options.Cookie.Name = "AntiforgeryCookie"; });
 
-        builder.Services.AddSingletonMediatorServices();
+        builder.Services.AddGeneratedMediator();
         builder.Services.AddPersistenceServices();
 
         builder.Services.AddApplicationServices();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddIdentityServices();
-        builder.Services.AddDispatcherServices();
+        builder.Services.AddGeneratedSocketConnectionService();
 
         builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
@@ -76,11 +76,11 @@ public static class Program
 
         builder.Logging.AddSimpleConsole(options =>
         {
-            options.SingleLine = true;         
+            options.SingleLine = true;
             options.TimestampFormat = "HH:mm:ss ";
             options.IncludeScopes = false;
         });
-        
+
         builder.Services.AddAuthorization();
 
         var app = builder.Build();
@@ -94,10 +94,9 @@ public static class Program
         });
 
         app.AddSecurityConfig();
-        app.AddApiEndpoints();
 
-        // Websockets
-        app.AddWebSocketEndpoints();
+        app.MapGeneratedApiEndpoints();
+        app.MapGeneratedWebSocketEndpoint();
 
         return app;
     }

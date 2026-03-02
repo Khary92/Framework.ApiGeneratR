@@ -76,7 +76,7 @@ public class ServerApiGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.AddLine();
 
-        scb.StartScope("public static void AddApiEndpoints(this WebApplication app)");
+        scb.StartScope("public static void MapGeneratedApiEndpoints(this WebApplication app)");
 
         if (!requests.IsDefaultOrEmpty)
             foreach (var request in requests)

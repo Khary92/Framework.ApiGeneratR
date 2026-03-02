@@ -69,10 +69,11 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public static class SocketServiceExtensions");
-        scb.StartScope("public static void AddDispatcherServices(this IServiceCollection services)");
+        scb.StartScope("public static void AddGeneratedSocketConnectionService(this IServiceCollection services)");
         scb.AddLine("services.AddSingleton<ISocketConnectionService, SocketConnectionService>();");
         scb.EndScope();
-        scb.StartScope("public static void AddWebSocketEndpoints(this WebApplication app)");
+        scb.AddLine();
+        scb.StartScope("public static void MapGeneratedWebSocketEndpoint(this WebApplication app)");
         scb.AddLine("var eventWebSocketHandler = app.Services.GetRequiredService<ISocketConnectionService>();");
         scb.AddLine();
         scb.StartScope("app.Map(\"/ws/events\", async context =>");
