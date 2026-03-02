@@ -27,11 +27,17 @@ public static class OptionsExtensions
                 {
                     options.GlobalOptions.TryGetValue("apigeneratr_log_mediator", out isLogMediator);
                 }
+                
+                if (!options.GlobalOptions.TryGetValue("apigeneratr_log_websocket", out var isLogWebsocket))
+                {
+                    options.GlobalOptions.TryGetValue("apigeneratr_log_websocket", out isLogWebsocket);
+                }
 
                 return new GlobalOptions(
                     definitionsProject ?? "ApiGeneratR.Definitions.Default",
                     handlerProject ?? "ApiGeneratR.Handler.Default",
-                    isLogMediator == "true");
+                    isLogMediator == "true",
+                    isLogWebsocket == "true");
             });
     }
 }

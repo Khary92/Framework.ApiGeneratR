@@ -2,4 +2,6 @@ is_global = true
 
 apigeneratr_definitionsproject = ApiGeneratR.Definitions
 apigeneratr_handlerproject = Core.Application
+
 apigeneratr_log_mediator = true
+apigeneratr_log_websocket = true

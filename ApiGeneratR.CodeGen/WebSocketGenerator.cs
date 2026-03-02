@@ -15,9 +15,9 @@ public class WebSocketGenerator : IIncrementalGenerator
     {
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
-        
+
         var combined = assemblyName.Combine(context.GetGlobalOptions());
-        
+
         context.RegisterSourceOutput(combined,
             static (spc, combined) =>
             {
@@ -39,11 +39,11 @@ public class WebSocketGenerator : IIncrementalGenerator
     {
         if (projectNamespace != options.DefinitionsProject) return;
 
-        ExecuteSocketConnectionServiceGeneration(context, projectNamespace);
+        ExecuteSocketConnectionServiceGeneration(context, projectNamespace, options);
         ExecuteExtensionsGeneration(context, projectNamespace);
         ExecuteEnvelopeGeneration(context, projectNamespace);
     }
-    
+
     private static void ExecuteEnvelopeGeneration(SourceProductionContext context, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
@@ -94,7 +94,7 @@ public class WebSocketGenerator : IIncrementalGenerator
     }
 
     private static void ExecuteSocketConnectionServiceGeneration(SourceProductionContext context,
-        string projectNamespace)
+        string projectNamespace, GlobalOptions options)
     {
         var scb = new SourceCodeBuilder();
 
@@ -108,7 +108,9 @@ public class WebSocketGenerator : IIncrementalGenerator
             "Microsoft.Extensions.Logging",
             "Microsoft.IdentityModel.Tokens"
         ]);
-        
+
+        if (options.IsLogWebsockets) scb.AddUsing("Microsoft.Extensions.Logging");
+
         scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public interface ISocketConnectionService");
@@ -117,12 +119,12 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.AddLine("Task BroadcastToAllUsers(EventEnvelope envelope, CancellationToken ct = default);");
         scb.EndScope();
         scb.AddLine();
-        
+
         scb.StartScope("public interface IIdentityIdMapper");
         scb.AddLine("Task<string> GetUserIdyByIdentityId(string identityId);");
         scb.EndScope();
         scb.AddLine();
-        
+
         scb.StartScope(
             "public class SocketConnectionService(IIdentityIdMapper db, ILogger<SocketConnectionService> logger, TokenValidationParameters tokenValidationParameters) : ISocketConnectionService");
 
@@ -130,7 +132,6 @@ public class WebSocketGenerator : IIncrementalGenerator
             "private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _connections = new();");
         scb.AddLine();
 
-        // HandleConnection Method
         scb.StartScope("public async Task HandleConnection(string authHeader, WebSocket webSocket)");
         scb.StartScope("if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith(\"Bearer \"))");
         scb.AddLine(
@@ -192,20 +193,15 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.AddLine("var bytes = Encoding.UTF8.GetBytes(json);");
         scb.AddLine("var segment = new ArraySegment<byte>(bytes);");
         scb.AddLine();
-        scb.AddLine("var tasks = userSockets.Keys");
-        scb.AddLine("    .Where(s => s.State == WebSocketState.Open)");
-        scb.AddLine("    .Select(async socket =>");
-        scb.AddLine("    {");
-        scb.AddLine("        try");
-        scb.AddLine("        {");
-        scb.AddLine("            await socket.SendAsync(segment, WebSocketMessageType.Text, true, ct);");
-        scb.AddLine("        }");
-        scb.AddLine("        catch (Exception ex)");
-        scb.AddLine("        {");
-        scb.AddLine(
-            "            logger.LogWarning(ex, \"Could not send message to specific socket for user {UserId}\", userId);");
-        scb.AddLine("        }");
-        scb.AddLine("    });");
+        scb.StartScope(
+            "var tasks = userSockets.Keys.Where(s => s.State == WebSocketState.Open).Select(async socket =>");
+        scb.StartScope("try");
+        scb.AddLine("await socket.SendAsync(segment, WebSocketMessageType.Text, true, ct);");
+        scb.EndScope();
+        scb.StartScope("catch (Exception ex)");
+        scb.AddLine("logger.LogWarning(ex, \"Could not send message to specific socket for user {UserId}\", userId);");
+        scb.EndScope();
+        scb.EndScope(");");
         scb.AddLine();
         scb.AddLine("await Task.WhenAll(tasks);");
         scb.EndScope();
@@ -214,28 +210,26 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.StartScope(
             "public async Task BroadcastToAllUsers(EventEnvelope eventEnvelope, CancellationToken ct = default)");
         scb.AddLine("var openSockets = _connections");
-        scb.AddLine("    .Where(kvp => kvp.Key.StartsWith(\"user:\"))");
-        scb.AddLine("    .SelectMany(kvp => kvp.Value.Keys)");
-        scb.AddLine("    .Where(socket => socket.State == WebSocketState.Open)");
-        scb.AddLine("    .ToList();");
+        scb.AddIndentedLine(".Where(kvp => kvp.Key.StartsWith(\"user:\"))");
+        scb.AddIndentedLine(".SelectMany(kvp => kvp.Value.Keys)");
+        scb.AddIndentedLine(".Where(socket => socket.State == WebSocketState.Open)");
+        scb.AddIndentedLine(".ToList();");
         scb.AddLine();
         scb.AddLine("if (openSockets.Count == 0) return;");
         scb.AddLine();
         scb.AddLine("var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(eventEnvelope));");
         scb.AddLine("var segment = new ArraySegment<byte>(bytes);");
         scb.AddLine();
-        scb.AddLine("var tasks = openSockets.Select(async socket =>");
-        scb.AddLine("{");
-        scb.AddLine("    try");
-        scb.AddLine("    {");
-        scb.AddLine("        if (socket.State == WebSocketState.Open)");
-        scb.AddLine("            await socket.SendAsync(segment, WebSocketMessageType.Text, true, ct);");
-        scb.AddLine("    }");
-        scb.AddLine("    catch (Exception ex)");
-        scb.AddLine("    {");
-        scb.AddLine("        logger.LogWarning(ex, \"Broadcast failed for one socket.\");");
-        scb.AddLine("    }");
-        scb.AddLine("});");
+        scb.StartScope("var tasks = openSockets.Select(async socket =>");
+        scb.StartScope("try");
+        scb.StartScope("if (socket.State == WebSocketState.Open)");
+        scb.AddLine("await socket.SendAsync(segment, WebSocketMessageType.Text, true, ct);");
+        scb.EndScope();
+        scb.EndScope();
+        scb.StartScope("catch (Exception ex)");
+        scb.AddLine("logger.LogWarning(ex, \"Broadcast failed for one socket.\");");
+        scb.EndScope();
+        scb.EndScope(");");
         scb.AddLine();
         scb.AddLine("await Task.WhenAll(tasks);");
         scb.EndScope();
@@ -246,16 +240,16 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.AddLine("var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out _);");
         scb.AddLine();
         scb.AddLine("var identityId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;");
-        scb.AddLine("if (string.IsNullOrEmpty(identityId))");
-        scb.AddLine("    throw new SecurityTokenException(\"Token does not contain user ID\");");
+        scb.StartScope("if (string.IsNullOrEmpty(identityId))");
+        scb.AddLine("throw new SecurityTokenException(\"Token does not contain user ID\");");
+        scb.EndScope();
         scb.AddLine();
         scb.AddLine("var role = principal.FindFirst(ClaimTypes.Role)?.Value;");
         scb.AddLine();
         scb.AddLine("return string.IsNullOrEmpty(role)");
-        scb.AddLine("    ? throw new SecurityTokenException(\"Token does not contain role\")");
-        scb.AddLine("    : (userId: identityId, role);");
+        scb.AddIndentedLine("? throw new SecurityTokenException(\"Token does not contain role\")");
+        scb.AddIndentedLine(": (userId: identityId, role);");
         scb.EndScope();
-
         scb.EndScope();
 
         context.AddSource("SocketConnectionService.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
