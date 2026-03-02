@@ -1,6 +1,6 @@
-using Api.Definitions.Events.User;
-using Api.Definitions.Generated;
-using Api.Definitions.Requests.Queries;
+using ApiGeneratR.Definitions.Events.User;
+using ApiGeneratR.Definitions.Generated;
+using ApiGeneratR.Definitions.Requests.Queries;
 using Presentation.Web.Mapper;
 using Presentation.Web.Models;
 

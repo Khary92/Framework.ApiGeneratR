@@ -10,7 +10,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Core.Domain\Core.Domain.csproj"/>
-        <ProjectReference Include="..\Api.Definitions\Api.Definitions.csproj"/>
+        <ProjectReference Include="..\ApiGeneratR.Definitions\ApiGeneratR.Definitions.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -20,6 +20,6 @@
 
     <ItemGroup>
 
-        <ProjectReference Include="..\Shared.Contracts.Generator\Shared.Contracts.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\ApiGeneratR.CodeGen\ApiGeneratR.CodeGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 </Project>

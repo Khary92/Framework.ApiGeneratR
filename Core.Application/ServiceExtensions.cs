@@ -1,4 +1,4 @@
-using Api.Definitions.Generated;
+using ApiGeneratR.Definitions.Generated;
 using Core.Application.Mapper;
 using Microsoft.Extensions.DependencyInjection;
 

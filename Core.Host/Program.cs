@@ -1,5 +1,5 @@
 ﻿using System.Security.Cryptography;
-using Api.Definitions.Generated;
+using ApiGeneratR.Definitions.Generated;
 using Core.Application;
 using Core.Application.Ports;
 using Infrastructure.Identity;

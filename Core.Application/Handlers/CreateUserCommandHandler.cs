@@ -1,7 +1,7 @@
-using Api.Definitions.Dto;
-using Api.Definitions.Generated;
-using Api.Definitions.Mediator;
-using Api.Definitions.Requests.Commands;
+using ApiGeneratR.Definitions.Dto;
+using ApiGeneratR.Definitions.Generated;
+using ApiGeneratR.Definitions.Mediator;
+using ApiGeneratR.Definitions.Requests.Commands;
 using Core.Application.Mapper;
 using Core.Application.Ports;
 

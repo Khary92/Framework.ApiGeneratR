@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Api.Definitions\Api.Definitions.csproj"/>
+        <ProjectReference Include="..\ApiGeneratR.Definitions\ApiGeneratR.Definitions.csproj" />
     </ItemGroup>
 
     <ItemGroup>

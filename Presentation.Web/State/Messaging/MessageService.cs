@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
-using Api.Definitions.Events.Message;
-using Api.Definitions.Generated;
-using Api.Definitions.Requests.Queries;
+using ApiGeneratR.Definitions.Events.Message;
+using ApiGeneratR.Definitions.Generated;
+using ApiGeneratR.Definitions.Requests.Queries;
 using Presentation.Web.Mapper;
 using Presentation.Web.Models;
 using Presentation.Web.State.Login;

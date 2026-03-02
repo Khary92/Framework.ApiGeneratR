@@ -1,4 +1,4 @@
-using Api.Definitions.Generated;
+using ApiGeneratR.Definitions.Generated;
 using MudBlazor.Services;
 using Presentation.Web.Components;
 using Presentation.Web.Services;

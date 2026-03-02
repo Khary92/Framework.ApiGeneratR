@@ -1,6 +1,6 @@
-﻿using Api.Definitions.Dto;
-using Api.Definitions.Events.Message;
-using Api.Definitions.Requests.Commands;
+﻿using ApiGeneratR.Definitions.Dto;
+using ApiGeneratR.Definitions.Events.Message;
+using ApiGeneratR.Definitions.Requests.Commands;
 using Core.Domain.Entities;
 using Riok.Mapperly.Abstractions;
 

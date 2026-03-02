@@ -1,6 +1,6 @@
-using Api.Definitions.Dto;
-using Api.Definitions.Events.Message;
-using Api.Definitions.Events.User;
+using ApiGeneratR.Definitions.Dto;
+using ApiGeneratR.Definitions.Events.Message;
+using ApiGeneratR.Definitions.Events.User;
 using Presentation.Web.Models;
 
 namespace Presentation.Web.Mapper;

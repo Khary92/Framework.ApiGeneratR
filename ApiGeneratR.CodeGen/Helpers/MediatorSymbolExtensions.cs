@@ -1,0 +1,45 @@
+using System.Collections.Immutable;
+using System.Linq;
+using ApiGeneratR.CodeGen.Mapper;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+namespace ApiGeneratR.CodeGen.Helpers;
+
+public static class MediatorSymbolExtensions
+{
+    public static IncrementalValueProvider<ImmutableArray<MediatorHandlerData>> GetMediatorRequestHandlers(
+        this IncrementalGeneratorInitializationContext context, string nameSpace = "ApiGeneratR.Definitions.Mediator")
+    {
+        return context.SyntaxProvider.CreateSyntaxProvider(
+                (node, _) => node is ClassDeclarationSyntax { BaseList: not null },
+                (ctx, _) =>
+                {
+                    if (ctx.SemanticModel.GetDeclaredSymbol(ctx.Node) is not INamedTypeSymbol
+                        {
+                            TypeKind: TypeKind.Class
+                        } typeSymbol) return null;
+
+                    var interfaceSymbol = typeSymbol.AllInterfaces.FirstOrDefault(i =>
+                        i.Name == "IRequestHandler" &&
+                        i is { IsGenericType: true, TypeArguments.Length: 2 } &&
+                        i.ContainingNamespace.ToDisplayString().StartsWith(nameSpace));
+
+                    if (interfaceSymbol is null) return null;
+
+                    var requestSymbol = interfaceSymbol.TypeArguments[0];
+                    var responseSymbol = interfaceSymbol.TypeArguments[1];
+
+                    return new MediatorHandlerData(
+                        typeSymbol.Name,
+                        requestSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        requestSymbol.Name,
+                        responseSymbol.Name,
+                        responseSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                })
+            .Where(x => x is not null)
+            .Select((x, _) => x!)
+            .Collect();
+    }
+}

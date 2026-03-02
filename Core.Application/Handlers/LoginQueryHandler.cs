@@ -1,5 +1,5 @@
-﻿using Api.Definitions.Mediator;
-using Api.Definitions.Requests.Queries;
+﻿using ApiGeneratR.Definitions.Mediator;
+using ApiGeneratR.Definitions.Requests.Queries;
 using Core.Application.Ports;
 
 namespace Core.Application.Handlers;

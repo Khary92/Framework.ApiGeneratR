@@ -1,5 +1,5 @@
-using Api.Definitions.Generated;
-using Api.Definitions.Requests.Queries;
+using ApiGeneratR.Definitions.Generated;
+using ApiGeneratR.Definitions.Requests.Queries;
 using Presentation.Web.Events;
 
 namespace Presentation.Web.State.Login;

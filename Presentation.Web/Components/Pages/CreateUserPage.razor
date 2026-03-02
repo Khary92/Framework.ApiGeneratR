@@ -1,6 +1,6 @@
 @page "/user/create"
-@using Api.Definitions.Generated
-@using Api.Definitions.Requests.Commands
+@using ApiGeneratR.Definitions.Generated
+@using ApiGeneratR.Definitions.Requests.Commands
 @using Presentation.Web.Models
 @using Presentation.Web.Services
 @inject CommandSender CommandSender
@@ -133,7 +133,7 @@
                 _errorMessage = "Please fix errors.";
                 return;
             }
-            
+
             _tempPassword = PasswordGenerator.Generate(10);
 
             var adminCreateUserCommand = new CreateUserCommand(
