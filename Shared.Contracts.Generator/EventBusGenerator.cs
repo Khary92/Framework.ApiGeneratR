@@ -85,7 +85,7 @@ public class EventBusGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.EndScope();
         scb.EndScope();
-        
-        context.AddSource("EventBus.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+
+        context.AddSource("EventBus.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8)); 
     }
 }

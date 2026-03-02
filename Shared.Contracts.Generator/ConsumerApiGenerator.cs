@@ -43,9 +43,10 @@ public class ConsumerApiGenerator : IIncrementalGenerator
     private static void Execute(SourceProductionContext context, ImmutableArray<RequestData> requestData,
         string? projectNamespace, ImmutableArray<EventSourceData> eventData)
     {
+        
         if (requestData.IsDefaultOrEmpty || eventData.IsDefaultOrEmpty ||
             projectNamespace is not "Api.Definitions") return;
-
+        
         ExecuteHttpClientGeneration(context, projectNamespace);
         ExecuteWebsocketInterfaceGeneration(context, projectNamespace);
 

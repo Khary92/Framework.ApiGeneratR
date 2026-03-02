@@ -1,4 +1,4 @@
-using Shared.Contracts.Attributes;
+using Api.Definitions.Generated;
 
 namespace Api.Definitions.Events.Message;
 

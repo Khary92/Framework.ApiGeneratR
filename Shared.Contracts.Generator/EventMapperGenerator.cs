@@ -50,12 +50,12 @@ public class EventMapperGenerator : IIncrementalGenerator
 
             scb.SetUsings(["System.Text.Json"]);
 
-            scb.SetNamespace($"{@event.Namespace}.Generated");
+            scb.SetNamespace($"{projectNamespace}.Generated");
 
             scb.StartScope($"public static class {@event.TypeName}WebsocketExtensions");
 
             scb.StartScope(
-                $"public static global::Shared.Contracts.EventBus.EventEnvelope ToWebsocketMessage(this {@event.FullTypeName} @event)");
+                $"public static global::Api.Definitions.Generated.EventEnvelope ToWebsocketMessage(this {@event.FullTypeName} @event)");
             scb.AddLine(
                 $"return new(\"{@event.EventType}\", JsonSerializer.Serialize(@event), DateTime.UtcNow);");
             scb.EndScope();

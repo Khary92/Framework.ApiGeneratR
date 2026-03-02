@@ -1,7 +1,6 @@
 using Api.Definitions.Dto;
 using Api.Definitions.Generated;
 using Api.Definitions.Requests.Commands;
-using ApiDefinitions.Generated;
 using Core.Application.Mapper;
 using Core.Application.Ports;
 

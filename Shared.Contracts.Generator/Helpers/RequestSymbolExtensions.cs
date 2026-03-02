@@ -12,29 +12,23 @@ public static class RequestSymbolExtensions
         this IncrementalGeneratorInitializationContext context, string nameSpace)
     {
         return context.SyntaxProvider.ForAttributeWithMetadataName(
-                $"{nameSpace}.RequestAttribute",
+                $"{nameSpace}.Generated.RequestAttribute",
                 (node, _) =>
                     node is ClassDeclarationSyntax or StructDeclarationSyntax or RecordDeclarationSyntax,
                 (ctx, _) =>
                 {
-                    var typeSymbol = (INamedTypeSymbol)ctx.TargetSymbol;
-
-                    var interfaceSymbol = typeSymbol.AllInterfaces.FirstOrDefault(i =>
-                        i.Name == "IRequest" &&
-                        i is { IsGenericType: true, TypeArguments.Length: 1 } &&
-                        i.ContainingNamespace.ToDisplayString().StartsWith("Shared.Contracts.Mediator"));
-
-                    if (interfaceSymbol is null) return null;
-
-                    var returnValueFullName = interfaceSymbol.TypeArguments[0];
-
+                    var symbol = (INamedTypeSymbol)ctx.TargetSymbol;
                     var attribute = ctx.Attributes.FirstOrDefault();
-                    if (attribute == null) return null;
 
-                    var fullName = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                    if (attribute is null) return null;
+                    if (symbol.TypeArguments.Length == 0) return null;
+
+                    var returnValueFullName = symbol.TypeArguments[0];
+
+                    var fullName = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
                     var arrayBuilder = ImmutableArray.CreateBuilder<string>();
-                    foreach (var member in typeSymbol.GetMembers().OfType<IPropertySymbol>())
+                    foreach (var member in symbol.GetMembers().OfType<IPropertySymbol>())
                     {
                         if (member.DeclaredAccessibility != Accessibility.Public) continue;
                         if (member.IsStatic || member.IsIndexer) continue;
@@ -74,8 +68,8 @@ public static class RequestSymbolExtensions
                         _ => "Post"
                     };
 
-                    var hasIdentityId = typeSymbol.GetMembers().Any(m => m.Name == "IdentityId");
-                    var type = typeSymbol.IsRecord ? "Record" : "Class";
+                    var hasIdentityId = symbol.GetMembers().Any(m => m.Name == "IdentityId");
+                    var type = symbol.IsRecord ? "Record" : "Class";
 
                     return new RequestData(
                         route,
@@ -83,7 +77,7 @@ public static class RequestSymbolExtensions
                         hasIdentityId,
                         httpMethod,
                         cqsType,
-                        typeSymbol.Name,
+                        symbol.Name,
                         fullName,
                         returnValueFullName.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         arrayBuilder.ToImmutable(),

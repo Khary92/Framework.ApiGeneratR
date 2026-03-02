@@ -44,7 +44,7 @@ public class WebSocketGenerator : IIncrementalGenerator
     {
         var scb = new SourceCodeBuilder();
 
-        scb.SetNamespace($"{projectNamespace.Replace(".", "")}.Generated");
+        scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public interface IIdentityRepository");
         scb.AddLine("Task<Identity> GetByIdAsync(Guid id);");
@@ -54,12 +54,12 @@ public class WebSocketGenerator : IIncrementalGenerator
     {
         var scb = new SourceCodeBuilder();
 
-        scb.SetNamespace($"{projectNamespace.Replace(".", "")}.Generated");
+        scb.SetNamespace($"{projectNamespace}.Generated");
 
-        scb.StartScope("public class EventEnvelope");
-        scb.AddLine("public string Type { get; set; }");
-        scb.AddLine("public string Payload { get; set; }");
-        scb.AddLine("public DateTime Timestamp { get; set; }");
+        scb.StartScope("public class EventEnvelope(string type, string payload, DateTime timestamp)");
+        scb.AddLine("public string Type { get; set; } = type;");
+        scb.AddLine("public string Payload { get; set; } = payload;");
+        scb.AddLine("public DateTime Timestamp { get; set; } = timestamp;");
         scb.EndScope();
 
         context.AddSource("EventEnvelope.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
@@ -72,7 +72,7 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.SetUsings([
             "Microsoft.Extensions.DependencyInjection",
         ]);
-        scb.SetNamespace($"{projectNamespace.Replace(".", "")}.Generated");
+        scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public static class SocketServiceExtensions");
         scb.StartScope("public static void AddDispatcherServices(this IServiceCollection services)");
@@ -115,7 +115,7 @@ public class WebSocketGenerator : IIncrementalGenerator
             "Microsoft.IdentityModel.Tokens"
         ]);
         
-        scb.SetNamespace($"{projectNamespace.Replace(".", "")}.Generated");
+        scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public interface ISocketConnectionService");
         scb.AddLine("Task HandleConnection(string authHeader, WebSocket webSocket);");

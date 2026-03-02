@@ -3,7 +3,6 @@ using Api.Definitions.Generated;
 using ApiDefinitions.Generated;
 using Core.Application;
 using Core.Application.Ports;
-using CoreApplication.Generated;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,13 +22,13 @@ public static class Program
     private static WebApplication BuildServerApp(string[] args)
     {
         ApiDocumentation.PrintToPath("/home/jannic/Documents/Documentation.md");
-        
+
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
             Args = args,
             ContentRootPath = Directory.GetCurrentDirectory()
         });
-        
+
         builder.Logging.AddSimpleConsole();
         builder.Logging.SetMinimumLevel(LogLevel.Trace);
 
