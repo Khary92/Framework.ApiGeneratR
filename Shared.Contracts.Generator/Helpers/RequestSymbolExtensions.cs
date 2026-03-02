@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -13,17 +14,20 @@ public static class RequestSymbolExtensions
     {
         return context.SyntaxProvider.ForAttributeWithMetadataName(
                 $"{nameSpace}.Generated.RequestAttribute",
-                (node, _) =>
-                    node is ClassDeclarationSyntax or StructDeclarationSyntax or RecordDeclarationSyntax,
+                (node, _) => node is ClassDeclarationSyntax or RecordDeclarationSyntax,
                 (ctx, _) =>
                 {
                     var symbol = (INamedTypeSymbol)ctx.TargetSymbol;
                     var attribute = ctx.Attributes.FirstOrDefault();
 
                     if (attribute is null) return null;
-                    if (symbol.TypeArguments.Length == 0) return null;
 
-                    var returnValueFullName = symbol.TypeArguments[0];
+                    var requestInterface = symbol.AllInterfaces
+                        .FirstOrDefault(i => i.Name == "IRequest" && i.TypeArguments.Length == 1);
+
+                    if (requestInterface is null) return null;
+
+                    var returnValueFullName = requestInterface.TypeArguments[0];
 
                     var fullName = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
@@ -44,27 +48,27 @@ public static class RequestSymbolExtensions
                                        && attribute.ConstructorArguments[1].Value is true;
 
                     var requestValue = attribute.ConstructorArguments.Length > 2
-                        ? attribute.ConstructorArguments[2].Value?.ToString()
-                        : "0";
+                        ? (int)(attribute.ConstructorArguments[2].Value ?? 0)
+                        : 0;
 
                     var cqsType = requestValue switch
                     {
-                        "0" => "Command",
-                        "1" => "Query",
+                        0 => "Query",
+                        1 => "Command",
                         _ => "Unknown"
                     };
 
                     var methodValue = attribute.ConstructorArguments.Length > 3
-                        ? attribute.ConstructorArguments[3].Value?.ToString()
-                        : "1";
+                        ? (int)(attribute.ConstructorArguments[3].Value ?? 1)
+                        : 1;
 
                     var httpMethod = methodValue switch
                     {
-                        "0" => "Get",
-                        "1" => "Post",
-                        "2" => "Put",
-                        "3" => "Delete",
-                        "4" => "Patch",
+                        0 => "Get",
+                        1 => "Post",
+                        2 => "Put",
+                        3 => "Delete",
+                        4 => "Patch",
                         _ => "Post"
                     };
 

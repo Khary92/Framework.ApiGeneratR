@@ -43,7 +43,6 @@ public class ConsumerApiGenerator : IIncrementalGenerator
     private static void Execute(SourceProductionContext context, ImmutableArray<RequestData> requestData,
         string? projectNamespace, ImmutableArray<EventSourceData> eventData)
     {
-        
         if (requestData.IsDefaultOrEmpty || eventData.IsDefaultOrEmpty ||
             projectNamespace is not "Api.Definitions") return;
         
@@ -163,14 +162,13 @@ public class ConsumerApiGenerator : IIncrementalGenerator
             "System.Net.WebSockets",
             "System.Text",
             "System.Text.Json",
-            "Microsoft.Extensions.Logging",
-            "Shared.Contracts.EventBus"
+            "Microsoft.Extensions.Logging"
         ]);
 
         scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope(
-            "public class WebSocketService(global::Microsoft.Extensions.Logging.ILogger<WebSocketService> logger, global::Shared.Contracts.EventBus.IEventPublisher eventPublisher) : IWebSocketService ");
+            "public class WebSocketService(global::Microsoft.Extensions.Logging.ILogger<WebSocketService> logger, IEventPublisher eventPublisher) : IWebSocketService ");
         scb.AddLine("private ClientWebSocket _ws = new ClientWebSocket();");
         scb.AddLine();
 
@@ -303,7 +301,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
                 scb.AddIndentedLine(
                     "throw new InvalidOperationException(\"Token is null or empty. Make sure you are logged in.\");");
                 scb.AddLine();
-                scb.StartScope($"var httpRequest = new HttpRequestMessage(HttpMethod.Post, \"{request.Route}\");");
+                scb.StartScope($"var httpRequest = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, \"{request.Route}\");");
                 scb.AddLine("httpRequest.Content = JsonContent.Create(command);");
                 scb.EndScope();
                 scb.AddLine();
@@ -364,7 +362,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
                 scb.AddIndentedLine(
                     "throw new InvalidOperationException(\"Token is null or empty. Make sure you are logged in.\");");
                 scb.AddLine();
-                scb.StartScope($"var httpRequest = new HttpRequestMessage(HttpMethod.Post, \"{request.Route}\");");
+                scb.StartScope($"var httpRequest = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, \"{request.Route}\");");
                 scb.AddLine("httpRequest.Content = JsonContent.Create(query);");
                 scb.EndScope();
                 scb.AddLine();

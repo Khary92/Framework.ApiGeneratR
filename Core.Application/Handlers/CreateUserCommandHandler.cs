@@ -3,6 +3,7 @@ using Api.Definitions.Generated;
 using Api.Definitions.Requests.Commands;
 using Core.Application.Mapper;
 using Core.Application.Ports;
+using Mediator.Contract;
 
 namespace Core.Application.Handlers;
 

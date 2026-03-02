@@ -1,6 +1,5 @@
 ﻿using System.Security.Cryptography;
 using Api.Definitions.Generated;
-using ApiDefinitions.Generated;
 using Core.Application;
 using Core.Application.Ports;
 using Infrastructure.Identity;
@@ -21,7 +20,7 @@ public static class Program
 
     private static WebApplication BuildServerApp(string[] args)
     {
-        ApiDocumentation.PrintToPath("/home/jannic/Documents/Documentation.md");
+        //ApiDocumentation.PrintToPath("/home/jannic/Documents/Documentation.md");
 
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {

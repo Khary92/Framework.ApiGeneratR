@@ -42,45 +42,11 @@ public class MediatorGenerator : IIncrementalGenerator
     private static void Execute(SourceProductionContext context, ImmutableArray<MediatorHandlerData> handlers,
         string? projectNamespace)
     {
-        switch (projectNamespace)
+        if (projectNamespace is "Core.Application")
         {
-            case "Api.Definitions":
-                CreateInterfaces(context, projectNamespace);
-                break;
-            case "Core.Application":
-                CreateSourceMediator(context, handlers, "Api.Definitions");
-                CreateExtensionMethod(context, handlers, "Api.Definitions");
-                break;
+            CreateSourceMediator(context, handlers, "Api.Definitions");
+            CreateExtensionMethod(context, handlers, "Api.Definitions");
         }
-    }
-
-    private static void CreateInterfaces(SourceProductionContext context, string projectNamespace)
-    {
-        var scb = new SourceCodeBuilder();
-
-        scb.SetNamespace($"{projectNamespace}.Generated");
-        scb.StartScope("public interface IMediator");
-        scb.AddLine(
-            "Task<TResponse> HandleAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);");
-        scb.EndScope();
-
-        context.AddSource("IMediator.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
-
-        scb = new SourceCodeBuilder();
-        scb.SetNamespace($"{projectNamespace}.Generated");
-        scb.StartScope(
-            "public interface IRequestHandler<in TRequestIn, TResponseOut> where TRequestIn : IRequest<TResponseOut>");
-        scb.AddLine(
-            "Task<TResponseOut> HandleAsync(TRequestIn request, CancellationToken cancellationToken = default);");
-        scb.EndScope();
-
-        context.AddSource("IRequestHandler.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
-
-        scb = new SourceCodeBuilder();
-        scb.SetNamespace($"{projectNamespace}.Generated");
-        scb.AddLine("public interface IRequest<TResult>;");
-
-        context.AddSource("IRequest.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
     private static void CreateExtensionMethod(SourceProductionContext context,
@@ -97,21 +63,20 @@ public class MediatorGenerator : IIncrementalGenerator
         scb.StartScope("extension(IServiceCollection services)");
         scb.StartScope("public void AddSingletonMediatorServices()");
         scb.AddLine(
-            "services.AddSingleton<IMediator, SourceMediator>();");
+            "services.AddSingleton<global::Mediator.Contract.IMediator, SourceMediator>();");
 
         foreach (var handler in handlers)
         {
             if (handler == null) continue;
             scb.AddLine(
-                $"services.AddSingleton<IRequestHandler<{handler.RequestType}, {handler.ResponseType}>, {handler.HandlerType}>();");
+                $"services.AddSingleton<global::Mediator.Contract.IRequestHandler<{handler.RequestType}, {handler.ResponseType}>, {handler.HandlerType}>();");
         }
 
         scb.EndScope();
         scb.EndScope();
         scb.EndScope();
 
-        context.AddSource($"{projectNamespace}MediatorExtensions.g.cs",
-            SourceText.From(scb.ToString(), Encoding.UTF8));
+        context.AddSource("MediatorExtensions.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
     private static void CreateSourceMediator(SourceProductionContext context,
@@ -124,7 +89,7 @@ public class MediatorGenerator : IIncrementalGenerator
         ]);
         scb.SetNamespace($"{projectNamespace}.Generated");
 
-        scb.StartScope("public class SourceMediator : IMediator");
+        scb.StartScope("public class SourceMediator : global::Mediator.Contract.IMediator");
 
         scb.AddLine(
             "private readonly Dictionary<Type, Func<object, CancellationToken, Task<object>>> _handlers = new();");
@@ -158,7 +123,7 @@ public class MediatorGenerator : IIncrementalGenerator
         scb.AddLine();
 
         scb.StartScope(
-            "public async Task<TResponse> HandleAsync<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)");
+            "public async Task<TResponse> HandleAsync<TResponse>(global::Mediator.Contract.IRequest<TResponse> request, CancellationToken ct = default)");
         scb.AddLine("if (request == null) throw new ArgumentNullException(\"request is null\");");
         scb.AddLine();
         scb.AddLine("if (!_handlers.TryGetValue(request.GetType(), out var handlerWrapper))");
@@ -169,7 +134,7 @@ public class MediatorGenerator : IIncrementalGenerator
 
         scb.EndScope();
 
-        context.AddSource($"{projectNamespace}SourceMediator.g.cs",
+        context.AddSource("SourceMediator.g.cs",
             SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 }

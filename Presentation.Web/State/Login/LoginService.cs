@@ -1,7 +1,6 @@
 using Api.Definitions.Generated;
 using Api.Definitions.Requests.Queries;
 using Presentation.Web.Events;
-using Shared.Contracts.EventBus;
 
 namespace Presentation.Web.State.Login;
 
@@ -13,9 +12,9 @@ public class LoginService(
 {
     public bool IsUserLoggedIn { get; private set; }
     private Guid _userId = Guid.Empty;
-    
+
     public bool IsCurrentUser(Guid userId) => userId == _userId;
-    
+
     public async Task Login(string token)
     {
         IsUserLoggedIn = true;

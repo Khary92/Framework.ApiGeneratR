@@ -1,4 +1,5 @@
 ﻿using Api.Definitions.Generated;
+using Mediator.Contract;
 
 namespace Api.Definitions.Requests.Queries;
 

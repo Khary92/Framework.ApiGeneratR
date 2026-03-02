@@ -1,6 +1,6 @@
-﻿using Api.Definitions.Generated;
-using Api.Definitions.Requests.Queries;
+﻿using Api.Definitions.Requests.Queries;
 using Core.Application.Ports;
+using Mediator.Contract;
 
 namespace Core.Application.Handlers;
 

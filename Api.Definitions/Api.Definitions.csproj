@@ -14,6 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Mediator.Contract\Mediator.Contract.csproj" />
         <ProjectReference Include="..\Shared.Contracts.Generator\Shared.Contracts.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 </Project>

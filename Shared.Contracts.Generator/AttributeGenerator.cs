@@ -16,7 +16,7 @@ public class AttributeGenerator : IIncrementalGenerator
             ExecuteRequestAttributeGeneration(ctx, "Api.Definitions");
         });
     }
-
+    
     private static void ExecuteRequestAttributeGeneration(IncrementalGeneratorPostInitializationContext spc,
         string? projectNamespace)
     {

@@ -3,7 +3,6 @@ using Api.Definitions.Generated;
 using Api.Definitions.Requests.Queries;
 using Presentation.Web.Mapper;
 using Presentation.Web.Models;
-using Shared.Contracts.EventBus;
 
 namespace Presentation.Web.State.User;
 

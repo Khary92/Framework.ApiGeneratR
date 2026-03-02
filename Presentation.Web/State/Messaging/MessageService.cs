@@ -5,7 +5,6 @@ using Api.Definitions.Requests.Queries;
 using Presentation.Web.Mapper;
 using Presentation.Web.Models;
 using Presentation.Web.State.Login;
-using Shared.Contracts.EventBus;
 
 namespace Presentation.Web.State.Messaging;
 

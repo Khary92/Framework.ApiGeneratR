@@ -53,8 +53,10 @@ public class ServerApiGenerator : IIncrementalGenerator
     {
         var scb = new SourceCodeBuilder();
 
-        scb.SetUsings(["Microsoft.AspNetCore.Builder", "System.Security.Claims", "Microsoft.AspNetCore.Http"]);
-        scb.SetNamespace($"{projectNamespace.Replace(".", "")}.Generated");
+        scb.SetUsings([
+            "Microsoft.AspNetCore.Builder", "System.Security.Claims", "Microsoft.AspNetCore.Http"
+        ]);
+        scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public static class ApiExtensions");
 
@@ -85,7 +87,7 @@ public class ServerApiGenerator : IIncrementalGenerator
                 if (request is { RequiresAuth: true })
                 {
                     scb.StartScope(
-                        $"app.MapPost(\"{request.Route}\", async ({request.RequestFullName} request, global::Shared.Contracts.Mediator.IMediator mediator, ClaimsPrincipal user, CancellationToken ct) =>");
+                        $"app.MapPost(\"{request.Route}\", async ({request.RequestFullName} request, global::Mediator.Contract.IMediator mediator, ClaimsPrincipal user, CancellationToken ct) =>");
                     scb.AddLine("if (!user.IsValidUser()) return Results.Unauthorized();");
                     scb.AddLine();
                     var mediatorDelegate = $"{(request.RequestHasIdentityId
@@ -103,7 +105,7 @@ public class ServerApiGenerator : IIncrementalGenerator
                 }
 
                 scb.StartScope(
-                    $"app.MapPost(\"{request.Route}\", async ({request.RequestFullName} request, global::Shared.Contracts.Mediator.IMediator mediator) =>");
+                    $"app.MapPost(\"{request.Route}\", async ({request.RequestFullName} request, global::Mediator.Contract.IMediator mediator) =>");
                 scb.AddLine("var result = await mediator.HandleAsync(request);");
                 scb.AddLine();
                 scb.AddLine("return result is not null");

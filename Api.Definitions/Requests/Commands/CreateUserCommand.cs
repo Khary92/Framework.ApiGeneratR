@@ -1,5 +1,6 @@
 using Api.Definitions.Dto;
 using Api.Definitions.Generated;
+using Mediator.Contract;
 
 namespace Api.Definitions.Requests.Commands;
 

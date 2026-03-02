@@ -6,7 +6,6 @@ using Presentation.Web.State;
 using Presentation.Web.State.Login;
 using Presentation.Web.State.Messaging;
 using Presentation.Web.State.User;
-using Shared.Contracts.EventBus;
 
 namespace Presentation.Web;
 
