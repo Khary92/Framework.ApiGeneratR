@@ -74,6 +74,13 @@ public static class Program
             })
             .AddJwtBearer(options => { options.TokenValidationParameters = tokenValidationParameters; });
 
+        builder.Logging.AddSimpleConsole(options =>
+        {
+            options.SingleLine = true;         
+            options.TimestampFormat = "HH:mm:ss ";
+            options.IncludeScopes = false;
+        });
+        
         builder.Services.AddAuthorization();
 
         var app = builder.Build();

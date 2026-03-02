@@ -14,6 +14,7 @@
       - ./Certs:/certs:rw,z
   
   core-server:
+    user: "0:0"
     build:
       context: .
       dockerfile: Core.Host/Dockerfile

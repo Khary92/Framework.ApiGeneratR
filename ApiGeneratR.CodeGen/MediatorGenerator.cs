@@ -43,8 +43,8 @@ public class MediatorGenerator : IIncrementalGenerator
         string? projectNamespace, GlobalOptions options)
     {
         if (projectNamespace != options.HandlerProject) return;
-        
-        CreateSourceMediator(context, handlers, options.DefinitionsProject);
+
+        CreateSourceMediator(context, handlers, options.DefinitionsProject, options);
         CreateExtensionMethod(context, handlers, options.DefinitionsProject);
     }
 
@@ -54,9 +54,10 @@ public class MediatorGenerator : IIncrementalGenerator
         var scb = new SourceCodeBuilder();
 
         scb.SetUsings([
-            "System", "System.Collections.Generic", "System.Threading", "System.Threading.Tasks",
+            "System.Collections.Generic", "System.Threading", "System.Threading.Tasks",
             "Microsoft.Extensions.DependencyInjection"
         ]);
+
         scb.SetNamespace($"{projectNamespace}.Generated");
         scb.StartScope("public static class MediatorExtensions");
         scb.StartScope("extension(IServiceCollection services)");
@@ -79,13 +80,16 @@ public class MediatorGenerator : IIncrementalGenerator
     }
 
     private static void CreateSourceMediator(SourceProductionContext context,
-        ImmutableArray<MediatorHandlerData> handlers, string projectNamespace)
+        ImmutableArray<MediatorHandlerData> handlers, string projectNamespace, GlobalOptions options)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
-            "System", "System.Collections.Generic", "System.Threading",
+            "System.Collections.Generic", "System.Threading",
             "System.Threading.Tasks", "Microsoft.Extensions.DependencyInjection"
         ]);
+
+        if (options.IsLogMediator) scb.AddUsing("Microsoft.Extensions.Logging");
+
         scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public class SourceMediator : ApiGeneratR.Definitions.Mediator.IMediator");
@@ -95,8 +99,17 @@ public class MediatorGenerator : IIncrementalGenerator
         scb.AddLine("private readonly IServiceProvider _serviceProvider;");
         scb.AddLine();
 
-        scb.StartScope("public SourceMediator(IServiceProvider serviceProvider)");
+        if (options.IsLogMediator)
+        {
+            scb.AddLine($"private readonly {options.GetLoggerForType("SourceMediator")} _logger;");
+            scb.AddLine();
+        }
+
+        var optionalLogger = options.IsLogMediator ? $", {options.GetLoggerForType("SourceMediator")} logger" : "";
+
+        scb.StartScope($"public SourceMediator(IServiceProvider serviceProvider{optionalLogger})");
         scb.AddLine("_serviceProvider = serviceProvider;");
+        if (options.IsLogMediator) scb.AddLine("_logger = logger;");
         scb.AddLine("RegisterHandlers();");
         scb.EndScope();
         scb.AddLine();
@@ -115,20 +128,59 @@ public class MediatorGenerator : IIncrementalGenerator
             scb.AddLine("return (object)result;");
             scb.EndScope(");");
 
+            if (options.IsLogMediator)
+                scb.AddLine($"_logger.LogDebug(\"Registered handler: {handler.HandlerShortName}\");");
+
             if (!Equals(handler, handlers.Last())) scb.AddLine();
         }
+
+        if (options.IsLogMediator)
+            scb.AddLine(
+                $"_logger.LogInformation(\"ApiGeneratR Mediator initialized. Registered {handlers.Length} handlers.\");");
 
         scb.EndScope();
         scb.AddLine();
 
         scb.StartScope(
             "public async Task<TResponse> HandleAsync<TResponse>(ApiGeneratR.Definitions.Mediator.IRequest<TResponse> request, CancellationToken ct = default)");
+
         scb.AddLine("if (request == null) throw new ArgumentNullException(\"request is null\");");
+
+        if (options.IsLogMediator)
+        {
+            scb.AddLine();
+            scb.AddLine("_logger.LogDebug($\"Handling incoming {request}\");");
+        }
+
         scb.AddLine();
-        scb.AddLine("if (!_handlers.TryGetValue(request.GetType(), out var handlerWrapper))");
-        scb.AddIndentedLine("throw new Exception($\"Handler for type {request.GetType()} not found\");");
+
+        if (options.IsLogMediator)
+        {
+            scb.StartScope("if (!_handlers.TryGetValue(request.GetType(), out var handlerWrapper))");
+            scb.AddLine("_logger.LogDebug($\"No handler registered for {request.GetType()} \");");
+            scb.AddLine("throw new Exception($\"Handler for type {request.GetType()} not found\");");
+            scb.EndScope();
+        }
+        else
+        {
+            scb.AddLine("if (!_handlers.TryGetValue(request.GetType(), out var handlerWrapper))");
+            scb.AddIndentedLine("throw new Exception($\"Handler for type {request.GetType()} not found\");");
+        }
+
         scb.AddLine();
-        scb.AddLine("return (TResponse)await handlerWrapper(request, ct);");
+        scb.StartScope("try");
+        scb.AddLine("var result = (TResponse)await handlerWrapper(request, ct);");
+        if (options.IsLogMediator)
+            scb.AddLine("_logger.LogDebug(\"Successfully handled {RequestType}\", request.GetType().Name);");
+        scb.AddLine("return result;");
+        scb.EndScope();
+
+        scb.StartScope(options.IsLogMediator ? "catch (Exception e)" : "catch (Exception)");
+        
+        if (options.IsLogMediator)
+            scb.AddLine("_logger.LogError(e, \"Error handling request {RequestType}\", request.GetType().Name);");
+        scb.AddLine("throw;");
+        scb.EndScope();
         scb.EndScope();
 
         scb.EndScope();

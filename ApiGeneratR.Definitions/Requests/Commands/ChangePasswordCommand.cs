@@ -6,4 +6,7 @@ namespace ApiGeneratR.Definitions.Requests.Commands;
 
 [Request("change-password", true, RequestType.Command)]
 public record ChangePasswordCommand(string OldPassword, string NewPassword, Guid IdentityId = default)
-    : IRequest<CommandResponse>;
+    : IRequest<CommandResponse>
+{
+    public override string ToString() => $"ChangePasswordCommand (OldPassword: {OldPassword}, NewPassword: [redacted], IdentityId: [redacted])";   
+}

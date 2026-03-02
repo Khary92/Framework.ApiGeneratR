@@ -17,6 +17,13 @@ public static class Program
             Args = args,
             ContentRootPath = Directory.GetCurrentDirectory()
         });
+        
+        builder.Logging.AddSimpleConsole(options =>
+        {
+            options.SingleLine = true;         
+            options.TimestampFormat = "HH:mm:ss ";
+            options.IncludeScopes = false;
+        });
 
         builder.Services.AddDataProtection()
             .PersistKeysToFileSystem(new DirectoryInfo("/certs/dataprotection-keys"))
