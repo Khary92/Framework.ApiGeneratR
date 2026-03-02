@@ -87,7 +87,7 @@ public class ServerApiGenerator : IIncrementalGenerator
                 if (request is { RequiresAuth: true })
                 {
                     scb.StartScope(
-                        $"app.MapPost(\"{request.Route}\", async ({request.RequestFullName} request, global::Mediator.Contract.IMediator mediator, ClaimsPrincipal user, CancellationToken ct) =>");
+                        $"app.MapPost(\"{request.Route}\", async ({request.RequestFullName} request, global::Api.Definitions.Mediator.IMediator mediator, ClaimsPrincipal user, CancellationToken ct) =>");
                     scb.AddLine("if (!user.IsValidUser()) return Results.Unauthorized();");
                     scb.AddLine();
                     var mediatorDelegate = $"{(request.RequestHasIdentityId
@@ -105,7 +105,7 @@ public class ServerApiGenerator : IIncrementalGenerator
                 }
 
                 scb.StartScope(
-                    $"app.MapPost(\"{request.Route}\", async ({request.RequestFullName} request, global::Mediator.Contract.IMediator mediator) =>");
+                    $"app.MapPost(\"{request.Route}\", async ({request.RequestFullName} request, global::Api.Definitions.Mediator.IMediator mediator) =>");
                 scb.AddLine("var result = await mediator.HandleAsync(request);");
                 scb.AddLine();
                 scb.AddLine("return result is not null");

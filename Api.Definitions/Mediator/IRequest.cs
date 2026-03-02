@@ -1,3 +1,3 @@
-namespace Mediator.Contract;
+namespace Api.Definitions.Mediator;
 
 public interface IRequest<TResponse>;

@@ -1,5 +1,5 @@
 ﻿using Api.Definitions.Generated;
-using Mediator.Contract;
+using Api.Definitions.Mediator;
 
 namespace Api.Definitions.Requests.Queries;
 

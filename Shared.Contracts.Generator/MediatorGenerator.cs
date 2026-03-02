@@ -63,13 +63,13 @@ public class MediatorGenerator : IIncrementalGenerator
         scb.StartScope("extension(IServiceCollection services)");
         scb.StartScope("public void AddSingletonMediatorServices()");
         scb.AddLine(
-            "services.AddSingleton<global::Mediator.Contract.IMediator, SourceMediator>();");
+            "services.AddSingleton<Api.Definitions.Mediator.IMediator, SourceMediator>();");
 
         foreach (var handler in handlers)
         {
             if (handler == null) continue;
             scb.AddLine(
-                $"services.AddSingleton<global::Mediator.Contract.IRequestHandler<{handler.RequestType}, {handler.ResponseType}>, {handler.HandlerType}>();");
+                $"services.AddSingleton<Api.Definitions.Mediator.IRequestHandler<{handler.RequestType}, {handler.ResponseType}>, {handler.HandlerType}>();");
         }
 
         scb.EndScope();
@@ -89,7 +89,7 @@ public class MediatorGenerator : IIncrementalGenerator
         ]);
         scb.SetNamespace($"{projectNamespace}.Generated");
 
-        scb.StartScope("public class SourceMediator : global::Mediator.Contract.IMediator");
+        scb.StartScope("public class SourceMediator : Api.Definitions.Mediator.IMediator");
 
         scb.AddLine(
             "private readonly Dictionary<Type, Func<object, CancellationToken, Task<object>>> _handlers = new();");
@@ -123,7 +123,7 @@ public class MediatorGenerator : IIncrementalGenerator
         scb.AddLine();
 
         scb.StartScope(
-            "public async Task<TResponse> HandleAsync<TResponse>(global::Mediator.Contract.IRequest<TResponse> request, CancellationToken ct = default)");
+            "public async Task<TResponse> HandleAsync<TResponse>(Api.Definitions.Mediator.IRequest<TResponse> request, CancellationToken ct = default)");
         scb.AddLine("if (request == null) throw new ArgumentNullException(\"request is null\");");
         scb.AddLine();
         scb.AddLine("if (!_handlers.TryGetValue(request.GetType(), out var handlerWrapper))");

@@ -9,7 +9,7 @@ namespace Shared.Contract.Generator.Helpers;
 public static class MediatorSymbolExtensions
 {
     public static IncrementalValueProvider<ImmutableArray<MediatorHandlerData>> GetMediatorRequestHandlers(
-        this IncrementalGeneratorInitializationContext context, string nameSpace = "Mediator.Contract")
+        this IncrementalGeneratorInitializationContext context, string nameSpace = "Api.Definitions.Mediator")
     {
         return context.SyntaxProvider.CreateSyntaxProvider(
                 (node, _) => node is ClassDeclarationSyntax { BaseList: not null },
