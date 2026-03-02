@@ -9,10 +9,10 @@ namespace ApiGeneratR.CodeGen.Helpers;
 public static class EventSymbolExtensions
 {
     public static IncrementalValueProvider<ImmutableArray<EventSourceData>> GetEventSourceData(
-        this IncrementalGeneratorInitializationContext context, string nameSpace)
+        this IncrementalGeneratorInitializationContext context)
     {
         return context.SyntaxProvider.ForAttributeWithMetadataName(
-                $"{nameSpace}.Generated.EventAttribute",
+                "ApiGeneratR.Attributes.EventAttribute",
                 (node, _) => node is ClassDeclarationSyntax or RecordDeclarationSyntax,
                 (ctx, _) =>
                 {

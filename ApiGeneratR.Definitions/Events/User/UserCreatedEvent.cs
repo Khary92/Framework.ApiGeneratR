@@ -1,4 +1,4 @@
-using ApiGeneratR.Definitions.Generated;
+using ApiGeneratR.Attributes;
 
 namespace ApiGeneratR.Definitions.Events.User;
 

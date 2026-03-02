@@ -1,9 +1,10 @@
-﻿using Core.Application.Ports;
+﻿using ApiGeneratR.Definitions.Generated;
+using Core.Application.Ports;
 using Core.Domain.Entities;
 
 namespace Infrastructure.Persistence;
 
-public class DatabaseContext : IUnitOfWork
+public class DatabaseContext : IUnitOfWork, IIdentityIdMapper
 {
     private static readonly SemaphoreSlim Lock = new(1, 1);
 
@@ -72,5 +73,10 @@ public class DatabaseContext : IUnitOfWork
     private Task SaveChangesAsync(CancellationToken ct = default)
     {
         return Task.CompletedTask;
+    }
+
+    public Task<string> GetUserIdyByIdentityId(string identityId)
+    {
+        return Task.FromResult(Users.First(u => u.Id.ToString() == identityId).IdentityId.ToString());
     }
 }

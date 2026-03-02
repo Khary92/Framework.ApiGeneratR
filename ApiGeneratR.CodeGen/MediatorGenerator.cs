@@ -20,14 +20,14 @@ public class MediatorGenerator : IIncrementalGenerator
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
 
-        var combined = handlers.Combine(assemblyName);
+        var combined = handlers.Combine(assemblyName).Combine(context.GetGlobalOptions());
 
         context.RegisterSourceOutput(combined,
             static (spc, source) =>
             {
                 try
                 {
-                    Execute(spc, source.Left, source.Right);
+                    Execute(spc, source.Left.Left, source.Left.Right, source.Right);
                 }
                 catch (Exception ex)
                 {
@@ -40,13 +40,12 @@ public class MediatorGenerator : IIncrementalGenerator
     }
 
     private static void Execute(SourceProductionContext context, ImmutableArray<MediatorHandlerData> handlers,
-        string? projectNamespace)
+        string? projectNamespace, GlobalOptions options)
     {
-        if (projectNamespace is "Core.Application")
-        {
-            CreateSourceMediator(context, handlers, "ApiGeneratR.Definitions");
-            CreateExtensionMethod(context, handlers, "ApiGeneratR.Definitions");
-        }
+        if (projectNamespace != options.HandlerProject) return;
+        
+        CreateSourceMediator(context, handlers, options.DefinitionsProject);
+        CreateExtensionMethod(context, handlers, options.DefinitionsProject);
     }
 
     private static void CreateExtensionMethod(SourceProductionContext context,

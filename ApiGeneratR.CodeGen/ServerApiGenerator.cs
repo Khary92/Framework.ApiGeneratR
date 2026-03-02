@@ -14,19 +14,19 @@ public class ServerApiGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var apiSourceData = context.GetRequestSourceData("ApiGeneratR.Definitions");
+        var apiSourceData = context.GetRequestSourceData();
 
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
 
-        var combined = apiSourceData.Combine(assemblyName);
+        var combined = apiSourceData.Combine(assemblyName).Combine(context.GetGlobalOptions());
 
         context.RegisterSourceOutput(combined,
             static (spc, source) =>
             {
                 try
                 {
-                    Execute(spc, source.Left, source.Right);
+                    Execute(spc, source.Left.Left, source.Left.Right, source.Right);
                 }
                 catch (Exception ex)
                 {
@@ -39,11 +39,10 @@ public class ServerApiGenerator : IIncrementalGenerator
     }
 
     private static void Execute(SourceProductionContext context, ImmutableArray<RequestData> apiDefinitions,
-        string? projectNamespace)
+        string? projectNamespace, GlobalOptions options)
     {
         if (apiDefinitions.IsDefaultOrEmpty) return;
-
-        if (projectNamespace is not "ApiGeneratR.Definitions") return;
+        if (projectNamespace != options.DefinitionsProject) return;
 
         GenerateEndpoints(context, apiDefinitions, projectNamespace);
     }

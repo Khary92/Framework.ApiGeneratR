@@ -17,18 +17,18 @@ public class ConsumerApiGenerator : IIncrementalGenerator
     {
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
-        
-        var apiSourceData = context.GetRequestSourceData("ApiGeneratR.Definitions");
-        var eventSourceData = context.GetEventSourceData("ApiGeneratR.Definitions");
-        
-        var combined = apiSourceData.Combine(assemblyName).Combine(eventSourceData);
+
+        var apiSourceData = context.GetRequestSourceData();
+        var eventSourceData = context.GetEventSourceData();
+
+        var combined = apiSourceData.Combine(assemblyName).Combine(eventSourceData).Combine(context.GetGlobalOptions());
 
         context.RegisterSourceOutput(combined,
             static (spc, source) =>
             {
                 try
                 {
-                    Execute(spc, source.Left.Left, source.Left.Right, source.Right);
+                    Execute(spc, source.Left.Left.Left, source.Left.Left.Right, source.Left.Right, source.Right);
                 }
                 catch (Exception ex)
                 {
@@ -41,11 +41,11 @@ public class ConsumerApiGenerator : IIncrementalGenerator
     }
 
     private static void Execute(SourceProductionContext context, ImmutableArray<RequestData> requestData,
-        string? projectNamespace, ImmutableArray<EventSourceData> eventData)
+        string? projectNamespace, ImmutableArray<EventSourceData> eventData, GlobalOptions options)
     {
         if (requestData.IsDefaultOrEmpty || eventData.IsDefaultOrEmpty ||
-            projectNamespace is not "ApiGeneratR.Definitions") return;
-        
+            projectNamespace != options.DefinitionsProject) return;
+
         ExecuteHttpClientGeneration(context, projectNamespace);
         ExecuteWebsocketInterfaceGeneration(context, projectNamespace);
 
@@ -101,11 +101,11 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         }
 
         mdb.AddHorizontalRule();
-        
+
         mdb.AddHeader("Event Documentation");
         mdb.AddParagraph(
             $"Auto-generated documentation for the distributed events. Total events: {events.Length}");
-        
+
         if (events.IsDefaultOrEmpty)
         {
             mdb.AddParagraph("_No endpoints defined._");
@@ -119,7 +119,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
                 mdb.AddHeader(@event.TypeName, 3);
                 mdb.AddParagraph($"Full Type: `{@event.FullTypeName}` ");
                 mdb.AddParagraph($"Deserialization reference: `{@event.EventType}` ");
-                
+
                 mdb.StartCodeBlock();
                 mdb.AddLine($"// Structure of {@event.TypeName}");
 
@@ -195,7 +195,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.AddLine("_ws.Dispose();");
         scb.EndScope();
         scb.AddLine();
-        
+
         scb.StartScope("private async Task ReceiveLoop()");
         scb.AddLine("var buffer = new byte[1024 * 4];");
         scb.StartScope("while (_ws.State == WebSocketState.Open)");
@@ -301,7 +301,8 @@ public class ConsumerApiGenerator : IIncrementalGenerator
                 scb.AddIndentedLine(
                     "throw new InvalidOperationException(\"Token is null or empty. Make sure you are logged in.\");");
                 scb.AddLine();
-                scb.StartScope($"var httpRequest = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, \"{request.Route}\");");
+                scb.StartScope(
+                    $"var httpRequest = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, \"{request.Route}\");");
                 scb.AddLine("httpRequest.Content = JsonContent.Create(command);");
                 scb.EndScope();
                 scb.AddLine();
@@ -362,7 +363,8 @@ public class ConsumerApiGenerator : IIncrementalGenerator
                 scb.AddIndentedLine(
                     "throw new InvalidOperationException(\"Token is null or empty. Make sure you are logged in.\");");
                 scb.AddLine();
-                scb.StartScope($"var httpRequest = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, \"{request.Route}\");");
+                scb.StartScope(
+                    $"var httpRequest = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, \"{request.Route}\");");
                 scb.AddLine("httpRequest.Content = JsonContent.Create(query);");
                 scb.EndScope();
                 scb.AddLine();

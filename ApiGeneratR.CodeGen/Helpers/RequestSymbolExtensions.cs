@@ -9,10 +9,10 @@ namespace ApiGeneratR.CodeGen.Helpers;
 public static class RequestSymbolExtensions
 {
     public static IncrementalValueProvider<ImmutableArray<RequestData>> GetRequestSourceData(
-        this IncrementalGeneratorInitializationContext context, string nameSpace)
+        this IncrementalGeneratorInitializationContext context)
     {
         return context.SyntaxProvider.ForAttributeWithMetadataName(
-                $"{nameSpace}.Generated.RequestAttribute",
+                "ApiGeneratR.Attributes.RequestAttribute",
                 (node, _) => node is ClassDeclarationSyntax or RecordDeclarationSyntax,
                 (ctx, _) =>
                 {

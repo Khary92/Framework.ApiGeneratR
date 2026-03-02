@@ -1,6 +1,8 @@
 using System;
 using System.Text;
 using ApiGeneratR.CodeGen.Builder;
+using ApiGeneratR.CodeGen.Helpers;
+using ApiGeneratR.CodeGen.Mapper;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
@@ -13,13 +15,15 @@ public class EventBusGenerator : IIncrementalGenerator
     {
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
+
+        var combined = assemblyName.Combine(context.GetGlobalOptions());
         
-        context.RegisterSourceOutput(assemblyName,
-            static (spc, assemblyName) =>
+        context.RegisterSourceOutput(combined,
+            static (spc, combined) =>
             {
                 try
                 {
-                    Execute(spc, assemblyName);
+                    Execute(spc, combined.Left, combined.Right);
                 }
                 catch (Exception ex)
                 {
@@ -31,9 +35,9 @@ public class EventBusGenerator : IIncrementalGenerator
             });
     }
     
-    private static void Execute(SourceProductionContext context, string? projectNamespace)
+    private static void Execute(SourceProductionContext context, string? projectNamespace, GlobalOptions options)
     {
-        if (projectNamespace is not "ApiGeneratR.Definitions") return;
+        if (projectNamespace != options.DefinitionsProject) return;
         
         var scb = new SourceCodeBuilder();
         

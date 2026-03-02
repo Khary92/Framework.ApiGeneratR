@@ -1,4 +1,4 @@
-﻿using ApiGeneratR.Definitions.Generated;
+﻿using ApiGeneratR.Attributes;
 using ApiGeneratR.Definitions.Mediator;
 
 namespace ApiGeneratR.Definitions.Requests.Queries;

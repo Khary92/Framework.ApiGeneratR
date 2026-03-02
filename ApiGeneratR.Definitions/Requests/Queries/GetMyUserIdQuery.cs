@@ -1,5 +1,5 @@
+using ApiGeneratR.Attributes;
 using ApiGeneratR.Definitions.Dto;
-using ApiGeneratR.Definitions.Generated;
 using ApiGeneratR.Definitions.Mediator;
 
 namespace ApiGeneratR.Definitions.Requests.Queries;

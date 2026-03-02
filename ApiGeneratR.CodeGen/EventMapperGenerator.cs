@@ -14,17 +14,17 @@ public class EventMapperGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var socketEvents = context.GetEventSourceData("ApiGeneratR.Definitions");
+        var socketEvents = context.GetEventSourceData();
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
 
-        var combined = socketEvents.Combine(assemblyName);
+        var combined = socketEvents.Combine(assemblyName).Combine(context.GetGlobalOptions());
         context.RegisterSourceOutput(combined,
             static (spc, source) =>
             {
                 try
                 {
-                    ExecuteWebsocketsExtensions(spc, source.Left, source.Right);
+                    ExecuteWebsocketsExtensions(spc, source.Left.Left, source.Left.Right, source.Right);
                 }
                 catch (Exception ex)
                 {
@@ -36,11 +36,11 @@ public class EventMapperGenerator : IIncrementalGenerator
     }
 
     private static void ExecuteWebsocketsExtensions(SourceProductionContext spc,
-        ImmutableArray<EventSourceData> events, string? projectNamespace)
+        ImmutableArray<EventSourceData> events, string? projectNamespace, GlobalOptions options)
     {
         if (events.IsDefaultOrEmpty) return;
 
-        if (projectNamespace is not "ApiGeneratR.Definitions") return;
+        if (projectNamespace != options.DefinitionsProject) return;
 
         foreach (var @event in events)
         {

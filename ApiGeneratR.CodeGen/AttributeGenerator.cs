@@ -1,5 +1,6 @@
 using System.Text;
 using ApiGeneratR.CodeGen.Builder;
+using ApiGeneratR.CodeGen.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
@@ -12,17 +13,16 @@ public class AttributeGenerator : IIncrementalGenerator
     {
         context.RegisterPostInitializationOutput(static ctx =>
         {
-            ExecuteEventAttributeGeneration(ctx, "ApiGeneratR.Definitions");
-            ExecuteRequestAttributeGeneration(ctx, "ApiGeneratR.Definitions");
+            ExecuteEventAttributeGeneration(ctx);
+            ExecuteRequestAttributeGeneration(ctx);
         });
     }
     
-    private static void ExecuteRequestAttributeGeneration(IncrementalGeneratorPostInitializationContext spc,
-        string? projectNamespace)
+    private static void ExecuteRequestAttributeGeneration(IncrementalGeneratorPostInitializationContext spc)
     {
         var scb = new SourceCodeBuilder();
 
-        scb.SetNamespace($"{projectNamespace}.Generated");
+        scb.SetNamespace("ApiGeneratR.Attributes");
 
         scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
         scb.StartScope(
@@ -37,7 +37,7 @@ public class AttributeGenerator : IIncrementalGenerator
 
         scb = new SourceCodeBuilder();
 
-        scb.SetNamespace($"{projectNamespace}.Generated");
+        scb.SetNamespace("ApiGeneratR.Attributes");
         scb.StartScope("internal enum HttpMethod");
         scb.AddLine("Get,");
         scb.AddLine("Post,");
@@ -49,7 +49,7 @@ public class AttributeGenerator : IIncrementalGenerator
 
         scb = new SourceCodeBuilder();
 
-        scb.SetNamespace($"{projectNamespace}.Generated");
+        scb.SetNamespace("ApiGeneratR.Attributes");
         scb.StartScope("internal enum RequestType");
         scb.AddLine("Query,");
         scb.AddLine("Command");
@@ -58,12 +58,11 @@ public class AttributeGenerator : IIncrementalGenerator
         spc.AddSource("RequestType.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
-    private static void ExecuteEventAttributeGeneration(IncrementalGeneratorPostInitializationContext spc,
-        string? projectNamespace)
+    private static void ExecuteEventAttributeGeneration(IncrementalGeneratorPostInitializationContext spc)
     {
         var scb = new SourceCodeBuilder();
 
-        scb.SetNamespace($"{projectNamespace}.Generated");
+        scb.SetNamespace("ApiGeneratR.Attributes");
 
         scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
         scb.StartScope("internal class EventAttribute(string eventType) : Attribute");

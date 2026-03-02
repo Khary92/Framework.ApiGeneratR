@@ -1,6 +1,8 @@
 using System;
 using System.Text;
 using ApiGeneratR.CodeGen.Builder;
+using ApiGeneratR.CodeGen.Helpers;
+using ApiGeneratR.CodeGen.Mapper;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
@@ -13,12 +15,15 @@ public class WebSocketGenerator : IIncrementalGenerator
     {
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
-        context.RegisterSourceOutput(assemblyName,
-            static (spc, source) =>
+        
+        var combined = assemblyName.Combine(context.GetGlobalOptions());
+        
+        context.RegisterSourceOutput(combined,
+            static (spc, combined) =>
             {
                 try
                 {
-                    Execute(spc, source);
+                    Execute(spc, combined.Left, combined.Right);
                 }
                 catch (Exception ex)
                 {
@@ -30,26 +35,15 @@ public class WebSocketGenerator : IIncrementalGenerator
             });
     }
 
-    private static void Execute(SourceProductionContext context, string? projectNamespace)
+    private static void Execute(SourceProductionContext context, string? projectNamespace, GlobalOptions options)
     {
-        if (projectNamespace is not "ApiGeneratR.Definitions") return;
+        if (projectNamespace != options.DefinitionsProject) return;
 
         ExecuteSocketConnectionServiceGeneration(context, projectNamespace);
         ExecuteExtensionsGeneration(context, projectNamespace);
         ExecuteEnvelopeGeneration(context, projectNamespace);
-        ExecuteIdentityRepoGeneration(context, projectNamespace);
     }
-
-    private static void ExecuteIdentityRepoGeneration(SourceProductionContext context, string projectNamespace)
-    {
-        var scb = new SourceCodeBuilder();
-
-        scb.SetNamespace($"{projectNamespace}.Generated");
-
-        scb.StartScope("public interface IIdentityRepository");
-        scb.AddLine("Task<Identity> GetByIdAsync(Guid id);");
-    }
-
+    
     private static void ExecuteEnvelopeGeneration(SourceProductionContext context, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
