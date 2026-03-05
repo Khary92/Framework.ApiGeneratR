@@ -144,7 +144,7 @@
 
             var result = await api.Commands.SendAsync(adminCreateUserCommand);
 
-            if (!result.IsSuccessFull)
+            if (!result.IsSuccessful)
             {
                 _errorMessage = result.Message;
                 return;
