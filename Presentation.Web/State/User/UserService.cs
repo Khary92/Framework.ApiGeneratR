@@ -6,9 +6,7 @@ using Presentation.Web.Models;
 
 namespace Presentation.Web.State.User;
 
-public class UserService(
-    QuerySender querySender,
-    IEventSubscriber eventSubscriber) : IUserService
+public class UserService(IApiFacade api) : IUserService
 {
     private readonly List<IDisposable> _subscriptions = [];
     public event Func<Task>? OnCollectionChanged;
@@ -21,20 +19,20 @@ public class UserService(
 
     public async Task InitializeAsync()
     {
-        var users = await querySender.SendAsync(new GetAllUsersQuery());
+        var users = await api.Queries.SendAsync(new GetAllUsersQuery());
         Users = users.Select(u => u.ToUserModel()).ToList();
 
         // check if already subscribed
         if (_subscriptions.Count != 0) return;
 
-        var createdSub = eventSubscriber.Subscribe<UserCreatedEvent>(async @event =>
+        var createdSub = api.EventSubscriber.Subscribe<UserCreatedEvent>(async @event =>
         {
             Users.Add(@event.ToUserModel());
             if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
         });
         _subscriptions.Add(createdSub);
 
-        var deletedSub = eventSubscriber.Subscribe<UserDeletedEvent>(async @event =>
+        var deletedSub = api.EventSubscriber.Subscribe<UserDeletedEvent>(async @event =>
         {
             var user = Users.FirstOrDefault(user => user.UserId == @event.Id);
 
@@ -46,7 +44,7 @@ public class UserService(
         });
         _subscriptions.Add(deletedSub);
 
-        var updatedSub = eventSubscriber.Subscribe<UserUpdatedEvent>(async @event =>
+        var updatedSub = api.EventSubscriber.Subscribe<UserUpdatedEvent>(async @event =>
         {
             var user = Users.FirstOrDefault(user => user.UserId == @event.Id);
 

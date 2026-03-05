@@ -73,21 +73,26 @@ public class ConsumerApiGenerator : IIncrementalGenerator
 
         scb.StartScope("public interface IApiFacade");
         scb.AddLine("void SetToken(string token);");
+        scb.AddLine("IEventSubscriber EventSubscriber { get; }");
+        scb.AddLine("IEventPublisher EventPublisher { get; }");
         scb.AddLine("IWebSocketService WebSocket { get; }");
         scb.AddLine("ICommandSender Commands { get; }");
         scb.AddLine("IQuerySender Queries { get; }");
         scb.EndScope();
         scb.AddLine();
         scb.StartScope(
-            "public class ConsumerApi(IWebSocketService webSocket, ICommandSender commands, IQuerySender queries) : IApiFacade");
+            "public class ConsumerApi(IWebSocketService webSocket, ICommandSender commands, IQuerySender queries, IEventPublisher eventPublisher, IEventSubscriber eventSubscriber) : IApiFacade");
         scb.StartScope("public void SetToken(string token)");
         scb.AddLine("commands.InjectToken(token);");
         scb.AddLine("queries.InjectToken(token);");
+        scb.AddLine("webSocket.SetToken(token);");
         scb.EndScope();
         scb.AddLine();
         scb.AddLine("public IWebSocketService WebSocket => webSocket;");
         scb.AddLine("public ICommandSender Commands => commands;");
         scb.AddLine("public IQuerySender Queries => queries;");
+        scb.AddLine("public IEventPublisher EventPublisher => eventPublisher;");
+        scb.AddLine("public IEventSubscriber EventSubscriber => eventSubscriber;");
         scb.EndScope();
 
         context.AddSource("ApiFacade.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
@@ -118,12 +123,14 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.AddLine("services.AddSingleton<IWebSocketService, WebSocketService>();");
         scb.AddLine("services.AddSingleton<ICommandSender, GeneratedCommandSender>();");
         scb.AddLine("services.AddSingleton<IQuerySender, GeneratedQuerySender>();");
+        scb.AddLine("services.AddSingleton<EventService>();");
+        scb.AddLine("services.AddSingleton<IEventSubscriber>(sp => sp.GetRequiredService<EventService>());");
+        scb.AddLine("services.AddSingleton<IEventPublisher>(sp => sp.GetRequiredService<EventService>());");
 
         foreach (var request in requests)
         {
             if (request == null) continue;
 
-            scb.AddLine();
             scb.AddLine(
                 $"services.AddSingleton<I{request.RequestShortName}Sender, Generated{request.RequestShortName}Sender>();");
         }

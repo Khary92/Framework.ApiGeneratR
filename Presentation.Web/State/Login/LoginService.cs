@@ -4,12 +4,7 @@ using Presentation.Web.Events;
 
 namespace Presentation.Web.State.Login;
 
-public class LoginService(
-    IApiFacade api,
-    IEventPublisher eventPublisher,
-    QuerySender querySender,
-    CommandSender commandSender,
-    IWebSocketService webSocketService) : ILoginService
+public class LoginService(IApiFacade api) : ILoginService
 {
     public bool IsUserLoggedIn { get; private set; }
     private Guid _userId = Guid.Empty;
@@ -18,24 +13,22 @@ public class LoginService(
 
     public async Task Login(string token)
     {
-        // Prepare API
+        IsUserLoggedIn = true;
+        
         api.SetToken(token);
         await api.WebSocket.ConnectAsync(SocketUris.WebSocketUri, CancellationToken.None);
-     
-        // Prepare client environment
-        IsUserLoggedIn = true;
         var userIdDto = await api.Queries.SendAsync(new GetMyUserIdQuery());
         _userId = userIdDto.UserId;
-        await eventPublisher.PublishAsync(new UserLoggedInEvent());
+        await api.EventPublisher.PublishAsync(new UserLoggedInEvent());
     }
 
     public async Task Logout()
     {
         IsUserLoggedIn = false;
-        querySender.SetToken(string.Empty);
-        commandSender.SetToken(string.Empty);
+        
+        api.SetToken(string.Empty);
         _userId = Guid.Empty;
-        await webSocketService.DisposeAsync();
-        await eventPublisher.PublishAsync(new UserLoggedOutEvent());
+        await api.WebSocket.DisposeAsync();
+        await api.EventPublisher.PublishAsync(new UserLoggedOutEvent());
     }
 }

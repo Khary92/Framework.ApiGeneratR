@@ -48,12 +48,7 @@ public static class WebModuleExtensions
         private void AddCommunicationServices()
         {
             services.AddHttpClient<IApiClient, ApiHttpClient>(client => { client.BaseAddress = new Uri(BaseUrl); });
-
-            services.AddSingleton<IWebSocketService, WebSocketService>();
-
-            services.AddSingleton<EventService>();
-            services.AddSingleton<IEventPublisher>(sp => sp.GetRequiredService<EventService>());
-            services.AddSingleton<IEventSubscriber>(sp => sp.GetRequiredService<EventService>());
+            services.AddApiServices();
         }
 
         private void AddStateServices()

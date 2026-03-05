@@ -12,13 +12,13 @@ public class MessageService : IMessageService
 {
     private readonly List<IDisposable> _disposables = [];
     private readonly ConcurrentDictionary<string, List<MessageModel>> _messagesDict = new();
-    private readonly QuerySender _querySender;
-
-    public MessageService(QuerySender querySender, IEventSubscriber eventSubscriber, ILoginService loginService)
+    private readonly IApiFacade _api; 
+    
+    public MessageService(IApiFacade api, ILoginService loginService)
     {
-        _querySender = querySender;
+        _api = api;
 
-        var newMessageSub = eventSubscriber.Subscribe<MessageReceivedEvent>(@event =>
+        var newMessageSub = api.EventSubscriber.Subscribe<MessageReceivedEvent>(@event =>
         {
             var isCurrentUser = loginService.IsCurrentUser(@event.OriginUserId);
             var messageModel = @event.ToMessageModel(isCurrentUser);
@@ -36,7 +36,7 @@ public class MessageService : IMessageService
 
     public async Task<List<MessageModel>> GetMessagesForSelectedUser(UserModel selectedUser)
     {
-        var messageWrapper = await _querySender.SendAsync(new GetMessagesForUserQuery(selectedUser.UserId));
+        var messageWrapper = await _api.Queries.SendAsync(new GetMessagesForUserQuery(selectedUser.UserId));
 
         if (_messagesDict.TryGetValue(messageWrapper.ConversationId, out var cached))
             return cached;

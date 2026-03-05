@@ -32,9 +32,9 @@ public class SendMessageCommandHandler(
                 var message = messageMapper.ToDomain(command, conversationId, originUser.Id);
                 db.Messages.Add(message);
 
-                await eventSender.SendMessageToIdAsync(messageMapper.ToMessageReceivedEvent(message).ToWebsocketMessage(),
+                await eventSender.SendToIdAsync(messageMapper.ToMessageReceivedEvent(message).ToWebsocketMessage(),
                     targetUser.Id, ct);
-                await eventSender.SendMessageToIdAsync(messageMapper.ToMessageReceivedEvent(message).ToWebsocketMessage(),
+                await eventSender.SendToIdAsync(messageMapper.ToMessageReceivedEvent(message).ToWebsocketMessage(),
                     originUser.Id, ct);
 
                 return new CommandResponse(true, "Message sent");
