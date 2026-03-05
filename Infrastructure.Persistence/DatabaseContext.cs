@@ -77,6 +77,6 @@ public class DatabaseContext : IUnitOfWork, IIdentityIdMapper
 
     public Task<string> GetUserIdyByIdentityId(string identityId)
     {
-        return Task.FromResult(Users.First(u => u.Id.ToString() == identityId).IdentityId.ToString());
+        return Task.FromResult(Users.First(u => u.IdentityId.ToString() == identityId).Id.ToString());
     }
 }
