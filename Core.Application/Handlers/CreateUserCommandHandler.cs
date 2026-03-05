@@ -8,7 +8,7 @@ using Core.Application.Ports;
 namespace Core.Application.Handlers;
 
 public class CreateUserCommandHandler(
-    ISocketConnectionService socket,
+    IEventSender eventSender,
     UserMapper mapper,
     IAuthService authService,
     IUnitOfWork db)
@@ -35,7 +35,7 @@ public class CreateUserCommandHandler(
                 domainUser.IdentityId = newIdentityId;
                 db.Users.Add(domainUser);
 
-                await socket.BroadcastToAllUsers(mapper.ToCreatedEvent(domainUser).ToWebsocketMessage(), ct);
+                await eventSender.BroadcastAsync(mapper.ToCreatedEvent(domainUser).ToWebsocketMessage(), ct);
 
                 return new CommandResponse(true, "User created successfully");
             }, ct);

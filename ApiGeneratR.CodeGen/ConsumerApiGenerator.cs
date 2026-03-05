@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Text;
 using ApiGeneratR.CodeGen.Builder;
 using ApiGeneratR.CodeGen.Helpers;
@@ -49,10 +50,88 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         ExecuteHttpClientGeneration(context, projectNamespace);
         ExecuteWebsocketInterfaceGeneration(context, projectNamespace);
 
-        ExecuteCommandSenderGeneration(context, requestData, projectNamespace);
-        ExecuteQuerySenderGeneration(context, requestData, projectNamespace);
+        ExecuteRequestSenderGeneration(context, requestData, projectNamespace);
+        ExecuteRequestSenderFacadesGeneration(context, requestData, projectNamespace, "Command");
+        ExecuteRequestSenderFacadesGeneration(context, requestData, projectNamespace, "Query");
         ExecuteWebsocketReceiverGeneration(context, eventData, projectNamespace);
         ExecuteDocumentationGeneration(context, eventData, requestData, projectNamespace);
+
+        ExecuteInterfaceGeneration(context, eventData, requestData, projectNamespace);
+        ExecuteExtensionMethodGeneration(context, eventData, requestData, projectNamespace);
+    }
+
+    private static void ExecuteInterfaceGeneration(SourceProductionContext context,
+        ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests, string projectNamespace)
+    {
+        var scb = new SourceCodeBuilder();
+        scb.SetUsings([
+            "System.Threading.Tasks",
+            "System.Collections.Generic",
+            "System.Threading"
+        ]);
+        scb.SetNamespace($"{projectNamespace}.Generated");
+
+        scb.StartScope("public interface IApiFacade");
+        scb.AddLine("void SetToken(string token);");
+        scb.AddLine("IWebSocketService WebSocket { get; }");
+        scb.AddLine("ICommandSender Commands { get; }");
+        scb.AddLine("IQuerySender Queries { get; }");
+        scb.EndScope();
+        scb.AddLine();
+        scb.StartScope(
+            "public class ConsumerApi(IWebSocketService webSocket, ICommandSender commands, IQuerySender queries) : IApiFacade");
+        scb.StartScope("public void SetToken(string token)");
+        scb.AddLine("commands.InjectToken(token);");
+        scb.AddLine("queries.InjectToken(token);");
+        scb.EndScope();
+        scb.AddLine();
+        scb.AddLine("public IWebSocketService WebSocket => webSocket;");
+        scb.AddLine("public ICommandSender Commands => commands;");
+        scb.AddLine("public IQuerySender Queries => queries;");
+        scb.EndScope();
+
+        context.AddSource("ApiFacade.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+
+        scb = new SourceCodeBuilder();
+        scb.SetUsings([
+            "System.Threading.Tasks",
+            "System.Collections.Generic",
+            "System.Threading"
+        ]);
+        scb.SetNamespace($"{projectNamespace}.Generated");
+    }
+
+    private static void ExecuteExtensionMethodGeneration(SourceProductionContext context,
+        ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests, string projectNamespace)
+    {
+        var scb = new SourceCodeBuilder();
+        scb.SetUsings([
+            "System.Threading.Tasks",
+            "System.Collections.Generic",
+            "System.Threading"
+        ]);
+        scb.SetNamespace($"{projectNamespace}.Generated");
+
+        scb.StartScope("public static class ApiFacadeExtensions");
+        scb.StartScope("public static void AddApiServices(this IServiceCollection services)");
+        scb.AddLine("services.AddSingleton<IApiFacade, ConsumerApi>();");
+        scb.AddLine("services.AddSingleton<IWebSocketService, WebSocketService>();");
+        scb.AddLine("services.AddSingleton<ICommandSender, GeneratedCommandSender>();");
+        scb.AddLine("services.AddSingleton<IQuerySender, GeneratedQuerySender>();");
+
+        foreach (var request in requests)
+        {
+            if (request == null) continue;
+
+            scb.AddLine();
+            scb.AddLine(
+                $"services.AddSingleton<I{request.RequestShortName}Sender, Generated{request.RequestShortName}Sender>();");
+        }
+
+        scb.EndScope();
+        scb.EndScope();
+
+        context.AddSource("ApiFacadeExtensions.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
     private static void ExecuteDocumentationGeneration(SourceProductionContext context,
@@ -169,12 +248,19 @@ public class ConsumerApiGenerator : IIncrementalGenerator
 
         scb.StartScope(
             "public class WebSocketService(global::Microsoft.Extensions.Logging.ILogger<WebSocketService> logger, IEventPublisher eventPublisher) : IWebSocketService ");
+
+        scb.AddLine("private string _token;");
+        scb.AddLine();
+        scb.StartScope("public void SetToken(string token)");
+        scb.AddLine("_token = token;");
+        scb.EndScope();
+
         scb.AddLine("private ClientWebSocket _ws = new ClientWebSocket();");
         scb.AddLine();
 
-        scb.StartScope("public async Task ConnectAsync(Uri uri, string token, CancellationToken cancellationToken)");
+        scb.StartScope("public async Task ConnectAsync(Uri uri, CancellationToken cancellationToken)");
         scb.AddLine(
-            "if (string.IsNullOrEmpty(token)) throw new InvalidOperationException(\"Token is null or empty.\");");
+            "if (string.IsNullOrEmpty(_token)) throw new InvalidOperationException(\"Token is null or empty.\");");
         scb.AddLine();
         scb.StartScope("if (_ws.State == WebSocketState.Open)");
         scb.AddLine("logger.LogWarning(\"WebSocket is already open\");");
@@ -182,7 +268,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.AddLine();
         scb.AddLine("_ws = new ClientWebSocket();");
-        scb.AddLine("_ws.Options.SetRequestHeader(\"Authorization\", $\"Bearer {token}\");");
+        scb.AddLine("_ws.Options.SetRequestHeader(\"Authorization\", $\"Bearer {_token}\");");
         scb.AddLine("await _ws.ConnectAsync(uri, CancellationToken.None);");
         scb.AddLine("_ = ReceiveLoop();");
         scb.EndScope();
@@ -246,7 +332,8 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public interface IWebSocketService");
-        scb.AddLine("Task ConnectAsync(Uri webSocketUri, string eToken, CancellationToken ctsToken);");
+        scb.AddLine("void SetToken(string _token);");
+        scb.AddLine("Task ConnectAsync(Uri webSocketUri, CancellationToken ctsToken);");
         scb.AddLine("Task DisposeAsync();");
         scb.EndScope();
 
@@ -270,34 +357,48 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         context.AddSource("ApiClient.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
-    private static void ExecuteCommandSenderGeneration(SourceProductionContext context,
+    private static void ExecuteRequestSenderGeneration(SourceProductionContext context,
         ImmutableArray<RequestData> requests, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
-        scb.SetUsings([
-            "System.Net.Http.Headers",
-            "System.Net.Http.Json"
-        ]);
+        
         scb.SetNamespace($"{projectNamespace}.Generated");
 
-        scb.StartScope("public class CommandSender(IApiClient http)");
+        scb.StartScope("public class TokenInjection");
         scb.AddLine("private string _token = string.Empty;");
+        scb.AddLine("protected string Token => _token;");
         scb.AddLine();
         scb.StartScope("public void SetToken(string token)");
         scb.AddLine("_token = token;");
         scb.EndScope();
-        scb.AddLine();
+        scb.EndScope();
 
+        context.AddSource("TokenInjection.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        
         foreach (var request in requests)
         {
-            if (request == null || request.CqsType != "Command") continue;
+            scb = new SourceCodeBuilder();
+            scb.SetUsings([
+                "System.Net.Http.Headers",
+                "System.Net.Http.Json"
+            ]);
+            scb.SetNamespace($"{projectNamespace}.Generated");
 
+            scb.StartScope($"public interface I{request.RequestShortName}Sender");
+            scb.AddLine(
+                $"Task<{request.ReturnValueFullName}> SendAsync({request.RequestFullName} {request.CqsType.ToLower()}, CancellationToken ct = default);");
+            scb.EndScope();
+            scb.AddLine();
+
+            scb.StartScope(
+                $"public class Generated{request.RequestShortName}Sender(IApiClient http) : TokenInjection, I{request.RequestShortName}Sender");
+            
             scb.StartScope(
                 $"public async Task<{request.ReturnValueFullName}> SendAsync({request.RequestFullName} command, CancellationToken ct = default)");
 
             if (request.RequiresAuth)
             {
-                scb.AddLine("if (string.IsNullOrEmpty(_token))");
+                scb.AddLine("if (string.IsNullOrEmpty(Token))");
                 scb.AddIndentedLine(
                     "throw new InvalidOperationException(\"Token is null or empty. Make sure you are logged in.\");");
                 scb.AddLine();
@@ -306,7 +407,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
                 scb.AddLine("httpRequest.Content = JsonContent.Create(command);");
                 scb.EndScope();
                 scb.AddLine();
-                scb.AddLine("httpRequest.Headers.Authorization = new AuthenticationHeaderValue(\"Bearer\", _token);");
+                scb.AddLine("httpRequest.Headers.Authorization = new AuthenticationHeaderValue(\"Bearer\", Token);");
                 scb.AddLine();
                 scb.AddLine("var response = await http.Client.SendAsync(httpRequest, ct);");
                 scb.AddLine();
@@ -314,26 +415,26 @@ public class ConsumerApiGenerator : IIncrementalGenerator
                 scb.AddLine(
                     $"return (await response.Content.ReadFromJsonAsync<{request.ReturnValueFullName}>(ct))!;");
                 scb.EndScope();
+            }
+            else
+            {
+                scb.AddLine($"var response = await http.Client.PostAsJsonAsync(\"{request.Route}\", command);");
                 scb.AddLine();
-                continue;
+                scb.AddLine("response.EnsureSuccessStatusCode();");
+                scb.AddLine();
+                scb.AddLine($"var result = await response.Content.ReadFromJsonAsync<{request.ReturnValueFullName}>();");
+                scb.AddLine("return result!;");
+                scb.EndScope();
             }
 
-            scb.AddLine($"var response = await http.Client.PostAsJsonAsync(\"{request.Route}\", command);");
-            scb.AddLine();
-            scb.AddLine("response.EnsureSuccessStatusCode();");
-            scb.AddLine();
-            scb.AddLine($"var result = await response.Content.ReadFromJsonAsync<{request.ReturnValueFullName}>();");
-            scb.AddLine("return result!;");
             scb.EndScope();
+            context.AddSource($"Generated{request.RequestShortName}Sender.g.cs",
+                SourceText.From(scb.ToString(), Encoding.UTF8));
         }
-
-        scb.EndScope();
-
-        context.AddSource("CommandSender.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
-    private static void ExecuteQuerySenderGeneration(SourceProductionContext context,
-        ImmutableArray<RequestData> requests, string projectNamespace)
+    private static void ExecuteRequestSenderFacadesGeneration(SourceProductionContext context,
+        ImmutableArray<RequestData> requests, string projectNamespace, string type)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -342,57 +443,59 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         ]);
         scb.SetNamespace($"{projectNamespace}.Generated");
 
-        scb.StartScope($"public class QuerySender(IApiClient http)");
-        scb.AddLine("private string _token = string.Empty;");
-        scb.AddLine();
-        scb.StartScope("public void SetToken(string token)");
-        scb.AddLine("_token = token;");
-        scb.EndScope();
-        scb.AddLine();
+        var typedRequests = requests.Where(r => r.CqsType == type).ToImmutableList();
 
-        foreach (var request in requests)
+        var interfaceSignature = $"public interface I{type}Sender : ";
+
+        foreach (var request in typedRequests)
         {
-            if (request == null || request.CqsType == "Command") continue;
-
-            scb.StartScope(
-                $"public async Task<{request.ReturnValueFullName}> SendAsync({request.RequestFullName} query, CancellationToken ct = default)");
-
-            if (request.RequiresAuth)
+            if (request == typedRequests.Last())
             {
-                scb.AddLine("if (string.IsNullOrEmpty(_token))");
-                scb.AddIndentedLine(
-                    "throw new InvalidOperationException(\"Token is null or empty. Make sure you are logged in.\");");
-                scb.AddLine();
-                scb.StartScope(
-                    $"var httpRequest = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, \"{request.Route}\");");
-                scb.AddLine("httpRequest.Content = JsonContent.Create(query);");
-                scb.EndScope();
-                scb.AddLine();
-                scb.AddLine("httpRequest.Headers.Authorization = new AuthenticationHeaderValue(\"Bearer\", _token);");
-                scb.AddLine();
-                scb.AddLine("var response = await http.Client.SendAsync(httpRequest, ct);");
-                scb.AddLine();
-                scb.AddLine("response.EnsureSuccessStatusCode();");
-                scb.AddLine(
-                    $"return (await response.Content.ReadFromJsonAsync<{request.ReturnValueFullName}>(ct))!;");
-                scb.EndScope();
-                scb.AddLine();
-
+                interfaceSignature += $" I{request.RequestShortName}Sender";
                 continue;
             }
 
-            scb.AddLine($"var response = await http.Client.PostAsJsonAsync(\"{request.Route}\", query);");
-            scb.AddLine();
-            scb.AddLine("response.EnsureSuccessStatusCode();");
-            scb.AddLine();
-            scb.AddLine($"var result = await response.Content.ReadFromJsonAsync<{request.ReturnValueFullName}>();");
-            scb.AddLine("return result!;");
-            scb.EndScope();
-            scb.AddLine();
+            interfaceSignature += $" I{request.RequestShortName}Sender, ";
         }
+
+        scb.StartScope(interfaceSignature);
+        scb.AddLine("void InjectToken(string token);");
+        scb.EndScope();
+        scb.AddLine();
+
+        var classSignature = $"public class Generated{type}Sender(";
+
+        foreach (var request in typedRequests)
+        {
+            if (request == typedRequests.Last())
+            {
+                classSignature +=
+                    $" I{request.RequestShortName}Sender {request.RequestShortName.ToLower()}sender) : I{type}Sender";
+                continue;
+            }
+
+            classSignature += $" I{request.RequestShortName}Sender {request.RequestShortName.ToLower()}sender,";
+        }
+
+        scb.StartScope(classSignature);
+
+
+        var tokenInjections = new List<string>();
+        foreach (var request in requests.Where(r => r.CqsType == type))
+        {
+            scb.AddLine(
+                $"public async Task<{request.ReturnValueFullName}> SendAsync({request.RequestFullName} query, CancellationToken ct = default) => await {request.RequestShortName.ToLower()}sender.SendAsync(query, ct);");
+            tokenInjections.Add($"({request.RequestShortName.ToLower()}sender as TokenInjection)?.SetToken(token);");
+        }
+
+        scb.AddLine();
+        scb.StartScope("public void InjectToken(string token)");
+        foreach (var tokenInjection in tokenInjections) scb.AddLine(tokenInjection);
+        scb.EndScope();
+        scb.AddLine();
 
         scb.EndScope();
 
-        context.AddSource("QuerySender.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        context.AddSource($"{type}Sender.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 }

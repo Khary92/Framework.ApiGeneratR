@@ -3,7 +3,7 @@
 @using ApiGeneratR.Definitions.Requests.Queries
 @using Presentation.Web.State.Login
 @inject ILoginService LoginService
-@inject QuerySender QuerySender
+@inject IApiFacade Api
 @inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="min-height: 80vh;">
@@ -78,7 +78,7 @@
 
     private async Task HandleLogin()
     {
-        var response = await QuerySender.SendAsync(new LoginQuery(_userName, _password));
+        var response = await Api.Queries.SendAsync(new LoginQuery(_userName, _password));
 
         if (!response.IsLoginSuccessful)
         {

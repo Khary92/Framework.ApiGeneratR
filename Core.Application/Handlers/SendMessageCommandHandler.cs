@@ -9,7 +9,7 @@ namespace Core.Application.Handlers;
 
 public class SendMessageCommandHandler(
     IUnitOfWork db,
-    ISocketConnectionService socket,
+    IEventSender eventSender,
     IConversationIdService conversationIdService,
     MessageMapper messageMapper)
     : IRequestHandler<SendMessageCommand, CommandResponse>
@@ -32,9 +32,9 @@ public class SendMessageCommandHandler(
                 var message = messageMapper.ToDomain(command, conversationId, originUser.Id);
                 db.Messages.Add(message);
 
-                await socket.SendMessageToUser(messageMapper.ToMessageReceivedEvent(message).ToWebsocketMessage(),
+                await eventSender.SendMessageToIdAsync(messageMapper.ToMessageReceivedEvent(message).ToWebsocketMessage(),
                     targetUser.Id, ct);
-                await socket.SendMessageToUser(messageMapper.ToMessageReceivedEvent(message).ToWebsocketMessage(),
+                await eventSender.SendMessageToIdAsync(messageMapper.ToMessageReceivedEvent(message).ToWebsocketMessage(),
                     originUser.Id, ct);
 
                 return new CommandResponse(true, "Message sent");

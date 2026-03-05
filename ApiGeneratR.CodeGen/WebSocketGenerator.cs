@@ -42,6 +42,56 @@ public class WebSocketGenerator : IIncrementalGenerator
         ExecuteSocketConnectionServiceGeneration(context, projectNamespace, options);
         ExecuteExtensionsGeneration(context, projectNamespace);
         ExecuteEnvelopeGeneration(context, projectNamespace);
+        ExecuteInterfaceGeneration(context, projectNamespace);
+    }
+    
+    private static void ExecuteInterfaceGeneration(SourceProductionContext context, string projectNamespace)
+    {
+        var scb = new SourceCodeBuilder();
+
+        scb.SetUsings([
+            "System.Collections.Concurrent",
+            "System.IdentityModel.Tokens.Jwt",
+            "System.Net.WebSockets",
+            "System.Security.Claims",
+            "System.Text",
+            "System.Text.Json",
+            "Microsoft.Extensions.Logging",
+            "Microsoft.IdentityModel.Tokens"
+        ]);
+        
+        scb.SetNamespace($"{projectNamespace}.Generated");
+
+        scb.StartScope("public interface IEventSender");
+        scb.AddLine("Task HandleConnectionAsync(string authHeader, WebSocket webSocket);");
+        scb.AddLine("Task SendToIdAsync(EventEnvelope envelope, Guid targetId, CancellationToken ct = default);");
+        scb.AddLine("Task BroadcastAsync(EventEnvelope envelope, CancellationToken ct = default);");
+        scb.EndScope();
+        scb.AddLine();
+        
+        context.AddSource("IEventSender.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+
+        scb = new SourceCodeBuilder();
+
+        scb.SetUsings([
+            "System.Collections.Concurrent",
+            "System.IdentityModel.Tokens.Jwt",
+            "System.Net.WebSockets",
+            "System.Security.Claims",
+            "System.Text",
+            "System.Text.Json",
+            "Microsoft.Extensions.Logging",
+            "Microsoft.IdentityModel.Tokens"
+        ]);
+        
+        scb.SetNamespace($"{projectNamespace}.Generated");
+        
+        scb.StartScope("public interface IIdentityIdMapper");
+        scb.AddLine("Task<string> GetUserIdyByIdentityId(string identityId);");
+        scb.EndScope();
+        scb.AddLine();
+        
+        context.AddSource("IIdentityIdMapper.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
     private static void ExecuteEnvelopeGeneration(SourceProductionContext context, string projectNamespace)
@@ -65,16 +115,19 @@ public class WebSocketGenerator : IIncrementalGenerator
 
         scb.SetUsings([
             "Microsoft.Extensions.DependencyInjection",
+            "Microsoft.AspNetCore.Builder", 
+            "Microsoft.AspNetCore.Http",   
+            "System.Linq"
         ]);
         scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public static class SocketServiceExtensions");
         scb.StartScope("public static void AddGeneratedSocketConnectionService(this IServiceCollection services)");
-        scb.AddLine("services.AddSingleton<ISocketConnectionService, SocketConnectionService>();");
+        scb.AddLine("services.AddSingleton<IEventSender, SocketConnectionService>();");
         scb.EndScope();
         scb.AddLine();
         scb.StartScope("public static void MapGeneratedWebSocketEndpoint(this WebApplication app)");
-        scb.AddLine("var eventWebSocketHandler = app.Services.GetRequiredService<ISocketConnectionService>();");
+        scb.AddLine("var eventWebSocketHandler = app.Services.GetRequiredService<IEventSender>();");
         scb.AddLine();
         scb.StartScope("app.Map(\"/ws/events\", async context =>");
         scb.StartScope("if (context.WebSockets.IsWebSocketRequest)");
@@ -82,7 +135,7 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.AddLine();
         scb.AddLine("var webSocket = await context.WebSockets.AcceptWebSocketAsync();");
         scb.AddLine();
-        scb.AddLine("await eventWebSocketHandler.HandleConnection(authHeader!, webSocket);");
+        scb.AddLine("await eventWebSocketHandler.HandleConnectionAsync(authHeader!, webSocket);");
         scb.EndScope();
         scb.StartScope("else");
         scb.AddLine("context.Response.StatusCode = 400;");
@@ -114,26 +167,14 @@ public class WebSocketGenerator : IIncrementalGenerator
 
         scb.SetNamespace($"{projectNamespace}.Generated");
 
-        scb.StartScope("public interface ISocketConnectionService");
-        scb.AddLine("Task HandleConnection(string authHeader, WebSocket webSocket);");
-        scb.AddLine("Task SendMessageToUser(EventEnvelope envelope, Guid userId, CancellationToken ct = default);");
-        scb.AddLine("Task BroadcastToAllUsers(EventEnvelope envelope, CancellationToken ct = default);");
-        scb.EndScope();
-        scb.AddLine();
-
-        scb.StartScope("public interface IIdentityIdMapper");
-        scb.AddLine("Task<string> GetUserIdyByIdentityId(string identityId);");
-        scb.EndScope();
-        scb.AddLine();
-
         scb.StartScope(
-            "public class SocketConnectionService(IIdentityIdMapper db, ILogger<SocketConnectionService> logger, TokenValidationParameters tokenValidationParameters) : ISocketConnectionService");
+            "public class SocketConnectionService(IIdentityIdMapper db, ILogger<SocketConnectionService> logger, TokenValidationParameters tokenValidationParameters) : IEventSender");
 
         scb.AddLine(
             "private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _connections = new();");
         scb.AddLine();
 
-        scb.StartScope("public async Task HandleConnection(string authHeader, WebSocket webSocket)");
+        scb.StartScope("public async Task HandleConnectionAsync(string authHeader, WebSocket webSocket)");
         scb.StartScope("if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith(\"Bearer \"))");
         scb.AddLine(
             "await webSocket.CloseAsync(WebSocketCloseStatus.PolicyViolation, \"Missing or invalid authorization header\", CancellationToken.None);");
@@ -187,7 +228,7 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.AddLine();
 
         scb.StartScope(
-            "public async Task SendMessageToUser(EventEnvelope envelope, Guid userId, CancellationToken ct = default)");
+            "public async Task SendToIdAsync(EventEnvelope envelope, Guid userId, CancellationToken ct = default)");
         scb.AddLine("if (!_connections.TryGetValue($\"user:{userId}\", out var userSockets)) return;");
         scb.AddLine();
         scb.AddLine("var json = JsonSerializer.Serialize(envelope);");
@@ -209,7 +250,7 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.AddLine();
 
         scb.StartScope(
-            "public async Task BroadcastToAllUsers(EventEnvelope eventEnvelope, CancellationToken ct = default)");
+            "public async Task BroadcastAsync(EventEnvelope eventEnvelope, CancellationToken ct = default)");
         scb.AddLine("var openSockets = _connections");
         scb.AddIndentedLine(".Where(kvp => kvp.Key.StartsWith(\"user:\"))");
         scb.AddIndentedLine(".SelectMany(kvp => kvp.Value.Keys)");

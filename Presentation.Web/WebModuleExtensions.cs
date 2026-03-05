@@ -54,9 +54,6 @@ public static class WebModuleExtensions
             services.AddSingleton<EventService>();
             services.AddSingleton<IEventPublisher>(sp => sp.GetRequiredService<EventService>());
             services.AddSingleton<IEventSubscriber>(sp => sp.GetRequiredService<EventService>());
-
-            services.AddScoped<CommandSender>();
-            services.AddScoped<QuerySender>();
         }
 
         private void AddStateServices()
