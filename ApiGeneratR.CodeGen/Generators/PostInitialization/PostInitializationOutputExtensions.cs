@@ -3,12 +3,11 @@ using ApiGeneratR.CodeGen.Builder;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace ApiGeneratR.CodeGen;
+namespace ApiGeneratR.CodeGen.Generators.PostInitialization;
 
-[Generator(LanguageNames.CSharp)]
-public class AttributeGenerator : IIncrementalGenerator
+public static class PostInitializationOutputExtensions
 {
-    public void Initialize(IncrementalGeneratorInitializationContext context)
+    public static void GenerateRequestAttribute(this IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(static ctx =>
         {
@@ -26,22 +25,15 @@ public class AttributeGenerator : IIncrementalGenerator
             scb.EndScope();
 
             ctx.AddSource("RequestAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
-
-            scb = new SourceCodeBuilder();
-
-            scb.SetNamespace("ApiGeneratR.Attributes");
-            scb.StartScope("internal enum HttpMethod");
-            scb.AddLine("Get,");
-            scb.AddLine("Post,");
-            scb.AddLine("Put,");
-            scb.AddLine("Delete,");
-            scb.AddLine("Patch");
-            scb.EndScope();
-
-            ctx.AddSource("HttpMethod.g.cs", scb.ToString());
-
-            scb = new SourceCodeBuilder();
-
+        });
+    }
+    
+    public static void GenerateApiConsumerAttribute(this IncrementalGeneratorInitializationContext context)
+    {
+        context.RegisterPostInitializationOutput(static ctx =>
+        {
+            var scb = new SourceCodeBuilder();
+            
             scb.SetNamespace("ApiGeneratR.Attributes");
 
             scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
@@ -57,8 +49,17 @@ public class AttributeGenerator : IIncrementalGenerator
             scb.EndScope();
 
             ctx.AddSource("ApiConsumerAttribute.g.cs", scb.ToString());
+        });
+    }
+    
+    public static void GenerateRequestTypeAttribute(this IncrementalGeneratorInitializationContext context)
+    {
+        context.RegisterPostInitializationOutput(static ctx =>
+        {
+            var scb = new SourceCodeBuilder();
+            
+            scb.SetNamespace("ApiGeneratR.Attributes");
 
-            scb = new SourceCodeBuilder();
 
             scb.SetNamespace("ApiGeneratR.Attributes");
             scb.StartScope("internal enum RequestType");
@@ -67,9 +68,15 @@ public class AttributeGenerator : IIncrementalGenerator
             scb.EndScope();
 
             ctx.AddSource("RequestType.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
-
-            scb = new SourceCodeBuilder();
-
+        });
+    }
+    
+    public static void GenerateEventAttributeAttribute(this IncrementalGeneratorInitializationContext context)
+    {
+        context.RegisterPostInitializationOutput(static ctx =>
+        {
+            var scb = new SourceCodeBuilder();
+            
             scb.SetNamespace("ApiGeneratR.Attributes");
 
             scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
@@ -78,6 +85,25 @@ public class AttributeGenerator : IIncrementalGenerator
             scb.EndScope();
 
             ctx.AddSource("EventAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        });
+    }
+    
+    public static void GenerateHttpMethodEnum(this IncrementalGeneratorInitializationContext context)
+    {
+        context.RegisterPostInitializationOutput(static ctx =>
+        {
+            var scb = new SourceCodeBuilder();
+            
+            scb.SetNamespace("ApiGeneratR.Attributes");
+            scb.StartScope("internal enum HttpMethod");
+            scb.AddLine("Get,");
+            scb.AddLine("Post,");
+            scb.AddLine("Put,");
+            scb.AddLine("Delete,");
+            scb.AddLine("Patch");
+            scb.EndScope();
+
+            ctx.AddSource("HttpMethod.g.cs", scb.ToString());
         });
     }
 }
