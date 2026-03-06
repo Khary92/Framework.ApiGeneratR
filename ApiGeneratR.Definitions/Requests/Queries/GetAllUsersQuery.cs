@@ -1,8 +1,8 @@
 using ApiGeneratR.Attributes;
 using ApiGeneratR.Definitions.Dto;
-using ApiGeneratR.Definitions.Mediator;
+using ApiGeneratR.Tags;
 
 namespace ApiGeneratR.Definitions.Requests.Queries;
 
 [Request("get-users", true, RequestType.Query)]
-public record GetAllUsersQuery : IRequest<List<UserDto>>;
+public record GetAllUsersQuery : RequestResponseTag<List<UserDto>>;

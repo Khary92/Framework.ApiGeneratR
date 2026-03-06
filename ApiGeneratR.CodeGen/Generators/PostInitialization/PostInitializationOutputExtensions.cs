@@ -7,6 +7,20 @@ namespace ApiGeneratR.CodeGen.Generators.PostInitialization;
 
 public static class PostInitializationOutputExtensions
 {
+    public static void GenerateIRequestTaggingInterface(this IncrementalGeneratorInitializationContext context)
+    {
+        context.RegisterPostInitializationOutput(static ctx =>
+        {
+            var scb = new SourceCodeBuilder();
+            
+            scb.SetNamespace("ApiGeneratR.Tags");
+
+            scb.AddLine("internal interface RequestResponseTag<TResponse>;");
+
+            ctx.AddSource("RequestResponseTag.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        });
+    }
+    
     public static void GenerateRequestHandlerAttribute(this IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(static ctx =>
