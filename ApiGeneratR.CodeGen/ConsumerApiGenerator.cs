@@ -56,12 +56,11 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         ExecuteWebsocketReceiverGeneration(context, eventData, projectNamespace);
         ExecuteDocumentationGeneration(context, eventData, requestData, projectNamespace);
 
-        ExecuteInterfaceGeneration(context, eventData, requestData, projectNamespace);
-        ExecuteExtensionMethodGeneration(context, eventData, requestData, projectNamespace);
+        ExecuteInterfaceGeneration(context, projectNamespace);
+        ExecuteExtensionMethodGeneration(context, requestData, projectNamespace);
     }
 
-    private static void ExecuteInterfaceGeneration(SourceProductionContext context,
-        ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests, string projectNamespace)
+    private static void ExecuteInterfaceGeneration(SourceProductionContext context, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -71,7 +70,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         ]);
         scb.SetNamespace($"{projectNamespace}.Generated");
 
-        scb.StartScope("public interface IApiFacade");
+        scb.StartScope("public interface IApiContainer");
         scb.AddLine("void SetToken(string token);");
         scb.AddLine("IEventSubscriber EventSubscriber { get; }");
         scb.AddLine("IEventPublisher EventPublisher { get; }");
@@ -81,7 +80,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.AddLine();
         scb.StartScope(
-            "public class ConsumerApi(IWebSocketService webSocket, ICommandSender commands, IQuerySender queries, IEventPublisher eventPublisher, IEventSubscriber eventSubscriber) : IApiFacade");
+            "public class ConsumerApi(IWebSocketService webSocket, ICommandSender commands, IQuerySender queries, IEventPublisher eventPublisher, IEventSubscriber eventSubscriber) : IApiContainer");
         scb.StartScope("public void SetToken(string token)");
         scb.AddLine("commands.InjectToken(token);");
         scb.AddLine("queries.InjectToken(token);");
@@ -107,7 +106,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
     }
 
     private static void ExecuteExtensionMethodGeneration(SourceProductionContext context,
-        ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests, string projectNamespace)
+        ImmutableArray<RequestData> requests, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -119,7 +118,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
 
         scb.StartScope("public static class ApiFacadeExtensions");
         scb.StartScope("public static void AddApiServices(this IServiceCollection services)");
-        scb.AddLine("services.AddSingleton<IApiFacade, ConsumerApi>();");
+        scb.AddLine("services.AddSingleton<IApiContainer, ConsumerApi>();");
         scb.AddLine("services.AddSingleton<IWebSocketService, WebSocketService>();");
         scb.AddLine("services.AddSingleton<ICommandSender, GeneratedCommandSender>();");
         scb.AddLine("services.AddSingleton<IQuerySender, GeneratedQuerySender>();");
@@ -368,7 +367,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         ImmutableArray<RequestData> requests, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
-        
+
         scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public class TokenInjection");
@@ -381,7 +380,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.EndScope();
 
         context.AddSource("TokenInjection.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
-        
+
         foreach (var request in requests)
         {
             scb = new SourceCodeBuilder();
@@ -399,7 +398,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
 
             scb.StartScope(
                 $"public class Generated{request.RequestShortName}Sender(IApiClient http) : TokenInjection, I{request.RequestShortName}Sender");
-            
+
             scb.StartScope(
                 $"public async Task<{request.ReturnValueFullName}> SendAsync({request.RequestFullName} command, CancellationToken ct = default)");
 

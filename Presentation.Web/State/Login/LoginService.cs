@@ -16,20 +16,20 @@ public partial class LoginService : ILoginService
     {
         IsUserLoggedIn = true;
 
-        Api.SetToken(token);
-        await Api.WebSocket.ConnectAsync(SocketUris.WebSocketUri, CancellationToken.None);
-        var userIdDto = await Api.Queries.SendAsync(new GetMyUserIdQuery());
+        SetToken(token);
+        await WebSocket.ConnectAsync(SocketUris.WebSocketUri, CancellationToken.None);
+        var userIdDto = await Queries.SendAsync(new GetMyUserIdQuery());
         _userId = userIdDto.UserId;
-        await Api.EventPublisher.PublishAsync(new UserLoggedInEvent());
+        await EventPublisher.PublishAsync(new UserLoggedInEvent());
     }
 
     public async Task Logout()
     {
         IsUserLoggedIn = false;
 
-        Api.SetToken(string.Empty);
+        SetToken(string.Empty);
         _userId = Guid.Empty;
-        await Api.WebSocket.DisposeAsync();
-        await Api.EventPublisher.PublishAsync(new UserLoggedOutEvent());
+        await WebSocket.DisposeAsync();
+        await EventPublisher.PublishAsync(new UserLoggedOutEvent());
     }
 }

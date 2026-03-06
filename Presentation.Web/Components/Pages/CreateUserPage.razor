@@ -3,7 +3,7 @@
 @using ApiGeneratR.Definitions.Requests.Commands
 @using Presentation.Web.Models
 @using Presentation.Web.Services
-@inject IApiFacade api
+@inject IApiContainer Api
 @inject NavigationManager NavigationManager
 @inject IPasswordGenerator PasswordGenerator
 @inject ISnackbar Snackbar
@@ -142,7 +142,7 @@
                 _userModel.FirstName,
                 _userModel.LastName);
 
-            var result = await api.Commands.SendAsync(adminCreateUserCommand);
+            var result = await Api.Commands.SendAsync(adminCreateUserCommand);
 
             if (!result.IsSuccessful)
             {

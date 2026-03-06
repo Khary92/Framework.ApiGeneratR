@@ -3,7 +3,7 @@
 @using Presentation.Web.Models
 @using Presentation.Web.State.Messaging
 @inject IMessageService MessageService
-@inject IApiFacade api
+@inject IApiContainer Api
 
 <MudItem xs="12" md="8" Class="d-flex flex-column" Style="height: 100%; min-height: 0;">
 
@@ -92,7 +92,7 @@
     {
         if (string.IsNullOrWhiteSpace(NewMessage) || SelectedUser == null) return;
 
-        await api.Commands.SendAsync(new SendMessageCommand(NewMessage, SelectedUser.UserId));
+        await Api.Commands.SendAsync(new SendMessageCommand(NewMessage, SelectedUser.UserId));
 
         NewMessage = string.Empty;
     }

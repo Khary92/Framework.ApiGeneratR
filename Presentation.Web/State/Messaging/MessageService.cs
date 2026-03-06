@@ -16,7 +16,7 @@ public partial class MessageService : IMessageService
     private readonly ILoginService _loginService;
     private readonly ConcurrentDictionary<string, List<MessageModel>> _messagesDict = new();
 
-    public MessageService(IApiFacade api, ILoginService loginService) : this(api)
+    public MessageService(IApiContainer apiContainer, ILoginService loginService) : this(apiContainer)
     {
         _loginService = loginService;
     }
@@ -37,7 +37,7 @@ public partial class MessageService : IMessageService
     
     public async Task<List<MessageModel>> GetMessagesForSelectedUser(UserModel selectedUser)
     {
-        var messageWrapper = await Api.Queries.SendAsync(new GetMessagesForUserQuery(selectedUser.UserId));
+        var messageWrapper = await Queries.SendAsync(new GetMessagesForUserQuery(selectedUser.UserId));
 
         if (_messagesDict.TryGetValue(messageWrapper.ConversationId, out var cached))
             return cached;

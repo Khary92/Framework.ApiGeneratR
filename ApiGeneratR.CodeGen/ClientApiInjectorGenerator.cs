@@ -62,12 +62,26 @@ public class ClientApiInjectorGenerator : IIncrementalGenerator
 
             scb.StartScope($"public partial class {consumer.ConsumerClassName} : IDisposable");
             scb.AddLine("private readonly List<IDisposable> _disposables = [];");
-            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IApiFacade Api; ");
+            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IApiContainer _container; ");
+            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IWebSocketService WebSocket;");
+            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.ICommandSender Commands;");
+            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IQuerySender Queries;");
+            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IEventPublisher EventPublisher;");
+            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IEventSubscriber EventSubscriber;");
             scb.AddLine();
             scb.StartScope(
-                $"public {consumer.ConsumerClassName}(global::ApiGeneratR.Definitions.Generated.IApiFacade api)");
-            scb.AddLine("Api = api;");
+                $"public {consumer.ConsumerClassName}(global::ApiGeneratR.Definitions.Generated.IApiContainer container)");
+            scb.AddLine("_container = container;");
+            scb.AddLine("WebSocket = container.WebSocket;");
+            scb.AddLine("Commands = container.Commands;");
+            scb.AddLine("Queries = container.Queries;");
+            scb.AddLine("EventPublisher = container.EventPublisher;");
+            scb.AddLine("EventSubscriber = container.EventSubscriber;");
             scb.AddLine("Initialize();");
+            scb.EndScope();
+            scb.AddLine();
+            scb.StartScope("private void SetToken(string token)");
+            scb.AddLine("_container.SetToken(token);");
             scb.EndScope();
             scb.AddLine();
             scb.StartScope("private void Initialize()");
@@ -77,7 +91,7 @@ public class ClientApiInjectorGenerator : IIncrementalGenerator
                 if (registeredEvent == null) continue;
 
                 scb.AddLine(
-                    $"_disposables.Add(Api.EventSubscriber.Subscribe<{registeredEvent}>((@event) => HandleEventAsync(@event)));");
+                    $"_disposables.Add(EventSubscriber.Subscribe<{registeredEvent}>((@event) => HandleEventAsync(@event)));");
             }
 
             scb.EndScope();

@@ -19,7 +19,7 @@ public partial class UserService : IUserService
 
     public async Task InitializeAsync()
     {
-        var users = await Api.Queries.SendAsync(new GetAllUsersQuery());
+        var users = await Queries.SendAsync(new GetAllUsersQuery());
         Users = users.Select(u => u.ToUserModel()).ToList();
         if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
     }
