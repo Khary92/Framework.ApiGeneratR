@@ -191,7 +191,7 @@ public static class ClientApiExtensions
         scb.EndScope();
         scb.EndScope();
 
-        context.AddSource("TokenInjection.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        AddSource(context, "TokenInjection.g.cs", scb.ToString());
     }
 
     public static void CreateAtomicRequestSenderWithInterfaces(this SourceProductionContext context,
@@ -250,8 +250,8 @@ public static class ClientApiExtensions
             }
 
             scb.EndScope();
-            context.AddSource($"Generated{request.RequestShortName}Sender.g.cs",
-                SourceText.From(scb.ToString(), Encoding.UTF8));
+
+            AddSource(context, $"Generated{request.RequestShortName}Sender.g.cs", scb.ToString());
         }
     }
 
@@ -312,7 +312,7 @@ public static class ClientApiExtensions
         }
 
         scb.StartScope(classSignature);
-        
+
         var tokenInjections = new List<string>();
         foreach (var request in requests.Where(r => r.CqsType == type))
         {
@@ -329,7 +329,7 @@ public static class ClientApiExtensions
 
         scb.EndScope();
 
-        context.AddSource($"{type}Sender.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        AddSource(context, $"{type}Sender.g.cs", scb.ToString());
     }
 
     public static void CreateWebsocketInterface(this SourceProductionContext context, string projectNamespace)
@@ -345,7 +345,8 @@ public static class ClientApiExtensions
         scb.AddLine("Task DisposeAsync();");
         scb.EndScope();
 
-        context.AddSource("IWebSocketService.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+
+        AddSource(context, "IWebSocketService.g.cs", scb.ToString());
     }
 
     public static void CreateApiClientWithInterface(this SourceProductionContext context, string projectNamespace)
@@ -362,15 +363,16 @@ public static class ClientApiExtensions
         scb.AddLine("public HttpClient Client => client;");
         scb.EndScope();
 
-        context.AddSource("ApiClient.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        AddSource(context, "ApiClient.g.cs", scb.ToString());
     }
 
-    public static void CreateEventBusWithInterfaces(this SourceProductionContext context, string? projectNamespace, GlobalOptions options)
+    public static void CreateEventBusWithInterfaces(this SourceProductionContext context, string? projectNamespace,
+        GlobalOptions options)
     {
         if (projectNamespace != options.DefinitionsProject) return;
-        
+
         var scb = new SourceCodeBuilder();
-        
+
         scb.SetNamespace($"{projectNamespace}.Generated");
         scb.StartScope("public interface IEventPublisher");
         scb.AddLine("Task PublishAsync<TEvent>(TEvent @event) where TEvent : class;");
@@ -420,7 +422,7 @@ public static class ClientApiExtensions
         scb.EndScope();
         scb.EndScope();
 
-        context.AddSource("EventBus.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8)); 
+        AddSource(context, "EventBus.g.cs", scb.ToString());
     }
 
     private static void AddSource(SourceProductionContext context, string fileName, string sourceCode)

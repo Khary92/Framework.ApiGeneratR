@@ -48,7 +48,7 @@ public static class PostInitializationOutputExtensions
             scb.EndScope();
             scb.EndScope();
 
-            ctx.AddSource("ApiConsumerAttribute.g.cs", scb.ToString());
+            ctx.AddSource("ApiConsumerAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         });
     }
     
@@ -103,7 +103,7 @@ public static class PostInitializationOutputExtensions
             scb.AddLine("Patch");
             scb.EndScope();
 
-            ctx.AddSource("HttpMethod.g.cs", scb.ToString());
+            ctx.AddSource("HttpMethod.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         });
     }
 }
