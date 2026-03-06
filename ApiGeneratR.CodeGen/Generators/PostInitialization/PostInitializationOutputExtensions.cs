@@ -7,6 +7,24 @@ namespace ApiGeneratR.CodeGen.Generators.PostInitialization;
 
 public static class PostInitializationOutputExtensions
 {
+    public static void GenerateRequestHandlerAttribute(this IncrementalGeneratorInitializationContext context)
+    {
+        context.RegisterPostInitializationOutput(static ctx =>
+        {
+            var scb = new SourceCodeBuilder();
+            
+            scb.SetNamespace("ApiGeneratR.Attributes");
+
+            scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
+            scb.StartScope(
+                "internal class RequestHandlerAttribute(Type requestType) : Attribute");
+            scb.AddLine("public Type RequestFullName { get; } = requestType;");
+            scb.EndScope();
+
+            ctx.AddSource("RequestHandlerAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        });
+    }
+    
     public static void GenerateRequestAttribute(this IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(static ctx =>

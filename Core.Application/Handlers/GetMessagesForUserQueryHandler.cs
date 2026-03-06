@@ -1,16 +1,17 @@
+using ApiGeneratR.Attributes;
 using ApiGeneratR.Definitions.Dto;
-using ApiGeneratR.Definitions.Mediator;
+using ApiGeneratR.Definitions.Generated;
 using ApiGeneratR.Definitions.Requests.Queries;
 using Core.Application.Mapper;
 using Core.Application.Ports;
 
 namespace Core.Application.Handlers;
 
+[RequestHandler(typeof(GetMessagesForUserQuery))]
 public class GetMessagesForUserQueryHandler(
     IUnitOfWork db,
     IConversationIdService conversationIdService,
-    MessageMapper mapper)
-    : IRequestHandler<GetMessagesForUserQuery, MessagesWrapper>
+    MessageMapper mapper) : IGetMessagesForUserQueryHandler
 {
     public Task<MessagesWrapper> HandleAsync(GetMessagesForUserQuery query,
         CancellationToken ct = default)

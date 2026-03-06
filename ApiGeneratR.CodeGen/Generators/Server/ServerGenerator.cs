@@ -14,9 +14,9 @@ public class MediatorGenerator : IIncrementalGenerator
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
 
-        var requestHandlerImplementations = context.GetMediatorRequestHandlers();
         var events = context.GetEventSourceData();
         var requests = context.GetRequestSourceData();
+        var requestHandlers = context.GetRequestHandlerSourceData();
 
         context.RegisterSourceOutput(events.Combine(assemblyName).Combine(context.GetGlobalOptions()),
             static (spc, source) =>
@@ -32,13 +32,30 @@ public class MediatorGenerator : IIncrementalGenerator
                             DiagnosticSeverity.Error, true), Location.None, ex.Message));
                 }
             });
+        
+        
+        context.RegisterSourceOutput(requestHandlers.Combine(events).Combine(assemblyName).Combine(context.GetGlobalOptions()),
+            static (spc, source) =>
+            {
+                try
+                {
+                    spc.CreateSourceMediator(source.Left.Left.Left, source.Left.Right, source.Right);
+                    spc.CreateMediatorExtensions(source.Left.Left.Left, source.Left.Right, source.Right);
+                }
+                catch (Exception ex)
+                {
+                    spc.ReportDiagnostic(Diagnostic.Create(
+                        new DiagnosticDescriptor("WEBSOCKGEN001", "Generator crashed", "{0}", "Generator",
+                            DiagnosticSeverity.Error, true), Location.None, ex.Message));
+                }
+            });
 
         context.RegisterSourceOutput(requests.Combine(assemblyName).Combine(context.GetGlobalOptions()),
             static (spc, source) =>
             {
                 try
                 {
-                    spc.CreateEndpoints(source.Left.Left, source.Left.Right, source.Right);
+                    CreateEndpoints(spc, source.Left.Left, source.Left.Right, source.Right);
                 }
                 catch (Exception ex)
                 {
@@ -48,32 +65,15 @@ public class MediatorGenerator : IIncrementalGenerator
                         Location.None, ex.Message));
                 }
             });
-
-        context.RegisterSourceOutput(
-            requestHandlerImplementations.Combine(assemblyName).Combine(context.GetGlobalOptions()),
-            static (spc, source) =>
-            {
-                try
-                {
-                    ExecuteMediatorCreation(spc, source.Left.Left, source.Left.Right, source.Right);
-                }
-                catch (Exception ex)
-                {
-                    spc.ReportDiagnostic(Diagnostic.Create(
-                        new DiagnosticDescriptor("GEN001", "Mediator Generator Error",
-                            "Error generating mediator code: {0}", "Generator", DiagnosticSeverity.Error, true),
-                        Location.None, ex.Message));
-                }
-            });
     }
 
-    private static void ExecuteMediatorCreation(SourceProductionContext ctx,
-        ImmutableArray<MediatorHandlerData> requestHandlerImplementations, string? projectNamespace,
-        GlobalOptions options)
+    private static void CreateEndpoints(SourceProductionContext context,
+        ImmutableArray<RequestData> requests, string? projectNamespace, GlobalOptions options)
     {
-        if (projectNamespace != options.HandlerProject) return;
+        if (requests.IsDefaultOrEmpty) return;
+        if (projectNamespace != options.DefinitionsProject) return;
 
-        ctx.CreateSourceMediator(requestHandlerImplementations, options.DefinitionsProject, options);
-        ctx.CreateMediatorExtensions(requestHandlerImplementations, options.DefinitionsProject);
+        context.CreateEndpoints(requests, projectNamespace, options);
+        context.CreateMediatorInterface(requests, projectNamespace);
     }
 }

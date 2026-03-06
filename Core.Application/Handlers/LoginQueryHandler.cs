@@ -1,11 +1,13 @@
-﻿using ApiGeneratR.Definitions.Mediator;
+﻿using ApiGeneratR.Attributes;
+using ApiGeneratR.Definitions.Generated;
 using ApiGeneratR.Definitions.Requests.Queries;
 using Core.Application.Ports;
 
 namespace Core.Application.Handlers;
 
+[RequestHandler(typeof(LoginQuery))]
 public class LoginQueryHandler(IUnitOfWork db, IAuthService authService)
-    : IRequestHandler<LoginQuery, LoginResponse>
+    : ILoginQueryHandler
 {
     public Task<LoginResponse> HandleAsync(LoginQuery query, CancellationToken ct = default)
     {

@@ -1,18 +1,19 @@
+using ApiGeneratR.Attributes;
 using ApiGeneratR.Definitions.Dto;
 using ApiGeneratR.Definitions.Generated;
-using ApiGeneratR.Definitions.Mediator;
 using ApiGeneratR.Definitions.Requests.Commands;
 using Core.Application.Mapper;
 using Core.Application.Ports;
 
 namespace Core.Application.Handlers;
 
+[RequestHandler(typeof(CreateUserCommand))]
 public class CreateUserCommandHandler(
     IEventSender eventSender,
     UserMapper mapper,
     IAuthService authService,
     IUnitOfWork db)
-    : IRequestHandler<CreateUserCommand, CommandResponse>
+    : ICreateUserCommandHandler
 {
     public async Task<CommandResponse> HandleAsync(CreateUserCommand command, CancellationToken ct = default)
     {

@@ -89,6 +89,6 @@ public class ClientApiInjectorGenerator : IIncrementalGenerator
         ctx.CreateEventBusWithInterfaces(projectNamespace, options);
         
         //Documentation
-        ctx.CreateDocumentation(projectNamespace, eventData, requestData);
+        ctx.CreateStaticServices(projectNamespace, eventData, requestData, options);
     }
 }

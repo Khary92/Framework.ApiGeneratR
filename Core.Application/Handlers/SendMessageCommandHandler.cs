@@ -1,18 +1,19 @@
-﻿using ApiGeneratR.Definitions.Dto;
+﻿using ApiGeneratR.Attributes;
+using ApiGeneratR.Definitions.Dto;
 using ApiGeneratR.Definitions.Generated;
-using ApiGeneratR.Definitions.Mediator;
 using ApiGeneratR.Definitions.Requests.Commands;
 using Core.Application.Mapper;
 using Core.Application.Ports;
 
 namespace Core.Application.Handlers;
 
+[RequestHandler(typeof(SendMessageCommand))]
 public class SendMessageCommandHandler(
     IUnitOfWork db,
     IEventSender eventSender,
     IConversationIdService conversationIdService,
     MessageMapper messageMapper)
-    : IRequestHandler<SendMessageCommand, CommandResponse>
+    : ISendMessageCommandHandler
 {
     public async Task<CommandResponse> HandleAsync(SendMessageCommand command,
         CancellationToken ct = default)

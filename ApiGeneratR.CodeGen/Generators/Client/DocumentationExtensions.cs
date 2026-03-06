@@ -11,29 +11,26 @@ namespace ApiGeneratR.CodeGen.Generators.Client;
 
 public static class DocumentationExtensions
 {
-    public static void CreateDocumentation(this SourceProductionContext ctx, string projectNamespace,
-        ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests)
+    public static void CreateStaticServices(this SourceProductionContext ctx, string projectNamespace,
+        ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests, GlobalOptions options)
     {
         SourceCodeBuilder scb = new();
         scb.SetNamespace($"{projectNamespace}.Generated");
-        scb.StartScope("public static class ApiDocumentation");
+        scb.StartScope("public static class GeneratRStaticServices");
         scb.AddLine();
-
+        
         scb.AddLine("private static string Markdown => \"\"\"");
-
         var lines = GetMarkdownText(events, requests).Split(["\n", "\r"], StringSplitOptions.None);
         foreach (var line in lines) scb.AddLine(line);
-
         scb.AddLine("\"\"\";");
-
+        
         scb.AddLine();
-        scb.StartScope("public static void PrintToPath(string path)");
+        scb.StartScope("public static void PrintDocumentationToPath(string path)");
         scb.AddLine("File.WriteAllText(path, Markdown);");
         scb.EndScope();
         scb.EndScope();
         
-        //Documentation
-        ctx.AddSource("ApiDocumentation.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        ctx.AddSource("StaticServices.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
     private static string GetMarkdownText(ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests)
