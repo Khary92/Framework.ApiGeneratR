@@ -10,40 +10,34 @@ using Presentation.Web.State.Login;
 
 namespace Presentation.Web.State.Messaging;
 
-[ApiConsumer([
-    nameof(MessageReceivedEvent),
-    nameof(UserDeletedEvent)
-    ])]
-
-public class MessageService : IMessageService 
+[ApiConsumer([typeof(MessageReceivedEvent)])]
+public partial class MessageService : IMessageService
 {
-    private readonly List<IDisposable> _disposables = [];
+    private readonly ILoginService _loginService;
     private readonly ConcurrentDictionary<string, List<MessageModel>> _messagesDict = new();
-    private readonly IApiFacade _api; 
-    
-    public MessageService(IApiFacade api, ILoginService loginService)
+
+    public MessageService(IApiFacade api, ILoginService loginService) : this(api)
     {
-        _api = api;
-
-        var newMessageSub = api.EventSubscriber.Subscribe<MessageReceivedEvent>(@event =>
-        {
-            var isCurrentUser = loginService.IsCurrentUser(@event.OriginUserId);
-            var messageModel = @event.ToMessageModel(isCurrentUser);
-
-            var list = _messagesDict.GetOrAdd(@event.ConversationId, _ => []);
-            list.Add(messageModel);
-
-            OnMessageReceived?.Invoke();
-            return Task.CompletedTask;
-        });
-        _disposables.Add(newMessageSub);
+        _loginService = loginService;
     }
 
     public event Action? OnMessageReceived;
 
+    private Task HandleEventAsync(MessageReceivedEvent @event)
+    {
+        var isCurrentUser = _loginService.IsCurrentUser(@event.OriginUserId);
+        var messageModel = @event.ToMessageModel(isCurrentUser);
+
+        var list = _messagesDict.GetOrAdd(@event.ConversationId, _ => []);
+        list.Add(messageModel);
+
+        OnMessageReceived?.Invoke();
+        return Task.CompletedTask;
+    }
+    
     public async Task<List<MessageModel>> GetMessagesForSelectedUser(UserModel selectedUser)
     {
-        var messageWrapper = await _api.Queries.SendAsync(new GetMessagesForUserQuery(selectedUser.UserId));
+        var messageWrapper = await Api.Queries.SendAsync(new GetMessagesForUserQuery(selectedUser.UserId));
 
         if (_messagesDict.TryGetValue(messageWrapper.ConversationId, out var cached))
             return cached;
@@ -51,10 +45,5 @@ public class MessageService : IMessageService
         var messageModels = messageWrapper.Messages.Select(m => m.ToMessageModel()).ToList();
         _messagesDict[messageWrapper.ConversationId] = messageModels;
         return messageModels;
-    }
-
-    public void Dispose()
-    {
-        foreach (var disposable in _disposables) disposable.Dispose();
     }
 }

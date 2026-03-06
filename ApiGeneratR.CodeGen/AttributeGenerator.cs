@@ -54,8 +54,8 @@ public class AttributeGenerator : IIncrementalGenerator
 
         scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
         scb.StartScope(
-            "internal class ApiConsumerAttribute(string[] eventSubscriptions) : Attribute");
-        scb.AddLine("public string[] EventSubscriptions { get; } = eventSubscriptions;");
+            "internal class ApiConsumerAttribute(Type[] eventSubscriptionTypes) : Attribute");
+        scb.AddLine("public Type[] EventSubscriptionTypes { get; } = eventSubscriptionTypes;");
         scb.EndScope();
         
         spc.AddSource("ApiConsumerAttribute.g.cs", scb.ToString());
