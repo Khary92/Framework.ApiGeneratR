@@ -1,14 +1,14 @@
+using ApiGeneratR.Attributes;
 using ApiGeneratR.Definitions.Events.User;
-using ApiGeneratR.Definitions.Generated;
 using ApiGeneratR.Definitions.Requests.Queries;
 using Presentation.Web.Mapper;
 using Presentation.Web.Models;
 
 namespace Presentation.Web.State.User;
 
-public class UserService(IApiFacade api) : IUserService
+[ApiConsumer(typeof(UserCreatedEvent), typeof(UserDeletedEvent), typeof(UserUpdatedEvent))]
+public partial class UserService : IUserService
 {
-    private readonly List<IDisposable> _subscriptions = [];
     public event Func<Task>? OnCollectionChanged;
 
     public List<UserModel> Users
@@ -19,55 +19,37 @@ public class UserService(IApiFacade api) : IUserService
 
     public async Task InitializeAsync()
     {
-        var users = await api.Queries.SendAsync(new GetAllUsersQuery());
+        var users = await Api.Queries.SendAsync(new GetAllUsersQuery());
         Users = users.Select(u => u.ToUserModel()).ToList();
+        if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
+    }
 
-        // check if already subscribed
-        if (_subscriptions.Count != 0) return;
+    private async Task HandleEventAsync(UserCreatedEvent @event)
+    {
+        Users.Add(@event.ToUserModel());
+        if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
+    }
 
-        var createdSub = api.EventSubscriber.Subscribe<UserCreatedEvent>(async @event =>
-        {
-            Users.Add(@event.ToUserModel());
-            if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
-        });
-        _subscriptions.Add(createdSub);
+    private async Task HandleEventAsync(UserDeletedEvent @event)
+    {
+        var user = Users.FirstOrDefault(user => user.UserId == @event.Id);
 
-        var deletedSub = api.EventSubscriber.Subscribe<UserDeletedEvent>(async @event =>
-        {
-            var user = Users.FirstOrDefault(user => user.UserId == @event.Id);
+        if (user == null) return;
 
-            if (user == null) return;
-
-            Users.Remove(user);
-
-            if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
-        });
-        _subscriptions.Add(deletedSub);
-
-        var updatedSub = api.EventSubscriber.Subscribe<UserUpdatedEvent>(async @event =>
-        {
-            var user = Users.FirstOrDefault(user => user.UserId == @event.Id);
-
-            if (user == null) return;
-
-            Users.Remove(user);
-            Users.Add(@event.ToUserModel());
-
-            if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
-        });
-        _subscriptions.Add(updatedSub);
+        Users.Remove(user);
 
         if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
     }
 
-    public async ValueTask DisposeAsync()
+    private async Task HandleEventAsync(UserUpdatedEvent @event)
     {
-        foreach (var subscription in _subscriptions) subscription.Dispose();
+        var user = Users.FirstOrDefault(user => user.UserId == @event.Id);
 
-        _subscriptions.Clear();
+        if (user == null) return;
 
-        OnCollectionChanged = null;
+        Users.Remove(user);
+        Users.Add(@event.ToUserModel());
 
-        await Task.CompletedTask;
+        if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
     }
 }

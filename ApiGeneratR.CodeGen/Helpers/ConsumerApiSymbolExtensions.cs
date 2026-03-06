@@ -23,11 +23,16 @@ public static class ConsumerApiSymbolExtensions
 
                     var @namespace = symbol.ContainingNamespace?.ToDisplayString() ?? "UnknownNamespace";
 
-                    if (attribute.ConstructorArguments.Length == 0) return null;
+                    if (attribute.ConstructorArguments.Length == 0)
+                    {
+                        return new ApiConsumerData(
+                            [],
+                            @namespace,
+                            symbol.Name);
+                    }
 
                     var arg = attribute.ConstructorArguments[0];
-
-
+                    
                     var eventTypeNames = arg.Values
                         .Select(v =>
                         {

@@ -54,13 +54,11 @@ public static class WebModuleExtensions
         private void AddStateServices()
         {
             services.AddScoped<ILoginService, LoginService>();
+            services.AddScoped<IMessageService, MessageService>();
 
             services.AddScoped<UserService>();
-            services.AddScoped<IAsyncInitializeModel>(sp => sp.GetRequiredService<UserService>());
             services.AddScoped<IUserService>(sp => sp.GetRequiredService<UserService>());
-
-            services.AddScoped<MessageService>();
-            services.AddScoped<IMessageService>(sp => sp.GetRequiredService<MessageService>());
+            services.AddScoped<IAsyncInitializeModel>(sp => sp.GetRequiredService<UserService>());
         }
 
         private void AddValidators()
