@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
+using ApiGeneratR.Attributes;
 using ApiGeneratR.Definitions.Events.Message;
+using ApiGeneratR.Definitions.Events.User;
 using ApiGeneratR.Definitions.Generated;
 using ApiGeneratR.Definitions.Requests.Queries;
 using Presentation.Web.Mapper;
@@ -8,7 +10,12 @@ using Presentation.Web.State.Login;
 
 namespace Presentation.Web.State.Messaging;
 
-public class MessageService : IMessageService
+[ApiConsumer([
+    nameof(MessageReceivedEvent),
+    nameof(UserDeletedEvent)
+    ])]
+
+public class MessageService : IMessageService 
 {
     private readonly List<IDisposable> _disposables = [];
     private readonly ConcurrentDictionary<string, List<MessageModel>> _messagesDict = new();

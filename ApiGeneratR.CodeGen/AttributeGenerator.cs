@@ -45,8 +45,21 @@ public class AttributeGenerator : IIncrementalGenerator
         scb.AddLine("Delete,");
         scb.AddLine("Patch");
         scb.EndScope();
+        
         spc.AddSource("HttpMethod.g.cs", scb.ToString());
+        
+        scb = new SourceCodeBuilder();
 
+        scb.SetNamespace("ApiGeneratR.Attributes");
+
+        scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
+        scb.StartScope(
+            "internal class ApiConsumerAttribute(string[] eventSubscriptions) : Attribute");
+        scb.AddLine("public string[] EventSubscriptions { get; } = eventSubscriptions;");
+        scb.EndScope();
+        
+        spc.AddSource("ApiConsumerAttribute.g.cs", scb.ToString());
+        
         scb = new SourceCodeBuilder();
 
         scb.SetNamespace("ApiGeneratR.Attributes");

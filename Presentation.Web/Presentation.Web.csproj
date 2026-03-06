@@ -17,6 +17,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\ApiGeneratR.CodeGen\ApiGeneratR.CodeGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    </ItemGroup>
+    
+    <ItemGroup>
         <_ContentIncludedByDefault Remove="Components\Elements\Dialog\CancelAppointmentDialog.razor"/>
         <_ContentIncludedByDefault Remove="Components\Elements\Dialog\CreateAppointmentDialog.razor"/>
         <_ContentIncludedByDefault Remove="Components\Elements\Dialog\Error.razor"/>
