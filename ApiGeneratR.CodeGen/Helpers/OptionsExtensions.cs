@@ -11,6 +11,11 @@ public static class OptionsExtensions
         return context.AnalyzerConfigOptionsProvider
             .Select((options, _) =>
             {
+                if (!options.GlobalOptions.TryGetValue("apigeneratr_clientprojects", out var clientProjects))
+                {
+                    options.GlobalOptions.TryGetValue("apigeneratr_clientprojects", out clientProjects);
+                }
+
                 if (!options.GlobalOptions.TryGetValue("build_property.apigeneratr_definitionsproject",
                         out var definitionsProject))
                 {
@@ -27,15 +32,18 @@ public static class OptionsExtensions
                 {
                     options.GlobalOptions.TryGetValue("apigeneratr_log_mediator", out isLogMediator);
                 }
-                
+
                 if (!options.GlobalOptions.TryGetValue("apigeneratr_log_websocket", out var isLogWebsocket))
                 {
                     options.GlobalOptions.TryGetValue("apigeneratr_log_websocket", out isLogWebsocket);
                 }
 
                 return new GlobalOptions(
-                    definitionsProject ?? "ApiGeneratR.Definitions.Default",
-                    handlerProject ?? "ApiGeneratR.Handler.Default",
+                    clientProjects == null
+                        ? ["Missing global config entry for client projects!"]
+                        : clientProjects.Split(','),
+                    definitionsProject ?? "Missing global config entry for definitions project!",
+                    handlerProject ?? "Missing global config entry for request handler project!",
                     isLogMediator == "true",
                     isLogWebsocket == "true");
             });
