@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using ApiGeneratR.Definitions.Generated;
 using Core.Application;
+using Core.Application.Generated;
 using Core.Application.Ports;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
@@ -20,7 +21,7 @@ public static class Program
 
     private static WebApplication BuildServerApp(string[] args)
     {
-        ApiDocumentation.PrintToPath("Documentation.md");
+        //ApiGeneratRStatics.PrintToPath("Documentation.md");
 
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
@@ -38,7 +39,7 @@ public static class Program
 
         builder.Services.AddAntiforgery(options => { options.Cookie.Name = "AntiforgeryCookie"; });
 
-        builder.Services.AddGeneratedMediator();
+        builder.Services.AddServerApiServices();
         builder.Services.AddPersistenceServices();
 
         builder.Services.AddApplicationServices();

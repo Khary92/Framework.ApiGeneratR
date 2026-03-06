@@ -1,11 +1,13 @@
+using ApiGeneratR.Attributes;
 using ApiGeneratR.Definitions.Dto;
-using ApiGeneratR.Definitions.Mediator;
+using ApiGeneratR.Definitions.Generated;
 using ApiGeneratR.Definitions.Requests.Queries;
 using Core.Application.Ports;
 
 namespace Core.Application.Handlers;
 
-public class GetOwnUserIdQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<GetMyUserIdQuery, UserIdDto>
+[RequestHandler(typeof(GetMyUserIdQuery))]
+public class GetOwnUserIdQueryHandler(IUnitOfWork unitOfWork) : IGetMyUserIdQueryHandler
 {
     public Task<UserIdDto> HandleAsync(GetMyUserIdQuery request, CancellationToken cancellationToken = default)
     {

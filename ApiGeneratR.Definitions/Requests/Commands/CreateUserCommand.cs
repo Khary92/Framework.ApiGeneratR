@@ -1,6 +1,6 @@
 using ApiGeneratR.Attributes;
 using ApiGeneratR.Definitions.Dto;
-using ApiGeneratR.Definitions.Mediator;
+using ApiGeneratR.Tags;
 
 namespace ApiGeneratR.Definitions.Requests.Commands;
 
@@ -9,4 +9,4 @@ public record CreateUserCommand(
     string LoginName,
     string InitialPassword,
     string FirstName,
-    string LastName) : IRequest<CommandResponse>;
+    string LastName) : RequestResponseTag<CommandResponse>;
