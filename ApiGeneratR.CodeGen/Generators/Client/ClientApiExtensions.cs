@@ -1,66 +1,17 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using ApiGeneratR.CodeGen.Builder;
-using ApiGeneratR.CodeGen.Helpers;
 using ApiGeneratR.CodeGen.Mapper;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace ApiGeneratR.CodeGen;
+namespace ApiGeneratR.CodeGen.Generators.Client;
 
-[Generator(LanguageNames.CSharp)]
-public class ConsumerApiGenerator : IIncrementalGenerator
+public static class ClientApiExtensions
 {
-    public void Initialize(IncrementalGeneratorInitializationContext context)
-    {
-        var assemblyName = context.CompilationProvider
-            .Select(static (compilation, _) => compilation.AssemblyName);
-
-        var apiSourceData = context.GetRequestSourceData();
-        var eventSourceData = context.GetEventSourceData();
-
-        var combined = apiSourceData.Combine(assemblyName).Combine(eventSourceData).Combine(context.GetGlobalOptions());
-
-        context.RegisterSourceOutput(combined,
-            static (spc, source) =>
-            {
-                try
-                {
-                    Execute(spc, source.Left.Left.Left, source.Left.Left.Right, source.Left.Right, source.Right);
-                }
-                catch (Exception ex)
-                {
-                    spc.ReportDiagnostic(Diagnostic.Create(
-                        new DiagnosticDescriptor("GEN001", "ServerApiGenerator Error",
-                            "Error generating consumer api code: {0}", "Generator", DiagnosticSeverity.Error, true),
-                        Location.None, ex.Message));
-                }
-            });
-    }
-
-    private static void Execute(SourceProductionContext context, ImmutableArray<RequestData> requestData,
-        string? projectNamespace, ImmutableArray<EventSourceData> eventData, GlobalOptions options)
-    {
-        if (requestData.IsDefaultOrEmpty || eventData.IsDefaultOrEmpty ||
-            projectNamespace != options.DefinitionsProject) return;
-
-        ExecuteHttpClientGeneration(context, projectNamespace);
-        ExecuteWebsocketInterfaceGeneration(context, projectNamespace);
-
-        ExecuteRequestSenderGeneration(context, requestData, projectNamespace);
-        ExecuteRequestSenderFacadesGeneration(context, requestData, projectNamespace, "Command");
-        ExecuteRequestSenderFacadesGeneration(context, requestData, projectNamespace, "Query");
-        ExecuteWebsocketReceiverGeneration(context, eventData, projectNamespace);
-        ExecuteDocumentationGeneration(context, eventData, requestData, projectNamespace);
-
-        ExecuteInterfaceGeneration(context, projectNamespace);
-        ExecuteExtensionMethodGeneration(context, requestData, projectNamespace);
-    }
-
-    private static void ExecuteInterfaceGeneration(SourceProductionContext context, string projectNamespace)
+    public static void CreateApiContainer(this SourceProductionContext ctx, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -94,19 +45,12 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.AddLine("public IEventSubscriber EventSubscriber => eventSubscriber;");
         scb.EndScope();
 
-        context.AddSource("ApiFacade.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
-
-        scb = new SourceCodeBuilder();
-        scb.SetUsings([
-            "System.Threading.Tasks",
-            "System.Collections.Generic",
-            "System.Threading"
-        ]);
-        scb.SetNamespace($"{projectNamespace}.Generated");
+        AddSource(ctx, "ApiContainer.g.cs", scb.ToString());
     }
 
-    private static void ExecuteExtensionMethodGeneration(SourceProductionContext context,
-        ImmutableArray<RequestData> requests, string projectNamespace)
+    public static void CreateClientApiExtensions(this SourceProductionContext ctx,
+        ImmutableArray<RequestData> requests,
+        string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -137,109 +81,11 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.EndScope();
 
-        context.AddSource("ApiFacadeExtensions.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        AddSource(ctx, "ApiContainerExtensions.g.cs", scb.ToString());
     }
 
-    private static void ExecuteDocumentationGeneration(SourceProductionContext context,
-        ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests, string projectNamespace)
-    {
-        var mdb = new MarkdownBuilder();
-        mdb.AddHeader("API Documentation");
-        mdb.AddParagraph(
-            $"Auto-generated documentation for the available endpoints. Total endpoints: {requests.Length}");
 
-        if (requests.IsDefaultOrEmpty)
-        {
-            mdb.AddParagraph("_No endpoints defined._");
-        }
-        else
-        {
-            mdb.AddHeader("Endpoints Overview", 2);
-
-            var rows = new List<List<string>>();
-            foreach (var handler in requests)
-                rows.Add([
-                    $"`{handler.HttpMethod}`", $"{handler.RequiresAuth}", $"`{handler.Route}`",
-                    handler.RequestShortName,
-                    handler.DataStructureType
-                ]);
-
-            mdb.AddTable(new List<string> { "Method", "Requires Auth", "Route", "Command/Record", "Type" }, rows);
-
-            mdb.AddHorizontalRule();
-            mdb.AddHeader("Request Definitions", 2);
-
-            foreach (var request in requests)
-            {
-                if (request == null) continue;
-
-                mdb.AddHeader(request.RequestShortName, 3);
-                mdb.AddParagraph($"Full Type: `{request.RequestFullName}` ");
-
-                mdb.StartCodeBlock();
-                mdb.AddLine($"// Structure of {request.RequestShortName}");
-
-                foreach (var member in request.Members) mdb.AddLine(member);
-
-                mdb.EndCodeBlock();
-            }
-        }
-
-        mdb.AddHorizontalRule();
-
-        mdb.AddHeader("Event Documentation");
-        mdb.AddParagraph(
-            $"Auto-generated documentation for the distributed events. Total events: {events.Length}");
-
-        if (events.IsDefaultOrEmpty)
-        {
-            mdb.AddParagraph("_No endpoints defined._");
-        }
-        else
-        {
-            foreach (var @event in events)
-            {
-                if (@event == null) continue;
-
-                mdb.AddHeader(@event.TypeName, 3);
-                mdb.AddParagraph($"Full Type: `{@event.FullTypeName}` ");
-                mdb.AddParagraph($"Deserialization reference: `{@event.EventType}` ");
-
-                mdb.StartCodeBlock();
-                mdb.AddLine($"// Structure of {@event.TypeName}");
-
-                foreach (var member in @event.Properties)
-                {
-                    mdb.AddLine($"public {member.Type} {member.Name} " + "{ get; }");
-                }
-
-                mdb.EndCodeBlock();
-            }
-        }
-
-        SourceCodeBuilder scb = new();
-        scb.SetNamespace($"{projectNamespace}.Generated");
-        scb.StartScope("public static class ApiDocumentation");
-        scb.AddLine();
-
-        scb.AddLine("private static string Markdown => \"\"\"");
-
-        var lines = mdb.ToString().Split(["\n", "\r"], StringSplitOptions.None);
-        foreach (var line in lines) scb.AddLine(line);
-
-        scb.AddLine("\"\"\";");
-
-        scb.AddLine();
-        scb.StartScope("public static void PrintToPath(string path)");
-        scb.AddLine("File.WriteAllText(path, Markdown);");
-        scb.EndScope();
-        scb.EndScope();
-
-        context.AddSource("ApiDocumentation.g.cs",
-            SourceText.From(scb.ToString(), Encoding.UTF8));
-    }
-
-    private static void ExecuteWebsocketReceiverGeneration(SourceProductionContext context,
+    public static void GenerateWebsocketReceiver(this SourceProductionContext ctx,
         ImmutableArray<EventSourceData> events, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
@@ -327,44 +173,10 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.EndScope();
 
-        context.AddSource("WebSocketService.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        AddSource(ctx, "WebSocketService.g.cs", scb.ToString());
     }
 
-    private static void ExecuteWebsocketInterfaceGeneration(SourceProductionContext context, string projectNamespace)
-    {
-        var scb = new SourceCodeBuilder();
-
-        scb.SetUsings(["System.Net.Http"]);
-        scb.SetNamespace($"{projectNamespace}.Generated");
-
-        scb.StartScope("public interface IWebSocketService");
-        scb.AddLine("void SetToken(string _token);");
-        scb.AddLine("Task ConnectAsync(Uri webSocketUri, CancellationToken ctsToken);");
-        scb.AddLine("Task DisposeAsync();");
-        scb.EndScope();
-
-        context.AddSource("IWebSocketService.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
-    }
-
-    private static void ExecuteHttpClientGeneration(SourceProductionContext context, string projectNamespace)
-    {
-        var scb = new SourceCodeBuilder();
-        scb.SetUsings(["System.Net.Http"]);
-        scb.SetNamespace($"{projectNamespace}.Generated");
-
-        scb.StartScope("public interface IApiClient");
-        scb.AddLine("HttpClient Client { get; }");
-        scb.EndScope();
-        scb.AddLine();
-        scb.StartScope("public class ApiHttpClient(HttpClient client) : IApiClient");
-        scb.AddLine("public HttpClient Client => client;");
-        scb.EndScope();
-
-        context.AddSource("ApiClient.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
-    }
-
-    private static void ExecuteRequestSenderGeneration(SourceProductionContext context,
-        ImmutableArray<RequestData> requests, string projectNamespace)
+    public static void CreateTokenInjectorBaseClass(this SourceProductionContext context, string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
 
@@ -380,10 +192,14 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.EndScope();
 
         context.AddSource("TokenInjection.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+    }
 
+    public static void CreateAtomicRequestSenderWithInterfaces(this SourceProductionContext context,
+        ImmutableArray<RequestData> requests, string projectNamespace)
+    {
         foreach (var request in requests)
         {
-            scb = new SourceCodeBuilder();
+            var scb = new SourceCodeBuilder();
             scb.SetUsings([
                 "System.Net.Http.Headers",
                 "System.Net.Http.Json"
@@ -439,7 +255,19 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         }
     }
 
-    private static void ExecuteRequestSenderFacadesGeneration(SourceProductionContext context,
+    public static void CreateCommandSenderWithInterface(this SourceProductionContext context,
+        ImmutableArray<RequestData> requests, string projectNamespace)
+    {
+        context.InternalCreateRequestSenderFacades(requests, projectNamespace, "Command");
+    }
+
+    public static void CreateQuerySenderWithInterface(this SourceProductionContext context,
+        ImmutableArray<RequestData> requests, string projectNamespace)
+    {
+        context.InternalCreateRequestSenderFacades(requests, projectNamespace, "Query");
+    }
+
+    private static void InternalCreateRequestSenderFacades(this SourceProductionContext context,
         ImmutableArray<RequestData> requests, string projectNamespace, string type)
     {
         var scb = new SourceCodeBuilder();
@@ -484,8 +312,7 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         }
 
         scb.StartScope(classSignature);
-
-
+        
         var tokenInjections = new List<string>();
         foreach (var request in requests.Where(r => r.CqsType == type))
         {
@@ -503,5 +330,101 @@ public class ConsumerApiGenerator : IIncrementalGenerator
         scb.EndScope();
 
         context.AddSource($"{type}Sender.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+    }
+
+    public static void CreateWebsocketInterface(this SourceProductionContext context, string projectNamespace)
+    {
+        var scb = new SourceCodeBuilder();
+
+        scb.SetUsings(["System.Net.Http"]);
+        scb.SetNamespace($"{projectNamespace}.Generated");
+
+        scb.StartScope("public interface IWebSocketService");
+        scb.AddLine("void SetToken(string _token);");
+        scb.AddLine("Task ConnectAsync(Uri webSocketUri, CancellationToken ctsToken);");
+        scb.AddLine("Task DisposeAsync();");
+        scb.EndScope();
+
+        context.AddSource("IWebSocketService.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+    }
+
+    public static void CreateApiClientWithInterface(this SourceProductionContext context, string projectNamespace)
+    {
+        var scb = new SourceCodeBuilder();
+        scb.SetUsings(["System.Net.Http"]);
+        scb.SetNamespace($"{projectNamespace}.Generated");
+
+        scb.StartScope("public interface IApiClient");
+        scb.AddLine("HttpClient Client { get; }");
+        scb.EndScope();
+        scb.AddLine();
+        scb.StartScope("public class ApiHttpClient(HttpClient client) : IApiClient");
+        scb.AddLine("public HttpClient Client => client;");
+        scb.EndScope();
+
+        context.AddSource("ApiClient.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+    }
+
+    public static void CreateEventBusWithInterfaces(this SourceProductionContext context, string? projectNamespace, GlobalOptions options)
+    {
+        if (projectNamespace != options.DefinitionsProject) return;
+        
+        var scb = new SourceCodeBuilder();
+        
+        scb.SetNamespace($"{projectNamespace}.Generated");
+        scb.StartScope("public interface IEventPublisher");
+        scb.AddLine("Task PublishAsync<TEvent>(TEvent @event) where TEvent : class;");
+        scb.EndScope();
+        scb.AddLine();
+        scb.StartScope("public interface IEventSubscriber");
+        scb.AddLine("Task Subscribe<TEvent>(Func<TEvent, Task> handler) where TEvent : class;");
+        scb.AddLine("void Unsubscribe<TEvent>(Func<TEvent, Task> handler) where TEvent : class;");
+        scb.EndScope();
+        scb.AddLine();
+        scb.StartScope("public class EventService : IEventSubscriber, IEventPublisher");
+        scb.AddLine("private readonly Dictionary<Type, List<Delegate>> _handlers = new();");
+        scb.AddLine("private readonly Lock _lock = new();");
+        scb.StartScope("public async Task PublishAsync<TEvent>(TEvent @event) where TEvent : class");
+        scb.AddLine("List<Delegate> handlersCopy;");
+        scb.AddLine();
+        scb.StartScope("lock (_lock)");
+        scb.AddLine("if (!_handlers.TryGetValue(typeof(TEvent), out var handlers)) return;");
+        scb.AddLine("handlersCopy = new List<Delegate>(handlers);");
+        scb.EndScope();
+        scb.AddLine();
+        scb.AddLine("var tasks = handlersCopy.Cast<Func<TEvent, Task>>().Select(h => h(@event));");
+        scb.AddLine("await Task.WhenAll(tasks);");
+        scb.EndScope();
+        scb.AddLine();
+        scb.StartScope("public Task Subscribe<TEvent>(Func<TEvent, Task> handler) where TEvent : class");
+        scb.StartScope("lock (_lock)");
+        scb.StartScope("if (!_handlers.TryGetValue(typeof(TEvent), out var handlers))");
+        scb.AddLine("handlers = [];");
+        scb.AddLine("_handlers[typeof(TEvent)] = handlers;");
+        scb.EndScope();
+        scb.AddLine();
+        scb.AddLine("handlers.Add(handler);");
+        scb.EndScope();
+        scb.AddLine("return Task.CompletedTask;");
+        scb.EndScope();
+        scb.AddLine();
+        scb.StartScope("public void Unsubscribe<TEvent>(Func<TEvent, Task> handler) where TEvent : class");
+        scb.StartScope("lock (_lock)");
+        scb.StartScope("if (!_handlers.TryGetValue(typeof(TEvent), out var handlers)) return;");
+        scb.AddLine();
+        scb.AddLine("handlers.Remove(handler);");
+        scb.AddLine();
+        scb.AddLine("if (handlers.Count == 0) _handlers.Remove(typeof(TEvent));");
+        scb.EndScope();
+        scb.EndScope();
+        scb.EndScope();
+        scb.EndScope();
+
+        context.AddSource("EventBus.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8)); 
+    }
+
+    private static void AddSource(SourceProductionContext context, string fileName, string sourceCode)
+    {
+        context.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
     }
 }

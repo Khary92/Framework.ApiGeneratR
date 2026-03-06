@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Immutable;
-using System.Text;
-using ApiGeneratR.CodeGen.Builder;
 using ApiGeneratR.CodeGen.Helpers;
 using ApiGeneratR.CodeGen.Mapper;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 
-namespace ApiGeneratR.CodeGen;
+namespace ApiGeneratR.CodeGen.Generators.Client;
 
 [Generator(LanguageNames.CSharp)]
 public class ClientApiInjectorGenerator : IIncrementalGenerator
@@ -17,15 +14,17 @@ public class ClientApiInjectorGenerator : IIncrementalGenerator
         var assemblyName = context.CompilationProvider
             .Select(static (compilation, _) => compilation.AssemblyName);
 
-        var apiSourceData = context.GetConsumerApiSourceData();
-        var combined = apiSourceData.Combine(assemblyName).Combine(context.GetGlobalOptions());
+        var attributedClientServices = context.GetConsumerApiSourceData();
+        var apiSourceData = context.GetRequestSourceData();
+        var eventSourceData = context.GetEventSourceData();
+        var globalOptions = context.GetGlobalOptions();
 
-        context.RegisterSourceOutput(combined,
+        context.RegisterSourceOutput(attributedClientServices.Combine(assemblyName).Combine(globalOptions),
             static (spc, source) =>
             {
                 try
                 {
-                    Execute(spc, source.Left.Left, source.Left.Right, source.Right);
+                    ExecutePartialClientClassGeneration(spc, source.Left.Left, source.Left.Right, source.Right);
                 }
                 catch (Exception ex)
                 {
@@ -35,73 +34,61 @@ public class ClientApiInjectorGenerator : IIncrementalGenerator
                         Location.None, ex.Message));
                 }
             });
+
+        context.RegisterSourceOutput(
+            apiSourceData.Combine(assemblyName).Combine(eventSourceData).Combine(globalOptions),
+            static (spc, source) =>
+            {
+                try
+                {
+                    ExecuteApiContainerGeneration(spc, source.Left.Left.Left, source.Left.Left.Right, source.Left.Right,
+                        source.Right);
+                }
+                catch (Exception ex)
+                {
+                    spc.ReportDiagnostic(Diagnostic.Create(
+                        new DiagnosticDescriptor("GEN002", "Api Container Generator Error",
+                            "Error generating api container code: {0}", "Generator", DiagnosticSeverity.Error, true),
+                        Location.None, ex.Message));
+                }
+            });
     }
 
-    private static void Execute(SourceProductionContext spc, ImmutableArray<ApiConsumerData> consumerData,
+    private static void ExecutePartialClientClassGeneration(SourceProductionContext ctx,
+        ImmutableArray<ApiConsumerData> consumerData,
         string? nameSpace, GlobalOptions options)
     {
         if (nameSpace == null || !options.IsClientProject(nameSpace)) return;
 
-        ExecuteExtensionMethodGeneration(spc, consumerData);
+        ctx.CreatePartialClasses(consumerData);
     }
 
-    private static void ExecuteExtensionMethodGeneration(SourceProductionContext context,
-        ImmutableArray<ApiConsumerData> consumerData)
+    private static void ExecuteApiContainerGeneration(SourceProductionContext ctx,
+        ImmutableArray<RequestData> requestData,
+        string? projectNamespace, ImmutableArray<EventSourceData> eventData, GlobalOptions options)
     {
-        foreach (var consumer in consumerData)
-        {
-            if (consumer == null) continue;
+        if (requestData.IsDefaultOrEmpty || eventData.IsDefaultOrEmpty ||
+            projectNamespace != options.DefinitionsProject) return;
+        
+        // API container
+        ctx.CreateApiContainer(projectNamespace);
+        ctx.CreateClientApiExtensions(requestData, projectNamespace);
 
-            var scb = new SourceCodeBuilder();
-            scb.SetUsings([
-                "System.Threading.Tasks",
-                "System.Collections.Generic",
-                "System.Threading"
-            ]);
-            scb.SetNamespace(consumer.ConsumerNamespace);
+        // Request senders
+        ctx.CreateApiClientWithInterface(projectNamespace);
+        ctx.CreateTokenInjectorBaseClass(projectNamespace);
+        ctx.CreateAtomicRequestSenderWithInterfaces(requestData, projectNamespace);
+        ctx.CreateCommandSenderWithInterface(requestData, projectNamespace);
+        ctx.CreateQuerySenderWithInterface(requestData, projectNamespace);
 
-            scb.StartScope($"public partial class {consumer.ConsumerClassName} : IDisposable");
-            scb.AddLine("private readonly List<IDisposable> _disposables = [];");
-            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IApiContainer _container; ");
-            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IWebSocketService WebSocket;");
-            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.ICommandSender Commands;");
-            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IQuerySender Queries;");
-            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IEventPublisher EventPublisher;");
-            scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IEventSubscriber EventSubscriber;");
-            scb.AddLine();
-            scb.StartScope(
-                $"public {consumer.ConsumerClassName}(global::ApiGeneratR.Definitions.Generated.IApiContainer container)");
-            scb.AddLine("_container = container;");
-            scb.AddLine("WebSocket = container.WebSocket;");
-            scb.AddLine("Commands = container.Commands;");
-            scb.AddLine("Queries = container.Queries;");
-            scb.AddLine("EventPublisher = container.EventPublisher;");
-            scb.AddLine("EventSubscriber = container.EventSubscriber;");
-            scb.AddLine("Initialize();");
-            scb.EndScope();
-            scb.AddLine();
-            scb.StartScope("private void SetToken(string token)");
-            scb.AddLine("_container.SetToken(token);");
-            scb.EndScope();
-            scb.AddLine();
-            scb.StartScope("private void Initialize()");
+        // Websocket
+        ctx.GenerateWebsocketReceiver(eventData, projectNamespace);
+        ctx.CreateWebsocketInterface(projectNamespace);
 
-            foreach (var registeredEvent in consumer.GlobalEventTypesNameSpaces)
-            {
-                if (registeredEvent == null) continue;
-
-                scb.AddLine(
-                    $"_disposables.Add(EventSubscriber.Subscribe<{registeredEvent}>((@event) => HandleEventAsync(@event)));");
-            }
-
-            scb.EndScope();
-            scb.AddLine();
-            scb.StartScope("public void Dispose()");
-            scb.AddLine("foreach (var disposable in _disposables) disposable.Dispose();");
-            scb.EndScope();
-            scb.EndScope();
-
-            context.AddSource($"{consumer.ConsumerClassName}.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
-        }
+        // EventBus
+        ctx.CreateEventBusWithInterfaces(projectNamespace, options);
+        
+        //Documentation
+        ctx.CreateDocumentation(projectNamespace, eventData, requestData);
     }
 }
