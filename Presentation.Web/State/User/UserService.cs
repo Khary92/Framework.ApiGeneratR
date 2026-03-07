@@ -23,7 +23,6 @@ public partial class UserService : IUserService
         Users = users.Select(u => u.ToUserModel()).ToList();
         if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
     }
-
     
     private async Task HandleUserCreatedEventAsync(UserCreatedEvent @event)
     {

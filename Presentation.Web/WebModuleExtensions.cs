@@ -11,7 +11,7 @@ namespace Presentation.Web;
 
 public static class WebModuleExtensions
 {
-    private const string BaseUrl = "http://core-server:8080";
+    private const string BaseUrl = "http://core-server:8080/";
 
     public static void ConfigureWebApp(this WebApplication app)
     {
@@ -41,11 +41,11 @@ public static class WebModuleExtensions
             services.AddMudServices();
 
             services.AddStateServices();
-            services.AddCommunicationServices();
+            services.AddGeneratedServices();
             services.AddValidators();
         }
 
-        private void AddCommunicationServices()
+        private void AddGeneratedServices()
         {
             services.AddHttpClient<IApiClient, ApiHttpClient>(client => { client.BaseAddress = new Uri(BaseUrl); });
             services.AddApiServices();

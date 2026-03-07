@@ -61,21 +61,27 @@ public static class ClientApiExtensions
         scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public static class ApiFacadeExtensions");
-        scb.StartScope("public static void AddApiServices(this IServiceCollection services)");
-        scb.AddLine("services.AddSingleton<IApiContainer, ConsumerApi>();");
-        scb.AddLine("services.AddSingleton<IWebSocketService, WebSocketService>();");
-        scb.AddLine("services.AddSingleton<ICommandSender, GeneratedCommandSender>();");
-        scb.AddLine("services.AddSingleton<IQuerySender, GeneratedQuerySender>();");
-        scb.AddLine("services.AddSingleton<EventService>();");
-        scb.AddLine("services.AddSingleton<IEventSubscriber>(sp => sp.GetRequiredService<EventService>());");
-        scb.AddLine("services.AddSingleton<IEventPublisher>(sp => sp.GetRequiredService<EventService>());");
+        scb.StartScope(
+            "public static void AddApiServices(this IServiceCollection services, ServiceLifetime lifetime = ServiceLifetime.Scoped)");
+
+        scb.AddLine("services.Add(new ServiceDescriptor(typeof(IApiContainer), typeof(ConsumerApi), lifetime));");
+        scb.AddLine(
+            "services.Add(new ServiceDescriptor(typeof(IWebSocketService), typeof(WebSocketService), lifetime));");
+        scb.AddLine("services.Add(new ServiceDescriptor(typeof(ICommandSender), typeof(GeneratedCommandSender), lifetime));");
+        scb.AddLine(
+            "services.Add(new ServiceDescriptor(typeof(IQuerySender), typeof(GeneratedQuerySender), lifetime));");
+        scb.AddLine("services.Add(new ServiceDescriptor(typeof(EventService), typeof(EventService), lifetime));");
+        scb.AddLine(
+            "services.Add(new ServiceDescriptor(typeof(IEventSubscriber), sp => sp.GetRequiredService<EventService>(), lifetime));");
+        scb.AddLine(
+            "services.Add(new ServiceDescriptor(typeof(IEventPublisher), sp => sp.GetRequiredService<EventService>(), lifetime));");
 
         foreach (var request in requests)
         {
             if (request == null) continue;
 
             scb.AddLine(
-                $"services.AddSingleton<I{request.RequestShortName}Sender, Generated{request.RequestShortName}Sender>();");
+                $"services.Add(new ServiceDescriptor(typeof(I{request.RequestShortName}Sender), typeof(Generated{request.RequestShortName}Sender), lifetime));");
         }
 
         scb.EndScope();
