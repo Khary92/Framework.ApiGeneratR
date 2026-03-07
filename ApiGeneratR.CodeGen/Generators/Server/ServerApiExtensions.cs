@@ -90,15 +90,15 @@ public static class ServerApiExtensions
 
         scb.StartScope("public static class MediatorExtensions");
         scb.StartScope("extension(IServiceCollection services)");
-        scb.StartScope("public void AddServerApiServices()");
+        scb.StartScope("public void AddServerApiServices(ServiceLifetime lifetime = ServiceLifetime.Scoped)");
         scb.AddLine(
-            $"services.AddSingleton<global::{options.DefinitionsProject}.Generated.IMediator, global::{projectNamespace}.Generated.SourceMediator>();");
+            $"services.Add(new ServiceDescriptor(typeof(global::{options.DefinitionsProject}.Generated.IMediator), typeof(global::{projectNamespace}.Generated.SourceMediator), lifetime));");
 
         foreach (var handler in handlers)
         {
             if (handler == null) continue;
             scb.AddLine(
-                $"services.AddSingleton<global::{options.DefinitionsProject}.Generated.I{handler.RequestShortName}Handler, {handler.HandlerFullName}>();");
+                $"services.Add(new ServiceDescriptor(typeof(global::{options.DefinitionsProject}.Generated.I{handler.RequestShortName}Handler), typeof({handler.HandlerFullName}), lifetime));");
         }
 
         scb.EndScope();
