@@ -23,7 +23,7 @@ public partial class MessageService : IMessageService
 
     public event Action? OnMessageReceived;
 
-    private Task HandleEventAsync(MessageReceivedEvent @event)
+    private Task HandleMessageReceivedEventAsync(MessageReceivedEvent @event)
     {
         var isCurrentUser = _loginService.IsCurrentUser(@event.OriginUserId);
         var messageModel = @event.ToMessageModel(isCurrentUser);

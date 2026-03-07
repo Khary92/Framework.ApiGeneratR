@@ -22,7 +22,7 @@ public static class RequestSymbolExtensions
                     if (attribute is null) return null;
 
                     var requestInterface = symbol.AllInterfaces
-                        .FirstOrDefault(i => i.Name == "IRequest" && i.TypeArguments.Length == 1);
+                        .FirstOrDefault(i => i.Name == "RequestResponseTag" && i.TypeArguments.Length == 1);
 
                     if (requestInterface is null) return null;
 

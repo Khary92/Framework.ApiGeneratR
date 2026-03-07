@@ -32,17 +32,14 @@ public static class ConsumerApiSymbolExtensions
                     }
 
                     var arg = attribute.ConstructorArguments[0];
-                    
-                    var eventTypeNames = arg.Values
-                        .Select(v =>
-                        {
-                            if (v.Value is ITypeSymbol typeSymbol)
-                            {
-                                return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                            }
 
-                            return v.Value?.ToString() ?? "UnknownType";
-                        })
+                    var eventTypeNames = arg.Values
+                        .Select(v => v.Value as ITypeSymbol)
+                        .Where(t => t is not null)
+                        .Cast<ITypeSymbol>()
+                        .Select(typeSymbol => new TypeNames(
+                            typeSymbol.Name,
+                            typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)))
                         .ToImmutableArray();
 
                     return new ApiConsumerData(

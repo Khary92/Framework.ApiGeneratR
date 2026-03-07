@@ -25,7 +25,7 @@ public static class RequestHandlerSymbolExtensions
                         return null;
 
                     var requestInterface = requestSymbol.AllInterfaces
-                        .FirstOrDefault(i => i.Name == "IRequest" && i.IsGenericType);
+                        .FirstOrDefault(i => i.Name == "RequestResponseTag" && i.IsGenericType);
 
                     if (requestInterface is null) return null;
 

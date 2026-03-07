@@ -25,7 +25,6 @@ public static class PartialApiInjectionExtensions
             scb.SetNamespace(consumer.ConsumerNamespace);
 
             scb.StartScope($"public partial class {consumer.ConsumerClassName} : IDisposable");
-            scb.AddLine("private readonly List<IDisposable> _disposables = [];");
             scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IApiContainer _container; ");
             scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.IWebSocketService WebSocket;");
             scb.AddLine("private readonly global::ApiGeneratR.Definitions.Generated.ICommandSender Commands;");
@@ -50,18 +49,24 @@ public static class PartialApiInjectionExtensions
             scb.AddLine();
             scb.StartScope("private void Initialize()");
 
-            foreach (var registeredEvent in consumer.GlobalEventTypesNameSpaces)
+            foreach (var registeredEvent in consumer.TypeNames)
             {
                 if (registeredEvent == null) continue;
 
                 scb.AddLine(
-                    $"_disposables.Add(EventSubscriber.Subscribe<{registeredEvent}>((@event) => HandleEventAsync(@event)));");
+                    $"_ = EventSubscriber.Subscribe<{registeredEvent.EventLongName}>(Handle{registeredEvent.EventShortName}Async);");
             }
 
             scb.EndScope();
             scb.AddLine();
             scb.StartScope("public void Dispose()");
-            scb.AddLine("foreach (var disposable in _disposables) disposable.Dispose();");
+            foreach (var registeredEvent in consumer.TypeNames)
+            {
+                if (registeredEvent == null) continue;
+
+                scb.AddLine(
+                    $"EventSubscriber.Unsubscribe<{registeredEvent.EventLongName}>(Handle{registeredEvent.EventShortName}Async);");
+            }
             scb.EndScope();
             scb.EndScope();
 

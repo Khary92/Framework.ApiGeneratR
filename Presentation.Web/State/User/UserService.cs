@@ -24,13 +24,14 @@ public partial class UserService : IUserService
         if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
     }
 
-    private async Task HandleEventAsync(UserCreatedEvent @event)
+    
+    private async Task HandleUserCreatedEventAsync(UserCreatedEvent @event)
     {
         Users.Add(@event.ToUserModel());
         if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
     }
 
-    private async Task HandleEventAsync(UserDeletedEvent @event)
+    private async Task HandleUserDeletedEventAsync(UserDeletedEvent @event)
     {
         var user = Users.FirstOrDefault(user => user.UserId == @event.Id);
 
@@ -41,7 +42,7 @@ public partial class UserService : IUserService
         if (OnCollectionChanged != null) await OnCollectionChanged.Invoke();
     }
 
-    private async Task HandleEventAsync(UserUpdatedEvent @event)
+    private async Task HandleUserUpdatedEventAsync(UserUpdatedEvent @event)
     {
         var user = Users.FirstOrDefault(user => user.UserId == @event.Id);
 
