@@ -31,7 +31,7 @@ public static class PartialApiInjectionExtensions
             scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IQuerySender Queries;");
             scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IEventPublisher EventPublisher;");
             scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IEventSubscriber EventSubscriber;");
-            scb.AddLine();s
+            scb.AddLine();
             scb.StartScope(
                 $"public {consumer.ConsumerClassName}(global::{options.DefinitionsProject}.Generated.IApiContainer container)");
             scb.AddLine("_container = container;");
