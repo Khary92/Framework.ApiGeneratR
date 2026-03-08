@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 namespace ApiGeneratR.Generators.Server;
 
 [Generator(LanguageNames.CSharp)]
-public class MediatorGenerator : IIncrementalGenerator
+public class ServerGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -17,7 +17,7 @@ public class MediatorGenerator : IIncrementalGenerator
         var events = context.GetEventSourceData();
         var requests = context.GetRequestSourceData();
         var requestHandlers = context.GetRequestHandlerSourceData();
-
+        
         context.RegisterSourceOutput(events.Combine(assemblyName).Combine(context.GetGlobalOptions()),
             static (spc, source) =>
             {
@@ -32,9 +32,9 @@ public class MediatorGenerator : IIncrementalGenerator
                             DiagnosticSeverity.Error, true), Location.None, ex.Message));
                 }
             });
-        
-        
-        context.RegisterSourceOutput(requestHandlers.Combine(events).Combine(assemblyName).Combine(context.GetGlobalOptions()),
+
+        context.RegisterSourceOutput(
+            requestHandlers.Combine(events).Combine(assemblyName).Combine(context.GetGlobalOptions()),
             static (spc, source) =>
             {
                 try

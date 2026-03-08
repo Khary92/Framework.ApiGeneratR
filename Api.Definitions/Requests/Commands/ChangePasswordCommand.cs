@@ -4,7 +4,7 @@ using ApiGeneratR.Tags;
 
 namespace Api.Definitions.Requests.Commands;
 
-[Request("change-password", true, RequestType.Command)]
+[Request("change-password", "User", RequestType.Command)]
 public record ChangePasswordCommand(string OldPassword, string NewPassword, Guid IdentityId = default)
     : RequestResponseTag<CommandResponse>
 {

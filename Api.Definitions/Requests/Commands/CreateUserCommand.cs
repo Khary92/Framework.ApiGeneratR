@@ -4,7 +4,7 @@ using ApiGeneratR.Tags;
 
 namespace Api.Definitions.Requests.Commands;
 
-[Request("create-user", true, RequestType.Command)]
+[Request("create-user", "User", RequestType.Command)]
 public record CreateUserCommand(
     string LoginName,
     string InitialPassword,

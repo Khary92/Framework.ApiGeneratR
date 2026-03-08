@@ -39,46 +39,33 @@ public static class RequestSymbolExtensions
                         arrayBuilder.Add($"public {member.Type.ToDisplayString()} {member.Name} {{ get; }}");
                     }
 
-                    var route = attribute.ConstructorArguments.Length > 0
-                        ? attribute.ConstructorArguments[0].Value?.ToString() ?? "/unknown"
-                        : "/unknown";
+                    var route = attribute.ConstructorArguments[0].Value?.ToString() ?? "/unknown";
 
-                    var requiresAuth = attribute.ConstructorArguments.Length > 1
-                                       && attribute.ConstructorArguments[1].Value is true;
+                    var policyName = attribute.ConstructorArguments.Length > 1
+                        ? attribute.ConstructorArguments[1].Value?.ToString() ?? "Default"
+                        : "Default";
 
-                    var requestValue = attribute.ConstructorArguments.Length > 2
-                        ? (int)(attribute.ConstructorArguments[2].Value ?? 0)
-                        : 0;
-
-                    var cqsType = requestValue switch
+                    var cqsType = "Unknown";
+                    if (attribute.ConstructorArguments.Length > 2)
                     {
-                        0 => "Query",
-                        1 => "Command",
-                        _ => "Unknown"
-                    };
+                        var requestTypeConstant = attribute.ConstructorArguments[2];
+                        if (requestTypeConstant.Value is int val &&
+                            requestTypeConstant.Type is INamedTypeSymbol enumType)
+                        {
+                            var member = enumType.GetMembers().OfType<IFieldSymbol>()
+                                .FirstOrDefault(f => f.HasConstantValue && (int)f.ConstantValue == val);
+                            cqsType = member?.Name ?? "Unknown";
+                        }
+                    }
 
-                    var methodValue = attribute.ConstructorArguments.Length > 3
-                        ? (int)(attribute.ConstructorArguments[3].Value ?? 1)
-                        : 1;
-
-                    var httpMethod = methodValue switch
-                    {
-                        0 => "Get",
-                        1 => "Post",
-                        2 => "Put",
-                        3 => "Delete",
-                        4 => "Patch",
-                        _ => "Post"
-                    };
 
                     var hasIdentityId = symbol.GetMembers().Any(m => m.Name == "IdentityId");
                     var type = symbol.IsRecord ? "Record" : "Class";
 
                     return new RequestData(
                         route,
-                        requiresAuth,
+                        policyName,
                         hasIdentityId,
-                        httpMethod,
                         cqsType,
                         symbol.Name,
                         fullName,

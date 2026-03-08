@@ -21,7 +21,8 @@ public static class Program
 
     private static WebApplication BuildServerApp(string[] args)
     {
-        //ApiGeneratRStatics.PrintToPath("Documentation.md");
+        
+        GeneratedDocumentation.PrintDocumentationToPath("Documentation.md");
 
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
@@ -75,6 +76,11 @@ public static class Program
             })
             .AddJwtBearer(options => { options.TokenValidationParameters = tokenValidationParameters; });
 
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("User", policy => policy.RequireRole("user"));
+        });
+        
         builder.Logging.AddSimpleConsole(options =>
         {
             options.SingleLine = true;

@@ -11,37 +11,26 @@ public static class OptionsExtensions
         return context.AnalyzerConfigOptionsProvider
             .Select((options, _) =>
             {
-                if (!options.GlobalOptions.TryGetValue("apigeneratr_clientprojects", out var clientProjects))
-                {
-                    options.GlobalOptions.TryGetValue("apigeneratr_clientprojects", out clientProjects);
-                }
+                options.GlobalOptions.TryGetValue("apigeneratr_project_clients", out var clientProjects);
 
-                if (!options.GlobalOptions.TryGetValue("build_property.apigeneratr_definitionsproject",
-                        out var definitionsProject))
-                {
-                    options.GlobalOptions.TryGetValue("apigeneratr_definitionsproject", out definitionsProject);
-                }
+                options.GlobalOptions.TryGetValue("apigeneratr_auth_profiles", out var authProfiles);
 
-                if (!options.GlobalOptions.TryGetValue("build_property.apigeneratr_handlerproject",
-                        out var handlerProject))
-                {
-                    options.GlobalOptions.TryGetValue("apigeneratr_handlerproject", out handlerProject);
-                }
+                options.GlobalOptions.TryGetValue("apigeneratr_project_definitions",
+                    out var definitionsProject);
 
-                if (!options.GlobalOptions.TryGetValue("apigeneratr_log_mediator", out var isLogMediator))
-                {
-                    options.GlobalOptions.TryGetValue("apigeneratr_log_mediator", out isLogMediator);
-                }
+                options.GlobalOptions.TryGetValue("apigeneratr_project_handler", out var handlerProject);
 
-                if (!options.GlobalOptions.TryGetValue("apigeneratr_log_websocket", out var isLogWebsocket))
-                {
-                    options.GlobalOptions.TryGetValue("apigeneratr_log_websocket", out isLogWebsocket);
-                }
+                options.GlobalOptions.TryGetValue("apigeneratr_log_mediator", out var isLogMediator);
+
+                options.GlobalOptions.TryGetValue("apigeneratr_log_websocket", out var isLogWebsocket);
 
                 return new GlobalOptions(
                     clientProjects == null
                         ? ["Missing global config entry for client projects!"]
                         : clientProjects.Split(','),
+                    authProfiles == null
+                        ? ["Missing global config entry for auth profiles!"]
+                        : authProfiles.Split(','),
                     definitionsProject ?? "Missing global config entry for definitions project!",
                     handlerProject ?? "Missing global config entry for request handler project!",
                     isLogMediator == "true",

@@ -186,21 +186,11 @@ public static class ServerApiExtensions
 
         scb.StartScope("public static class ApiExtensions");
 
-        scb.StartScope("extension(ClaimsPrincipal user)");
-
-        scb.StartScope("public bool IsValidUser()");
-        scb.AddLine("var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;");
-        scb.AddLine("var role = user.FindFirst(ClaimTypes.Role)?.Value;");
-        scb.AddLine("return !string.IsNullOrEmpty(userIdString) && !string.IsNullOrEmpty(role) && role == \"user\";");
-        scb.EndScope();
-        scb.AddLine();
-
-        scb.StartScope("public Guid GetIdentityId()");
+        scb.StartScope("public static Guid GetIdentityId(this ClaimsPrincipal user)");
         scb.AddLine("var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;");
         scb.AddLine("return Guid.TryParse(userIdString, out var id) ? id : Guid.Empty;");
         scb.EndScope();
 
-        scb.EndScope();
         scb.AddLine();
 
         scb.StartScope("public static void MapGeneratedApiEndpoints(this WebApplication app)");
@@ -210,40 +200,25 @@ public static class ServerApiExtensions
             {
                 if (request == null) continue;
 
-                if (request is { RequiresAuth: true })
-                {
-                    scb.StartScope(
-                        $"app.MapPost(\"{request.Route}\", async ({request.RequestFullName} request, global::{options.DefinitionsProject}.Generated.IMediator mediator, ClaimsPrincipal user, CancellationToken ct) =>");
-                    scb.AddLine("if (!user.IsValidUser()) return Results.Unauthorized();");
-                    scb.AddLine();
-                    var mediatorDelegate = $"{(request.RequestHasIdentityId
-                            ? "var result = await mediator.HandleAsync(request with { IdentityId = user.GetIdentityId() }, ct);"
-                            : "var result = await mediator.HandleAsync(request, ct);"
-                        )}";
-                    scb.AddLine(mediatorDelegate);
-                    scb.AddLine();
-                    scb.AddLine("return result is not null");
-                    scb.AddIndentedLine("? Results.Ok(result)");
-                    scb.AddIndentedLine(": Results.NotFound();");
-                    scb.EndScope($"){(request.RequiresAuth ? ".RequireAuthorization()" : string.Empty)};");
-                    scb.AddLine();
-                    continue;
-                }
-
                 scb.StartScope(
-                    $"app.MapPost(\"{request.Route}\", async ({request.RequestFullName} request, global::{options.DefinitionsProject}.Generated.IMediator mediator) =>");
-                scb.AddLine("var result = await mediator.HandleAsync(request);");
+                    $"app.MapPost(\"{request.Route}\", async ({request.RequestFullName} request, global::{options.DefinitionsProject}.Generated.IMediator mediator, ClaimsPrincipal user, CancellationToken ct) =>");
+                var mediatorDelegate = $"{(request.RequestHasIdentityId
+                        ? "var result = await mediator.HandleAsync(request with { IdentityId = user.GetIdentityId() }, ct);"
+                        : "var result = await mediator.HandleAsync(request, ct);"
+                    )}";
+                scb.AddLine(mediatorDelegate);
                 scb.AddLine();
                 scb.AddLine("return result is not null");
                 scb.AddIndentedLine("? Results.Ok(result)");
                 scb.AddIndentedLine(": Results.NotFound();");
-                scb.EndScope(");");
+                scb.EndScope(
+                    $"){(request.AuthPolicy == "AllowAnonymous" ? ".AllowAnonymous()" : $".RequireAuthorization(\"{request.AuthPolicy}\")")};");
+                scb.AddLine();
             }
 
         scb.EndScope();
         scb.EndScope();
 
-        context.AddSource("ApiEndpointExtensions.g.cs",
-            SourceText.From(scb.ToString(), Encoding.UTF8));
+        context.AddSource("ApiEndpointExtensions.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 }

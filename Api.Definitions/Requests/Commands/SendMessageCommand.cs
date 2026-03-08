@@ -4,7 +4,7 @@ using ApiGeneratR.Tags;
 
 namespace Api.Definitions.Requests.Commands;
 
-[Request("send-message", true, RequestType.Command)]
+[Request("send-message", "User", RequestType.Command)]
 public record SendMessageCommand(string Message, Guid TargetUserId, Guid IdentityId = default)
     : RequestResponseTag<CommandResponse>
 {

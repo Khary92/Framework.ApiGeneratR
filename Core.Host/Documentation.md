@@ -4,15 +4,15 @@ Auto-generated documentation for the available endpoints. Total endpoints: 7
 
 ## Endpoints Overview
 
-| Method | Requires Auth | Route | Command/Record | Type |
-| --- | --- | --- | --- | --- |
-| `Post` | True | `change-password` | ChangePasswordCommand | Record |
-| `Post` | True | `create-user` | CreateUserCommand | Record |
-| `Post` | True | `send-message` | SendMessageCommand | Record |
-| `Post` | True | `get-users` | GetAllUsersQuery | Record |
-| `Post` | True | `get-messages-for-Id` | GetMessagesForUserQuery | Record |
-| `Post` | True | `get-own-user-Id` | GetMyUserIdQuery | Record |
-| `Post` | False | `login` | LoginQuery | Record |
+| Auth Policy | Route | Command/Record | Type |
+| --- | --- | --- | --- |
+| User | ChangePasswordCommand | Record |
+| User | CreateUserCommand | Record |
+| User | SendMessageCommand | Record |
+| User | GetAllUsersQuery | Record |
+| User | GetMessagesForUserQuery | Record |
+| User | GetMyUserIdQuery | Record |
+| AllowAnonymous | LoginQuery | Record |
 
 ---
 
@@ -20,7 +20,7 @@ Auto-generated documentation for the available endpoints. Total endpoints: 7
 
 ### ChangePasswordCommand
 
-Full Type: `global::ApiGeneratR.Definitions.Requests.Commands.ChangePasswordCommand` 
+Full Type: `global::Api.Definitions.Requests.Commands.ChangePasswordCommand` 
 
 ```csharp
             // Structure of ChangePasswordCommand
@@ -31,7 +31,7 @@ Full Type: `global::ApiGeneratR.Definitions.Requests.Commands.ChangePasswordComm
 
 ### CreateUserCommand
 
-Full Type: `global::ApiGeneratR.Definitions.Requests.Commands.CreateUserCommand` 
+Full Type: `global::Api.Definitions.Requests.Commands.CreateUserCommand` 
 
 ```csharp
             // Structure of CreateUserCommand
@@ -43,7 +43,7 @@ Full Type: `global::ApiGeneratR.Definitions.Requests.Commands.CreateUserCommand`
 
 ### SendMessageCommand
 
-Full Type: `global::ApiGeneratR.Definitions.Requests.Commands.SendMessageCommand` 
+Full Type: `global::Api.Definitions.Requests.Commands.SendMessageCommand` 
 
 ```csharp
             // Structure of SendMessageCommand
@@ -54,7 +54,7 @@ Full Type: `global::ApiGeneratR.Definitions.Requests.Commands.SendMessageCommand
 
 ### GetAllUsersQuery
 
-Full Type: `global::ApiGeneratR.Definitions.Requests.Queries.GetAllUsersQuery` 
+Full Type: `global::Api.Definitions.Requests.Queries.GetAllUsersQuery` 
 
 ```csharp
             // Structure of GetAllUsersQuery
@@ -62,7 +62,7 @@ Full Type: `global::ApiGeneratR.Definitions.Requests.Queries.GetAllUsersQuery`
 
 ### GetMessagesForUserQuery
 
-Full Type: `global::ApiGeneratR.Definitions.Requests.Queries.GetMessagesForUserQuery` 
+Full Type: `global::Api.Definitions.Requests.Queries.GetMessagesForUserQuery` 
 
 ```csharp
             // Structure of GetMessagesForUserQuery
@@ -72,7 +72,7 @@ Full Type: `global::ApiGeneratR.Definitions.Requests.Queries.GetMessagesForUserQ
 
 ### GetMyUserIdQuery
 
-Full Type: `global::ApiGeneratR.Definitions.Requests.Queries.GetMyUserIdQuery` 
+Full Type: `global::Api.Definitions.Requests.Queries.GetMyUserIdQuery` 
 
 ```csharp
             // Structure of GetMyUserIdQuery
@@ -81,7 +81,7 @@ Full Type: `global::ApiGeneratR.Definitions.Requests.Queries.GetMyUserIdQuery`
 
 ### LoginQuery
 
-Full Type: `global::ApiGeneratR.Definitions.Requests.Queries.LoginQuery` 
+Full Type: `global::Api.Definitions.Requests.Queries.LoginQuery` 
 
 ```csharp
             // Structure of LoginQuery
@@ -97,7 +97,7 @@ Auto-generated documentation for the distributed events. Total events: 4
 
 ### MessageReceivedEvent
 
-Full Type: `global::ApiGeneratR.Definitions.Events.Message.MessageReceivedEvent` 
+Full Type: `global::Api.Definitions.Events.Message.MessageReceivedEvent` 
 
 Deserialization reference: `message-received` 
 
@@ -112,7 +112,7 @@ Deserialization reference: `message-received`
 
 ### UserCreatedEvent
 
-Full Type: `global::ApiGeneratR.Definitions.Events.User.UserCreatedEvent` 
+Full Type: `global::Api.Definitions.Events.User.UserCreatedEvent` 
 
 Deserialization reference: `user-created` 
 
@@ -126,7 +126,7 @@ Deserialization reference: `user-created`
 
 ### UserDeletedEvent
 
-Full Type: `global::ApiGeneratR.Definitions.Events.User.UserDeletedEvent` 
+Full Type: `global::Api.Definitions.Events.User.UserDeletedEvent` 
 
 Deserialization reference: `user-deleted` 
 
@@ -137,7 +137,7 @@ Deserialization reference: `user-deleted`
 
 ### UserUpdatedEvent
 
-Full Type: `global::ApiGeneratR.Definitions.Events.User.UserUpdatedEvent` 
+Full Type: `global::Api.Definitions.Events.User.UserUpdatedEvent` 
 
 Deserialization reference: `user-updated` 
 

@@ -16,7 +16,7 @@ public static class DocumentationExtensions
     {
         SourceCodeBuilder scb = new();
         scb.SetNamespace($"{projectNamespace}.Generated");
-        scb.StartScope("public static class GeneratRStaticServices");
+        scb.StartScope("public static class GeneratedDocumentation");
         scb.AddLine();
         
         scb.AddLine("private static string Markdown => \"\"\"");
@@ -30,7 +30,7 @@ public static class DocumentationExtensions
         scb.EndScope();
         scb.EndScope();
         
-        ctx.AddSource("StaticServices.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        ctx.AddSource("GeneratedDocumentation.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 
     private static string GetMarkdownText(ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests)
@@ -49,14 +49,14 @@ public static class DocumentationExtensions
             mdb.AddHeader("Endpoints Overview", 2);
 
             var rows = new List<List<string>>();
-            foreach (var handler in requests)
+            foreach (var request in requests)
                 rows.Add([
-                    $"`{handler.HttpMethod}`", $"{handler.RequiresAuth}", $"`{handler.Route}`",
-                    handler.RequestShortName,
-                    handler.DataStructureType
+                    request.AuthPolicy,
+                    request.RequestShortName,
+                    request.DataStructureType
                 ]);
 
-            mdb.AddTable(new List<string> { "Method", "Requires Auth", "Route", "Command/Record", "Type" }, rows);
+            mdb.AddTable(new List<string> {"Auth Policy", "Route", "Command/Record", "Type" }, rows);
 
             mdb.AddHorizontalRule();
             mdb.AddHeader("Request Definitions", 2);

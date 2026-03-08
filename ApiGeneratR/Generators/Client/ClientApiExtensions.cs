@@ -224,7 +224,7 @@ public static class ClientApiExtensions
             scb.StartScope(
                 $"public async Task<{request.ReturnValueFullName}> SendAsync({request.RequestFullName} command, CancellationToken ct = default)");
 
-            if (request.RequiresAuth)
+            if (request.AuthPolicy != "AllowAnonymous")
             {
                 scb.AddLine("if (string.IsNullOrEmpty(Token))");
                 scb.AddIndentedLine(

@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 namespace ApiGeneratR.Generators.Client;
 
 [Generator(LanguageNames.CSharp)]
-public class ClientApiInjectorGenerator : IIncrementalGenerator
+public class ClientGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {

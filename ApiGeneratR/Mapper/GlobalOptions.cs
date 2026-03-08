@@ -4,6 +4,7 @@ namespace ApiGeneratR.Mapper;
 
 public record GlobalOptions(
     string[] ClientProjects,
+    string[] AuthProfiles,
     string DefinitionsProject,
     string HandlerProject,
     bool IsLogMediator,

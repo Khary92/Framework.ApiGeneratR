@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ApiGeneratR.Helpers;
 
-public static class EventSymbolExtensions
+public static class EventAttributeRetriever
 {
     public static IncrementalValueProvider<ImmutableArray<EventSourceData>> GetEventSourceData(
         this IncrementalGeneratorInitializationContext context)

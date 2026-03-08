@@ -4,9 +4,8 @@ namespace ApiGeneratR.Mapper;
 
 public record RequestData(
     string Route,
-    bool RequiresAuth,
+    string AuthPolicy,
     bool RequestHasIdentityId,
-    string HttpMethod,
     string CqsType,
     string RequestShortName,
     string RequestFullName,

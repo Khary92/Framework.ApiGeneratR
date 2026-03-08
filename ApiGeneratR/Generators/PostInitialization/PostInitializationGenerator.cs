@@ -10,7 +10,6 @@ public class AttributeGenerator : IIncrementalGenerator
         context.GenerateIRequestTaggingInterface();
         context.GenerateRequestHandlerAttribute();
         context.GenerateRequestAttribute();
-        context.GenerateHttpMethodEnum();
         context.GenerateApiConsumerAttribute();
         context.GenerateRequestTypeAttribute();
         context.GenerateEventAttributeAttribute();

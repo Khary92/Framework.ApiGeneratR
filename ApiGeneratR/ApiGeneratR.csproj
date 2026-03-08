@@ -20,4 +20,8 @@
         </PackageReference>
     </ItemGroup>
 
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);RS2000;RS2007;RS2008</NoWarn>
+    </PropertyGroup>
+
 </Project>

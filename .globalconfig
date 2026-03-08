@@ -1,9 +1,12 @@
 is_global = true
 
-# Use comma seperation for multiple projects (eg Presentation.Web, Presentation.Mobile)
-apigeneratr_clientprojects = Presentation.Web
-apigeneratr_definitionsproject = Api.Definitions
-apigeneratr_handlerproject = Core.Application
+# Use comma separation for multiple client projects (eg Presentation.Web,Presentation.Mobile)
+apigeneratr_project_clients = Presentation.Web
+apigeneratr_project_definitions = Api.Definitions
+apigeneratr_project_handler = Core.Application
+
+# Use comma separation for multiple profiles (eg Admin,User)
+apigeneratr_auth_profiles = User
 
 apigeneratr_log_mediator = true
 apigeneratr_log_websocket = true

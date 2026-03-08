@@ -12,7 +12,7 @@ public static class PostInitializationOutputExtensions
         context.RegisterPostInitializationOutput(static ctx =>
         {
             var scb = new SourceCodeBuilder();
-            
+
             scb.SetNamespace("ApiGeneratR.Tags");
 
             scb.AddLine("internal interface RequestResponseTag<TResponse>;");
@@ -20,13 +20,13 @@ public static class PostInitializationOutputExtensions
             ctx.AddSource("RequestResponseTag.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         });
     }
-    
+
     public static void GenerateRequestHandlerAttribute(this IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(static ctx =>
         {
             var scb = new SourceCodeBuilder();
-            
+
             scb.SetNamespace("ApiGeneratR.Attributes");
 
             scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
@@ -49,23 +49,22 @@ public static class PostInitializationOutputExtensions
 
             scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
             scb.StartScope(
-                "internal class RequestAttribute(string route, bool requiresAuth, RequestType requestType, HttpMethod method = HttpMethod.Post) : Attribute");
+                "internal class RequestAttribute(string route, string authPolicy, RequestType requestType) : Attribute");
             scb.AddLine("public string Route { get; } = route;");
-            scb.AddLine("public bool RequiresAuth { get; set; } = requiresAuth;");
-            scb.AddLine("public HttpMethod Method { get; } = method;");
+            scb.AddLine("public string AuthPolicy { get; set; } = authPolicy;");
             scb.AddLine("public RequestType RequestType { get; } = requestType;");
             scb.EndScope();
 
             ctx.AddSource("RequestAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         });
     }
-    
+
     public static void GenerateApiConsumerAttribute(this IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(static ctx =>
         {
             var scb = new SourceCodeBuilder();
-            
+
             scb.SetNamespace("ApiGeneratR.Attributes");
 
             scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
@@ -83,13 +82,13 @@ public static class PostInitializationOutputExtensions
             ctx.AddSource("ApiConsumerAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         });
     }
-    
+
     public static void GenerateRequestTypeAttribute(this IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(static ctx =>
         {
             var scb = new SourceCodeBuilder();
-            
+
             scb.SetNamespace("ApiGeneratR.Attributes");
 
 
@@ -102,13 +101,13 @@ public static class PostInitializationOutputExtensions
             ctx.AddSource("RequestType.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         });
     }
-    
+
     public static void GenerateEventAttributeAttribute(this IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(static ctx =>
         {
             var scb = new SourceCodeBuilder();
-            
+
             scb.SetNamespace("ApiGeneratR.Attributes");
 
             scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
@@ -117,25 +116,6 @@ public static class PostInitializationOutputExtensions
             scb.EndScope();
 
             ctx.AddSource("EventAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
-        });
-    }
-    
-    public static void GenerateHttpMethodEnum(this IncrementalGeneratorInitializationContext context)
-    {
-        context.RegisterPostInitializationOutput(static ctx =>
-        {
-            var scb = new SourceCodeBuilder();
-            
-            scb.SetNamespace("ApiGeneratR.Attributes");
-            scb.StartScope("internal enum HttpMethod");
-            scb.AddLine("Get,");
-            scb.AddLine("Post,");
-            scb.AddLine("Put,");
-            scb.AddLine("Delete,");
-            scb.AddLine("Patch");
-            scb.EndScope();
-
-            ctx.AddSource("HttpMethod.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         });
     }
 }
