@@ -1,9 +1,8 @@
 using System.Collections.Concurrent;
+using Api.Definitions.Events.Message;
+using Api.Definitions.Generated;
+using Api.Definitions.Requests.Queries;
 using ApiGeneratR.Attributes;
-using ApiGeneratR.Definitions.Events.Message;
-using ApiGeneratR.Definitions.Events.User;
-using ApiGeneratR.Definitions.Generated;
-using ApiGeneratR.Definitions.Requests.Queries;
 using Presentation.Web.Mapper;
 using Presentation.Web.Models;
 using Presentation.Web.State.Login;
@@ -34,7 +33,7 @@ public partial class MessageService : IMessageService
         OnMessageReceived?.Invoke();
         return Task.CompletedTask;
     }
-    
+
     public async Task<List<MessageModel>> GetMessagesForSelectedUser(UserModel selectedUser)
     {
         var messageWrapper = await Queries.SendAsync(new GetMessagesForUserQuery(selectedUser.UserId));

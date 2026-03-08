@@ -9,12 +9,12 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Directory.Packages.props", "./"]
 COPY [".globalconfig", "./"]
-COPY ["ApiGeneratR.CodeGen/ApiGeneratR.CodeGen.csproj", "ApiGeneratR.CodeGen/"]
-RUN dotnet restore "ApiGeneratR.CodeGen/ApiGeneratR.CodeGen.csproj"
-COPY ["ApiGeneratR.CodeGen/", "ApiGeneratR.CodeGen/"]
-RUN dotnet build "ApiGeneratR.CodeGen/ApiGeneratR.CodeGen.csproj" -c $BUILD_CONFIGURATION
+COPY ["ApiGeneratR/ApiGeneratR.csproj", "ApiGeneratR/"]
+RUN dotnet restore "ApiGeneratR/ApiGeneratR.csproj"
+COPY ["ApiGeneratR/", "ApiGeneratR/"]
+RUN dotnet build "ApiGeneratR/ApiGeneratR.csproj" -c $BUILD_CONFIGURATION
 COPY ["Presentation.Web/Presentation.Web.csproj", "Presentation.Web/"]
-COPY ["ApiGeneratR.Definitions/ApiGeneratR.Definitions.csproj", "ApiGeneratR.Definitions/"]
+COPY ["Api.Definitions/Api.Definitions.csproj", "Api.Definitions/"]
 RUN dotnet restore "Presentation.Web/Presentation.Web.csproj"
 COPY . .
 WORKDIR "/src/Presentation.Web"

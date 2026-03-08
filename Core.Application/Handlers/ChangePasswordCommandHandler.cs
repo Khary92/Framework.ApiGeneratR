@@ -1,7 +1,7 @@
+using Api.Definitions.Dto;
+using Api.Definitions.Generated;
+using Api.Definitions.Requests.Commands;
 using ApiGeneratR.Attributes;
-using ApiGeneratR.Definitions.Dto;
-using ApiGeneratR.Definitions.Generated;
-using ApiGeneratR.Definitions.Requests.Commands;
 using Core.Application.Ports;
 
 namespace Core.Application.Handlers;

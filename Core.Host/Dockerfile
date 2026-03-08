@@ -9,14 +9,14 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Directory.Packages.props", "./"]
 COPY [".globalconfig", "./"]
-COPY ["ApiGeneratR.CodeGen/ApiGeneratR.CodeGen.csproj", "ApiGeneratR.CodeGen/"]
-RUN dotnet restore "ApiGeneratR.CodeGen/ApiGeneratR.CodeGen.csproj"
-COPY ["ApiGeneratR.CodeGen/", "ApiGeneratR.CodeGen/"]
-RUN dotnet build "ApiGeneratR.CodeGen/ApiGeneratR.CodeGen.csproj" -c $BUILD_CONFIGURATION
+COPY ["ApiGeneratR/ApiGeneratR.csproj", "ApiGeneratR/"]
+RUN dotnet restore "ApiGeneratR/ApiGeneratR.csproj"
+COPY ["ApiGeneratR/", "ApiGeneratR/"]
+RUN dotnet build "ApiGeneratR/ApiGeneratR.csproj" -c $BUILD_CONFIGURATION
 COPY ["Core.Host/Core.Host.csproj", "Core.Host/"]
 COPY ["Core.Application/Core.Application.csproj", "Core.Application/"]
 COPY ["Core.Domain/Core.Domain.csproj", "Core.Domain/"]
-COPY ["ApiGeneratR.Definitions/ApiGeneratR.Definitions.csproj", "ApiGeneratR.Definitions/"]
+COPY ["Api.Definitions/Api.Definitions.csproj", "Api.Definitions/"]
 COPY ["Infrastructure.Persistence/Infrastructure.Persistence.csproj", "Infrastructure.Persistence/"]
 COPY ["Infrastructure.Identity/Infrastructure.Identity.csproj", "Infrastructure.Identity/"]
 RUN dotnet restore "Core.Host/Core.Host.csproj"

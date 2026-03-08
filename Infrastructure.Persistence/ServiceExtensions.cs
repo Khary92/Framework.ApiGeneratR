@@ -1,4 +1,4 @@
-﻿using ApiGeneratR.Definitions.Generated;
+﻿using Api.Definitions.Generated;
 using Core.Application.Ports;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,7 +11,7 @@ public static class ServiceExtensions
         services.AddSingleton<DatabaseContext>();
         services.AddSingleton<IUnitOfWork>(sp => sp.GetRequiredService<DatabaseContext>());
         services.AddSingleton<IIdentityIdMapper>(sp => sp.GetRequiredService<DatabaseContext>());
-        
+
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IConversationIdService, ConversationIdService>();
     }

@@ -2,7 +2,7 @@ is_global = true
 
 # Use comma seperation for multiple projects (eg Presentation.Web, Presentation.Mobile)
 apigeneratr_clientprojects = Presentation.Web
-apigeneratr_definitionsproject = ApiGeneratR.Definitions
+apigeneratr_definitionsproject = Api.Definitions
 apigeneratr_handlerproject = Core.Application
 
 apigeneratr_log_mediator = true
