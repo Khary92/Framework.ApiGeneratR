@@ -17,7 +17,7 @@ public class ServerGenerator : IIncrementalGenerator
         var events = context.GetEventSourceData();
         var requests = context.GetRequestSourceData();
         var requestHandlers = context.GetRequestHandlerSourceData();
-        
+
         context.RegisterSourceOutput(events.Combine(assemblyName).Combine(context.GetGlobalOptions()),
             static (spc, source) =>
             {
@@ -34,13 +34,12 @@ public class ServerGenerator : IIncrementalGenerator
             });
 
         context.RegisterSourceOutput(
-            requestHandlers.Combine(events).Combine(assemblyName).Combine(context.GetGlobalOptions()),
+            requestHandlers.Combine(assemblyName).Combine(context.GetGlobalOptions()),
             static (spc, source) =>
             {
                 try
                 {
-                    spc.CreateSourceMediator(source.Left.Left.Left, source.Left.Right, source.Right);
-                    spc.CreateMediatorExtensions(source.Left.Left.Left, source.Left.Right, source.Right);
+                    CreateSourceMediator(spc, source.Left.Left, source.Left.Right, source.Right);
                 }
                 catch (Exception ex)
                 {
@@ -65,6 +64,16 @@ public class ServerGenerator : IIncrementalGenerator
                         Location.None, ex.Message));
                 }
             });
+    }
+
+    private static void CreateSourceMediator(SourceProductionContext context,
+        ImmutableArray<RequestHandlerData> requestHandlerData, string? projectNamespace, GlobalOptions options)
+    {
+        if (requestHandlerData.IsDefaultOrEmpty) return;
+        if (projectNamespace == null || projectNamespace != options.HandlerProject) return;
+        
+        context.CreateSourceMediator(requestHandlerData, projectNamespace, options);
+        context.CreateMediatorExtensions(requestHandlerData, projectNamespace, options);
     }
 
     private static void CreateEndpoints(SourceProductionContext context,

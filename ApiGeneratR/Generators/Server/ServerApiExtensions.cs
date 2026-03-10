@@ -11,10 +11,8 @@ namespace ApiGeneratR.Generators.Server;
 public static class ServerApiExtensions
 {
     public static void CreateSourceMediator(this SourceProductionContext context,
-        ImmutableArray<RequestHandlerData> handlers, string? projectNamespace, GlobalOptions options)
+        ImmutableArray<RequestHandlerData> handlers, string projectNamespace, GlobalOptions options)
     {
-        if (projectNamespace == null || projectNamespace != options.HandlerProject) return;
-
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
             "System.Collections.Generic", "System.Threading",
@@ -77,8 +75,6 @@ public static class ServerApiExtensions
     public static void CreateMediatorExtensions(this SourceProductionContext context,
         ImmutableArray<RequestHandlerData> handlers, string? projectNamespace, GlobalOptions options)
     {
-        if (projectNamespace == null || projectNamespace != options.HandlerProject) return;
-
         var scb = new SourceCodeBuilder();
 
         scb.SetUsings([
