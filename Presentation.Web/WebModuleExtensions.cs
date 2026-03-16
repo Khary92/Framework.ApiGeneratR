@@ -48,7 +48,7 @@ public static class WebModuleExtensions
         private void AddGeneratedServices()
         {
             services.AddHttpClient<IApiClient, ApiHttpClient>(client => { client.BaseAddress = new Uri(BaseUrl); });
-            services.AddApiServices();
+            services.AddGeneratedClientApiServices();
         }
 
         private void AddStateServices()

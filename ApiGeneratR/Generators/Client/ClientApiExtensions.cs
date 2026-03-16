@@ -25,20 +25,20 @@ public static class ClientApiExtensions
         scb.AddLine("void SetToken(string token);");
         scb.AddLine("IEventSubscriber EventSubscriber { get; }");
         scb.AddLine("IEventPublisher EventPublisher { get; }");
-        scb.AddLine("IWebSocketService WebSocket { get; }");
+        scb.AddLine("IEventReceiver EventReceiver { get; }");
         scb.AddLine("ICommandSender Commands { get; }");
         scb.AddLine("IQuerySender Queries { get; }");
         scb.EndScope();
         scb.AddLine();
         scb.StartScope(
-            "public class ConsumerApi(IWebSocketService webSocket, ICommandSender commands, IQuerySender queries, IEventPublisher eventPublisher, IEventSubscriber eventSubscriber) : IApiContainer");
+            "public class ConsumerApi(IEventReceiver eventReceiver, ICommandSender commands, IQuerySender queries, IEventPublisher eventPublisher, IEventSubscriber eventSubscriber) : IApiContainer");
         scb.StartScope("public void SetToken(string token)");
         scb.AddLine("commands.InjectToken(token);");
         scb.AddLine("queries.InjectToken(token);");
-        scb.AddLine("webSocket.SetToken(token);");
+        scb.AddLine("eventReceiver.SetToken(token);");
         scb.EndScope();
         scb.AddLine();
-        scb.AddLine("public IWebSocketService WebSocket => webSocket;");
+        scb.AddLine("public IEventReceiver EventReceiver => eventReceiver;");
         scb.AddLine("public ICommandSender Commands => commands;");
         scb.AddLine("public IQuerySender Queries => queries;");
         scb.AddLine("public IEventPublisher EventPublisher => eventPublisher;");
@@ -62,11 +62,11 @@ public static class ClientApiExtensions
 
         scb.StartScope("public static class ApiFacadeExtensions");
         scb.StartScope(
-            "public static void AddApiServices(this IServiceCollection services, ServiceLifetime lifetime = ServiceLifetime.Scoped)");
+            "public static void AddGeneratedClientApiServices(this IServiceCollection services, ServiceLifetime lifetime = ServiceLifetime.Scoped)");
 
         scb.AddLine("services.Add(new ServiceDescriptor(typeof(IApiContainer), typeof(ConsumerApi), lifetime));");
         scb.AddLine(
-            "services.Add(new ServiceDescriptor(typeof(IWebSocketService), typeof(WebSocketService), lifetime));");
+            "services.Add(new ServiceDescriptor(typeof(IEventReceiver), typeof(WebSocketService), lifetime));");
         scb.AddLine("services.Add(new ServiceDescriptor(typeof(ICommandSender), typeof(GeneratedCommandSender), lifetime));");
         scb.AddLine(
             "services.Add(new ServiceDescriptor(typeof(IQuerySender), typeof(GeneratedQuerySender), lifetime));");
@@ -105,7 +105,7 @@ public static class ClientApiExtensions
         scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope(
-            "public class WebSocketService(global::Microsoft.Extensions.Logging.ILogger<WebSocketService> logger, IEventPublisher eventPublisher) : IWebSocketService ");
+            "public class WebSocketService(global::Microsoft.Extensions.Logging.ILogger<WebSocketService> logger, IEventPublisher eventPublisher) : IEventReceiver ");
 
         scb.AddLine("private string _token;");
         scb.AddLine();
@@ -345,14 +345,14 @@ public static class ClientApiExtensions
         scb.SetUsings(["System.Net.Http"]);
         scb.SetNamespace($"{projectNamespace}.Generated");
 
-        scb.StartScope("public interface IWebSocketService");
+        scb.StartScope("public interface IEventReceiver");
         scb.AddLine("void SetToken(string _token);");
         scb.AddLine("Task ConnectAsync(Uri webSocketUri, CancellationToken ctsToken);");
         scb.AddLine("Task DisposeAsync();");
         scb.EndScope();
 
 
-        AddSource(context, "IWebSocketService.g.cs", scb.ToString());
+        AddSource(context, "IEventReceiver.g.cs", scb.ToString());
     }
 
     public static void CreateApiClientWithInterface(this SourceProductionContext context, string projectNamespace)

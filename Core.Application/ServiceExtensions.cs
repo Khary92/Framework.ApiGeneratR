@@ -10,7 +10,6 @@ public static class ServiceExtensions
     {
         public void AddApplicationServices()
         {
-            services.AddAuthSettingsService();
             services.AddMapperServices();
         }
 
@@ -18,13 +17,6 @@ public static class ServiceExtensions
         {
             services.AddSingleton<MessageMapper>();
             services.AddSingleton<UserMapper>();
-        }
-
-        private void AddAuthSettingsService()
-        {
-            services.AddSingleton<EventService>();
-            services.AddSingleton<IEventSubscriber>(sp => sp.GetRequiredService<EventService>());
-            services.AddSingleton<IEventPublisher>(sp => sp.GetRequiredService<EventService>());
         }
     }
 }

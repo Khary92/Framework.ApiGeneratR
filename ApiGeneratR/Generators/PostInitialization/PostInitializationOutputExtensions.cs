@@ -71,9 +71,11 @@ public static class PostInitializationOutputExtensions
             scb.StartScope(
                 "internal class ApiConsumerAttribute : Attribute");
             scb.AddLine("public Type[] EventSubscriptionTypes { get; }");
+            scb.AddLine();
             scb.StartScope("public ApiConsumerAttribute(params Type[] eventSubscriptionTypes)");
             scb.AddLine("EventSubscriptionTypes = eventSubscriptionTypes;");
             scb.EndScope();
+            scb.AddLine();
             scb.StartScope("public ApiConsumerAttribute()");
             scb.AddLine("EventSubscriptionTypes = Array.Empty<Type>();");
             scb.EndScope();

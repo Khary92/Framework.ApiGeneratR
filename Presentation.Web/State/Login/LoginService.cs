@@ -17,7 +17,7 @@ public partial class LoginService : ILoginService
         IsUserLoggedIn = true;
 
         SetToken(token);
-        await WebSocket.ConnectAsync(SocketUris.WebSocketUri, CancellationToken.None);
+        await EventReceiver.ConnectAsync(SocketUris.WebSocketUri, CancellationToken.None);
         var userIdDto = await Queries.SendAsync(new GetMyUserIdQuery());
         _userId = userIdDto.UserId;
         await EventPublisher.PublishAsync(new UserLoggedInEvent());
@@ -29,7 +29,7 @@ public partial class LoginService : ILoginService
 
         SetToken(string.Empty);
         _userId = Guid.Empty;
-        await WebSocket.DisposeAsync();
+        await EventReceiver.DisposeAsync();
         await EventPublisher.PublishAsync(new UserLoggedOutEvent());
     }
 }

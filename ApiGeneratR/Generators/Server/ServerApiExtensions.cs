@@ -86,7 +86,7 @@ public static class ServerApiExtensions
 
         scb.StartScope("public static class MediatorExtensions");
         scb.StartScope("extension(IServiceCollection services)");
-        scb.StartScope("public void AddServerApiServices(ServiceLifetime lifetime = ServiceLifetime.Scoped)");
+        scb.StartScope("public void AddGeneratedHandlerServices(ServiceLifetime lifetime = ServiceLifetime.Scoped)");
         scb.AddLine(
             $"services.Add(new ServiceDescriptor(typeof(global::{options.DefinitionsProject}.Generated.IMediator), typeof(global::{projectNamespace}.Generated.SourceMediator), lifetime));");
 

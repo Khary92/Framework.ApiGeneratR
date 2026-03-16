@@ -21,7 +21,6 @@ public static class Program
 
     private static WebApplication BuildServerApp(string[] args)
     {
-        
         GeneratedDocumentation.PrintDocumentationToPath("Documentation.md");
 
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -40,13 +39,14 @@ public static class Program
 
         builder.Services.AddAntiforgery(options => { options.Cookie.Name = "AntiforgeryCookie"; });
 
-        builder.Services.AddServerApiServices();
+        builder.Services.AddGeneratedHandlerServices();
+        builder.Services.AddGeneratedSocketConnectionService();
+        
         builder.Services.AddPersistenceServices();
 
         builder.Services.AddApplicationServices();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddIdentityServices();
-        builder.Services.AddGeneratedSocketConnectionService();
 
         builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
@@ -67,7 +67,7 @@ public static class Program
             ClockSkew = TimeSpan.FromMinutes(5)
         };
 
-        builder.Services.AddHostServices(tokenValidationParameters);
+        builder.Services.AddSingleton(tokenValidationParameters);
 
         builder.Services.AddAuthentication(options =>
             {
@@ -80,7 +80,7 @@ public static class Program
         {
             options.AddPolicy("User", policy => policy.RequireRole("user"));
         });
-        
+
         builder.Logging.AddSimpleConsole(options =>
         {
             options.SingleLine = true;

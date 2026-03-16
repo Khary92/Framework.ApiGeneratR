@@ -26,7 +26,7 @@ public static class PartialApiInjectionExtensions
 
             scb.StartScope($"public partial class {consumer.ConsumerClassName} : IDisposable");
             scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IApiContainer _container; ");
-            scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IWebSocketService WebSocket;");
+            scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IEventReceiver EventReceiver;");
             scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.ICommandSender Commands;");
             scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IQuerySender Queries;");
             scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IEventPublisher EventPublisher;");
@@ -35,7 +35,7 @@ public static class PartialApiInjectionExtensions
             scb.StartScope(
                 $"public {consumer.ConsumerClassName}(global::{options.DefinitionsProject}.Generated.IApiContainer container)");
             scb.AddLine("_container = container;");
-            scb.AddLine("WebSocket = container.WebSocket;");
+            scb.AddLine("EventReceiver = container.EventReceiver;");
             scb.AddLine("Commands = container.Commands;");
             scb.AddLine("Queries = container.Queries;");
             scb.AddLine("EventPublisher = container.EventPublisher;");
