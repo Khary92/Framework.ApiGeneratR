@@ -6,7 +6,10 @@ apigeneratr_project_definitions = Api.Definitions
 apigeneratr_project_handler = Core.Application
 
 # Use comma separation for multiple profiles (eg Admin,User)
-apigeneratr_auth_profiles = User
+apigeneratr_auth_profiles = User,Admin
+
+# Use comma separation for multiple channels (eg Admin,User)
+apigeneratr_com_channels = UserChannel:User,AdminChannel:Admin
 
 apigeneratr_log_mediator = true
 apigeneratr_log_websocket = true

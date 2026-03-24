@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using ApiGeneratR.Mapper;
 using Microsoft.CodeAnalysis;
 
@@ -24,7 +27,21 @@ public static class OptionsExtensions
 
                 options.GlobalOptions.TryGetValue("apigeneratr_log_websocket", out var isLogWebsocket);
 
+                options.GlobalOptions.TryGetValue("apigeneratr_com_channels", out var comChannels);
+
+                if (comChannels == null) throw new InvalidOperationException("Missing global config entry for communication channels!");
+
+                var channels = comChannels.Split(',');
+                
+                var arrayBuilder = ImmutableArray.CreateBuilder<ChannelData>();
+                foreach (var channel in channels)
+                {
+                    var data = channel.Split(':');
+                    arrayBuilder.Add(new ChannelData(data[0], data[1]));
+                }
+                
                 return new GlobalOptions(
+                    arrayBuilder.ToImmutableArray(),
                     clientProjects == null
                         ? ["Missing global config entry for client projects!"]
                         : clientProjects.Split(','),

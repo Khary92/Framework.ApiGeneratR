@@ -1,8 +1,10 @@
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace ApiGeneratR.Mapper;
 
 public record GlobalOptions(
+    ImmutableArray<ChannelData> CommunicationChannels,
     string[] ClientProjects,
     string[] AuthProfiles,
     string DefinitionsProject,

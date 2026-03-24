@@ -350,8 +350,7 @@ public static class ClientApiExtensions
         scb.AddLine("Task ConnectAsync(Uri webSocketUri, CancellationToken ctsToken);");
         scb.AddLine("Task DisposeAsync();");
         scb.EndScope();
-
-
+        
         AddSource(context, "IEventReceiver.g.cs", scb.ToString());
     }
 
