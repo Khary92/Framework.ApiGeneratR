@@ -3,6 +3,7 @@
 public static class SocketUris
 {
     private const string WebSocketBaseAddress = "ws://core-server:8080";
-    public static string WebSocketEndpoint => "/ws/events";
-    public static Uri WebSocketUri => new(WebSocketBaseAddress + WebSocketEndpoint);
+    private static string WebSocketEndpoint => "/ws/events";
+    private static string UserChannel => "/userchannel";
+    public static Uri WebSocketUri => new(WebSocketBaseAddress + WebSocketEndpoint + UserChannel);
 }
