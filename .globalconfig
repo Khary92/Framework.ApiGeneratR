@@ -8,7 +8,7 @@ apigeneratr_project_handler = Core.Application
 # Use comma separation for multiple profiles (eg Admin,User)
 apigeneratr_auth_profiles = User,Admin
 
-# Use comma separation for multiple channels (eg Admin,User)
+# Use comma separation for multiple channels. The Auth Profile is given as the second parameter (e.g AllChannel:AllowAnonymous)
 apigeneratr_com_channels = UserChannel:User,AdminChannel:Admin
 
 apigeneratr_log_mediator = true

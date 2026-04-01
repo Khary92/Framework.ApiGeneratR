@@ -185,7 +185,7 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope(
-            "public class SocketConnectionService(IIdentityIdMapper db, ILogger<SocketConnectionService> logger) : IEventSender");
+            "public class SocketConnectionService(IServiceProvider serviceProvider, ILogger<SocketConnectionService> logger) : IEventSender");
 
         scb.AddLine(
             "private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _connectionsById = new();");
@@ -201,6 +201,8 @@ public class WebSocketGenerator : IIncrementalGenerator
             scb.StartScope(
                 $"public async Task Handle{channel.Channel}ConnectionAsync(WebSocket webSocket, string identityId)");
             scb.AddLine();
+            scb.AddLine("using var scope = serviceProvider.CreateScope();");
+            scb.AddLine("var db = scope.ServiceProvider.GetRequiredService<IIdentityIdMapper>();");
             scb.AddLine("var userId = await db.GetUserIdyByIdentityId(identityId);");
             scb.AddLine();
             scb.AddLine("if (string.IsNullOrEmpty(userId)) return;");
