@@ -67,7 +67,8 @@ public static class ClientApiExtensions
         scb.AddLine("services.Add(new ServiceDescriptor(typeof(IApiContainer), typeof(ConsumerApi), lifetime));");
         scb.AddLine(
             "services.Add(new ServiceDescriptor(typeof(IEventReceiver), typeof(WebSocketService), lifetime));");
-        scb.AddLine("services.Add(new ServiceDescriptor(typeof(ICommandSender), typeof(GeneratedCommandSender), lifetime));");
+        scb.AddLine(
+            "services.Add(new ServiceDescriptor(typeof(ICommandSender), typeof(GeneratedCommandSender), lifetime));");
         scb.AddLine(
             "services.Add(new ServiceDescriptor(typeof(IQuerySender), typeof(GeneratedQuerySender), lifetime));");
         scb.AddLine("services.Add(new ServiceDescriptor(typeof(EventService), typeof(EventService), lifetime));");
@@ -92,7 +93,7 @@ public static class ClientApiExtensions
 
 
     public static void GenerateWebsocketReceiver(this SourceProductionContext ctx,
-        ImmutableArray<EventSourceData> events, string projectNamespace)
+        ImmutableArray<EventSourceData> events, string projectNamespace, GlobalOptions options)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -157,7 +158,21 @@ public static class ClientApiExtensions
         scb.AddLine("var message = await reader.ReadToEndAsync();");
         scb.AddLine();
         scb.AddLine("var eventEnvelope = JsonSerializer.Deserialize<EventEnvelope>(message);");
-        scb.AddLine("if (eventEnvelope != null) await PublishEvent(eventEnvelope);");
+
+        if (options.IsLogApiClient)
+        {
+            scb.StartScope("if (eventEnvelope == null)");
+            scb.AddLine("logger.LogDebug(\"Received an event but deserialization failed\");");
+            scb.AddLine("return;");
+            scb.EndScope();
+            scb.AddLine();
+            scb.AddLine("await PublishEvent(eventEnvelope);");
+        }
+        else
+        {
+            scb.AddLine("if (eventEnvelope != null) await PublishEvent(eventEnvelope);");
+        }
+
         scb.EndScope();
         scb.EndScope();
         scb.AddLine();
@@ -170,6 +185,11 @@ public static class ClientApiExtensions
             if (eventType == null) continue;
 
             scb.AddLine($"case \"{eventType.EventType}\":");
+            if (options.IsLogApiClient)
+            {
+                scb.AddIndentedLine($"logger.LogDebug(\"Received an event of type {eventType.EventType}\");");
+            }
+
             scb.AddIndentedLine(
                 $"await eventPublisher.PublishAsync(JsonSerializer.Deserialize<{eventType.FullTypeName}>(envelope.Payload)!);");
             scb.AddLine("break;");
@@ -201,7 +221,7 @@ public static class ClientApiExtensions
     }
 
     public static void CreateAtomicRequestSenderWithInterfaces(this SourceProductionContext context,
-        ImmutableArray<RequestData> requests, string projectNamespace)
+        ImmutableArray<RequestData> requests, string projectNamespace, GlobalOptions options)
     {
         foreach (var request in requests)
         {
@@ -210,6 +230,9 @@ public static class ClientApiExtensions
                 "System.Net.Http.Headers",
                 "System.Net.Http.Json"
             ]);
+
+            if (options.IsLogApiClient) scb.AddUsing("Microsoft.Extensions.Logging");
+
             scb.SetNamespace($"{projectNamespace}.Generated");
 
             scb.StartScope($"public interface I{request.RequestShortName}Sender");
@@ -219,10 +242,16 @@ public static class ClientApiExtensions
             scb.AddLine();
 
             scb.StartScope(
-                $"public class Generated{request.RequestShortName}Sender(IApiClient http) : TokenInjection, I{request.RequestShortName}Sender");
+                $"public class Generated{request.RequestShortName}Sender(IApiClient http{(options.IsLogApiClient ? $", ILogger<Generated{request.RequestShortName}Sender> logger" : string.Empty)}) : TokenInjection, I{request.RequestShortName}Sender");
 
             scb.StartScope(
                 $"public async Task<{request.ReturnValueFullName}> SendAsync({request.RequestFullName} command, CancellationToken ct = default)");
+
+            if (options.IsLogApiClient)
+            {
+                scb.AddLine("logger.LogDebug(\"Sending request \" + command.ToString());");
+                scb.AddLine();
+            }
 
             if (request.AuthPolicy != "AllowAnonymous")
             {
@@ -261,13 +290,13 @@ public static class ClientApiExtensions
         }
     }
 
-    public static void CreateCommandSenderWithInterface(this SourceProductionContext context,
+    public static void CreateCommandSenderFacade(this SourceProductionContext context,
         ImmutableArray<RequestData> requests, string projectNamespace)
     {
         context.InternalCreateRequestSenderFacades(requests, projectNamespace, "Command");
     }
 
-    public static void CreateQuerySenderWithInterface(this SourceProductionContext context,
+    public static void CreateQuerySenderFacade(this SourceProductionContext context,
         ImmutableArray<RequestData> requests, string projectNamespace)
     {
         context.InternalCreateRequestSenderFacades(requests, projectNamespace, "Query");
@@ -350,7 +379,7 @@ public static class ClientApiExtensions
         scb.AddLine("Task ConnectAsync(Uri webSocketUri, CancellationToken ctsToken);");
         scb.AddLine("Task DisposeAsync();");
         scb.EndScope();
-        
+
         AddSource(context, "IEventReceiver.g.cs", scb.ToString());
     }
 

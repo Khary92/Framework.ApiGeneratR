@@ -70,6 +70,7 @@ public class WebSocketGenerator : IIncrementalGenerator
             scb.AddLine($"Task Handle{channel.Channel}ConnectionAsync(WebSocket webSocket, string identityId);");
             scb.AddLine($"Task SendTo{channel.Channel}Async(EventEnvelope envelope, CancellationToken ct = default);");
         }
+
         scb.AddLine("Task SendToIdAsync(EventEnvelope envelope, Guid targetId, CancellationToken ct = default);");
         scb.AddLine("Task BroadcastAsync(EventEnvelope envelope, CancellationToken ct = default);");
         scb.EndScope();
@@ -128,7 +129,7 @@ public class WebSocketGenerator : IIncrementalGenerator
             "System.Security.Claims"
         ]);
         scb.SetNamespace($"{projectNamespace}.Generated");
-        
+
         scb.StartScope("public static class SocketServiceExtensions");
         scb.AddLine();
         scb.AddLine();
@@ -139,18 +140,19 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.StartScope("public static void MapGeneratedWebSocketEndpoint(this WebApplication app)");
         scb.AddLine("var eventWebSocketHandler = app.Services.GetRequiredService<IEventSender>();");
         scb.AddLine();
-        
+
         foreach (var channel in options.CommunicationChannels)
         {
             if (!options.AuthProfiles.Contains(channel.AuthProfile))
                 throw new Exception("Auth profile not found for channel: " + channel.Channel);
-            
+
             scb.StartScope($"app.MapGet(\"/ws/events/{channel.Channel.ToLower()}\", async context =>");
             scb.StartScope("if (context.WebSockets.IsWebSocketRequest)");
             scb.AddLine();
             scb.AddLine("var webSocket = await context.WebSockets.AcceptWebSocketAsync();");
             scb.AddLine();
-            scb.AddLine($"await eventWebSocketHandler.Handle{channel.Channel}ConnectionAsync(webSocket, context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty);");
+            scb.AddLine(
+                $"await eventWebSocketHandler.Handle{channel.Channel}ConnectionAsync(webSocket, context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty);");
             scb.EndScope();
             scb.StartScope("else");
             scb.AddLine("context.Response.StatusCode = 400;");
@@ -189,21 +191,20 @@ public class WebSocketGenerator : IIncrementalGenerator
 
         scb.AddLine(
             "private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _connectionsById = new();");
-        
+        scb.AddLine();
+
         foreach (var channel in options.CommunicationChannels)
         {
-            scb.AddLine();
             scb.AddLine(
                 $"private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _connections{channel.Channel} = new();");
-
             scb.AddLine();
 
             scb.StartScope(
                 $"public async Task Handle{channel.Channel}ConnectionAsync(WebSocket webSocket, string identityId)");
-            scb.AddLine();
             scb.AddLine("using var scope = serviceProvider.CreateScope();");
             scb.AddLine("var db = scope.ServiceProvider.GetRequiredService<IIdentityIdMapper>();");
             scb.AddLine("var userId = await db.GetUserIdyByIdentityId(identityId);");
+
             scb.AddLine();
             scb.AddLine("if (string.IsNullOrEmpty(userId)) return;");
             scb.AddLine();
@@ -216,6 +217,13 @@ public class WebSocketGenerator : IIncrementalGenerator
                 $"var {channel.Channel.ToLower()}Sockets = _connections{channel.Channel}.GetOrAdd(connectionKey, _ => new ConcurrentDictionary<WebSocket, byte>());");
             scb.AddLine($"{channel.Channel.ToLower()}Sockets.TryAdd(webSocket, 0);");
             scb.AddLine();
+
+            if (options.IsLogWebsockets)
+            {
+                scb.AddLine($"logger.LogDebug(\"Added \" + userId + \" to channel {channel.Channel}\");");
+                scb.AddLine();
+            }
+
             scb.AddLine("var buffer = new byte[1024 * 4];");
             scb.StartScope("try");
             scb.StartScope("while (webSocket.State == WebSocketState.Open)");
@@ -246,11 +254,27 @@ public class WebSocketGenerator : IIncrementalGenerator
             scb.AddLine(
                 "await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, \"Closed\", CancellationToken.None);");
             scb.EndScope();
+
+            if (options.IsLogWebsockets)
+            {
+                scb.AddLine();
+                scb.AddLine($"logger.LogDebug(\"Removed \" + userId + \" from channel {channel.Channel}\");");
+            }
+
             scb.EndScope();
             scb.EndScope();
-            
+            scb.AddLine();
+
             scb.StartScope(
                 $"public async Task SendTo{channel.Channel}Async(EventEnvelope eventEnvelope, CancellationToken ct = default)");
+
+            if (options.IsLogWebsockets)
+            {
+                scb.AddLine(
+                    $"logger.LogDebug(\"Broadcasting event of type \" + eventEnvelope.Type + \" to channel {channel.Channel}\");");
+                scb.AddLine();
+            }
+
             scb.AddLine($"var openSockets = _connections{channel.Channel}");
             scb.AddIndentedLine(".SelectMany(kvp => kvp.Value.Keys)");
             scb.AddIndentedLine(".Where(socket => socket.State == WebSocketState.Open)");
@@ -277,9 +301,17 @@ public class WebSocketGenerator : IIncrementalGenerator
         }
 
         scb.AddLine();
-
+        
         scb.StartScope(
             "public async Task SendToIdAsync(EventEnvelope envelope, Guid userId, CancellationToken ct = default)");
+        
+        if (options.IsLogWebsockets)
+        {
+            scb.AddLine(
+                "logger.LogDebug(\"Sending event of type \" + envelope.Type + \" to id \" + userId.ToString());");
+            scb.AddLine();
+        }
+        
         scb.AddLine("if (!_connectionsById.TryGetValue($\"{userId}\", out var userSockets)) return;");
         scb.AddLine();
         scb.AddLine("var json = JsonSerializer.Serialize(envelope);");
@@ -302,14 +334,22 @@ public class WebSocketGenerator : IIncrementalGenerator
 
         scb.StartScope(
             "public async Task BroadcastAsync(EventEnvelope eventEnvelope, CancellationToken ct = default)");
+       
+        if (options.IsLogWebsockets)
+        {
+            scb.AddLine(
+                "logger.LogDebug(\"Global broadcasting event of type \" + eventEnvelope.Type);");
+            scb.AddLine();
+        }
         foreach (var channel in options.CommunicationChannels)
         {
             scb.AddLine($"await SendTo{channel.Channel}Async(eventEnvelope, ct);");
         }
+
         scb.EndScope();
         scb.EndScope();
         scb.AddLine();
-        
+
         context.AddSource("SocketConnectionService.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
 }

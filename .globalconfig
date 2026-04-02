@@ -11,5 +11,9 @@ apigeneratr_auth_profiles = User,Admin
 # Use comma separation for multiple channels. The Auth Profile is given as the second parameter (e.g AllChannel:AllowAnonymous)
 apigeneratr_com_channels = UserChannel:User,AdminChannel:Admin
 
+# Logs incoming commands and queries
 apigeneratr_log_mediator = true
+# Logs outgoing events
 apigeneratr_log_websocket = true
+# Logs clientside outgoing requests and incoming events
+apigeneratr_log_clientapi = true

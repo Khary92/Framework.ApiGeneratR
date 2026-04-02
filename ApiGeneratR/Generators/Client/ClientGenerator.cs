@@ -77,12 +77,12 @@ public class ClientGenerator : IIncrementalGenerator
         // Request senders
         ctx.CreateApiClientWithInterface(projectNamespace);
         ctx.CreateTokenInjectorBaseClass(projectNamespace);
-        ctx.CreateAtomicRequestSenderWithInterfaces(requestData, projectNamespace);
-        ctx.CreateCommandSenderWithInterface(requestData, projectNamespace);
-        ctx.CreateQuerySenderWithInterface(requestData, projectNamespace);
+        ctx.CreateAtomicRequestSenderWithInterfaces(requestData, projectNamespace, options);
+        ctx.CreateCommandSenderFacade(requestData, projectNamespace);
+        ctx.CreateQuerySenderFacade(requestData, projectNamespace);
 
         // Websocket
-        ctx.GenerateWebsocketReceiver(eventData, projectNamespace);
+        ctx.GenerateWebsocketReceiver(eventData, projectNamespace, options);
         ctx.CreateWebsocketInterface(projectNamespace);
 
         // EventBus
