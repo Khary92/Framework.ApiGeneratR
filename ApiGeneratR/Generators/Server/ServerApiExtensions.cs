@@ -126,7 +126,7 @@ public static class ServerApiExtensions
             scb.StartScope(
                 $"public static global::{options.DefinitionsProject}.Generated.EventEnvelope ToWebsocketMessage(this {@event.FullTypeName} @event)");
             scb.AddLine(
-                $"return new(\"{@event.EventType}\", JsonSerializer.Serialize(@event), DateTime.UtcNow);");
+                $"return new(\"{@event.EventType}\", JsonSerializer.Serialize(@event), DateTimeOffset.Now);");
             scb.EndScope();
             scb.EndScope();
 

@@ -107,10 +107,10 @@ public class WebSocketGenerator : IIncrementalGenerator
 
         scb.SetNamespace($"{projectNamespace}.Generated");
 
-        scb.StartScope("public class EventEnvelope(string type, string payload, DateTime timestamp)");
+        scb.StartScope("public class EventEnvelope(string type, string payload, DateTimeOffset timestamp)");
         scb.AddLine("public string Type { get; set; } = type;");
         scb.AddLine("public string Payload { get; set; } = payload;");
-        scb.AddLine("public DateTime Timestamp { get; set; } = timestamp;");
+        scb.AddLine("public DateTimeOffset Timestamp { get; set; } = timestamp;");
         scb.EndScope();
 
         context.AddSource("EventEnvelope.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
