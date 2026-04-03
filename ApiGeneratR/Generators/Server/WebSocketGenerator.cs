@@ -94,7 +94,7 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.SetNamespace($"{projectNamespace}.Generated");
 
         scb.StartScope("public interface IIdentityIdMapper");
-        scb.AddLine("Task<string> GetUserIdyByIdentityId(string identityId);");
+        scb.AddLine("Task<string> GetUserIdByIdentityId(string identityId);");
         scb.EndScope();
         scb.AddLine();
 
@@ -203,7 +203,7 @@ public class WebSocketGenerator : IIncrementalGenerator
                 $"public async Task Handle{channel.Channel}ConnectionAsync(WebSocket webSocket, string identityId)");
             scb.AddLine("using var scope = serviceProvider.CreateScope();");
             scb.AddLine("var db = scope.ServiceProvider.GetRequiredService<IIdentityIdMapper>();");
-            scb.AddLine("var userId = await db.GetUserIdyByIdentityId(identityId);");
+            scb.AddLine("var userId = await db.GetUserIdByIdentityId(identityId);");
 
             scb.AddLine();
             scb.AddLine("if (string.IsNullOrEmpty(userId)) return;");
