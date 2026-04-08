@@ -13,8 +13,8 @@ public static class DtoExtensions
         foreach (var dto in dtos)
         {
             var builder = new SourceCodeBuilder();
-            builder.SetNamespace(TranspilerStatics.TranspilerNamespace);
-            var parameters = string.Join(", ", dto.Properties.Select(p => $"{p.Type} {p.Name}"));
+            builder.SetNamespace(TranspilerBuilder.TranspilerNamespace + ".Generated");
+            var parameters = string.Join(", ", dto.Properties.Select(p => $"{p.Type.Split('.').Last()} {p.Name}"));
             builder.AddLine($"public record {dto.TypeName}({parameters});");
             transpilerBuilder.AddFile($"{dto.TypeName}.g.cs", builder.ToString());
         }
@@ -22,25 +22,25 @@ public static class DtoExtensions
         foreach (var @event in events)
         {
             var builder = new SourceCodeBuilder();
-            builder.SetNamespace(TranspilerStatics.TranspilerNamespace);
+            builder.SetNamespace(TranspilerBuilder.TranspilerNamespace + ".Generated");
             builder.AddLine(
-                $"public record {@event.TypeName}({string.Join(", ", @event.Properties.Select(p => $"{p.Type} {p.Name}"))});");
+                $"public record {@event.TypeName}({string.Join(", ", @event.Properties.Select(p => $"{p.Type.Split('.').Last()} {p.Name}"))});");
             transpilerBuilder.AddFile($"{@event.TypeName}.g.cs", builder.ToString());
         }
 
         foreach (var request in requests)
         {
             var builder = new SourceCodeBuilder();
-            builder.SetNamespace(TranspilerStatics.TranspilerNamespace);
+            builder.SetNamespace(TranspilerBuilder.TranspilerNamespace + ".Generated");
             builder.AddLine(
-                $"public record {request.RequestShortName}({string.Join(", ", request.Properties.Select(p => $"{p.Type} {p.Name}"))});");
+                $"public record {request.RequestShortName}({string.Join(", ", request.Properties.Select(p => $"{p.Type.Split('.').Last()} {p.Name}"))});");
             transpilerBuilder.AddFile($"{request.RequestShortName}.g.cs", builder.ToString());
         }
 
         foreach (var @enum in enums)
         {
             var builder = new SourceCodeBuilder();
-            builder.SetNamespace(TranspilerStatics.TranspilerNamespace);
+            builder.SetNamespace(TranspilerBuilder.TranspilerNamespace + ".Generated");
             builder.StartScope($"public enum {@enum.Name}");
             builder.AddLine(string.Join(", ", @enum.Fields));
             builder.EndScope();

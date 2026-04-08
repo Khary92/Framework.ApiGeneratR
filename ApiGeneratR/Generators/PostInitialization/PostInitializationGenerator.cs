@@ -14,5 +14,6 @@ public class AttributeGenerator : IIncrementalGenerator
         context.GenerateRequestTypeAttribute();
         context.GenerateEventAttribute();
         context.GenerateDtoAttributeAttribute();
+        context.GenerateApiEnumAttributeAttribute();
     }
 }

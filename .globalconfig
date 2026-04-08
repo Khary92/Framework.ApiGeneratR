@@ -17,3 +17,6 @@ apigeneratr_log_mediator = true
 apigeneratr_log_websocket = true
 # Logs clientside outgoing requests and incoming events
 apigeneratr_log_clientapi = true
+
+# Activates or deactivates transpiler service.
+apigeneratr_transpiler_active = true

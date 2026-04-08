@@ -86,22 +86,22 @@ public class ClientGenerator : IIncrementalGenerator
         if (requestData.IsDefaultOrEmpty || eventData.IsDefaultOrEmpty ||
             projectNamespace != options.DefinitionsProject) return;
 
-        var transpilerBuilder = new TranspilerBuilder();
+        var transpilerBuilder = new TranspilerBuilder(options);
 
         // API container
-        ctx.CreateApiContainer(projectNamespace, transpilerBuilder);
-        ctx.CreateClientApiExtensions(requestData, projectNamespace, transpilerBuilder);
+        ctx.CreateApiContainer(options, transpilerBuilder, projectNamespace);
+        ctx.CreateClientApiExtensions(options, requestData, transpilerBuilder, projectNamespace);
 
         // Request senders
-        ctx.CreateApiClientWithInterface(projectNamespace, transpilerBuilder);
-        ctx.CreateTokenInjectorBaseClass(projectNamespace, transpilerBuilder);
-        ctx.CreateAtomicRequestSenderWithInterfaces(requestData, projectNamespace, options, transpilerBuilder);
-        ctx.CreateCommandSenderFacade(requestData, projectNamespace, transpilerBuilder);
-        ctx.CreateQuerySenderFacade(requestData, projectNamespace, transpilerBuilder);
+        ctx.CreateApiClientWithInterface(options, transpilerBuilder, projectNamespace);
+        ctx.CreateTokenInjectorBaseClass(options, projectNamespace, transpilerBuilder);
+        ctx.CreateAtomicRequestSenderWithInterfaces(requestData, options, transpilerBuilder, projectNamespace);
+        ctx.CreateCommandSenderFacade(options, requestData, projectNamespace, transpilerBuilder);
+        ctx.CreateQuerySenderFacade(options, requestData, projectNamespace, transpilerBuilder);
 
         // Websocket
-        ctx.GenerateWebsocketReceiver(eventData, projectNamespace, options, transpilerBuilder);
-        ctx.CreateWebsocketInterface(projectNamespace, transpilerBuilder);
+        ctx.GenerateWebsocketReceiver(options, eventData, transpilerBuilder, projectNamespace);
+        ctx.CreateWebsocketInterface(options, transpilerBuilder,projectNamespace);
 
         // EventBus
         ctx.CreateEventBusWithInterfaces(projectNamespace, options, transpilerBuilder);

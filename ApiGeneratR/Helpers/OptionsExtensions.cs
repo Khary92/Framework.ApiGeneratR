@@ -28,6 +28,8 @@ public static class OptionsExtensions
 
                 options.GlobalOptions.TryGetValue("apigeneratr_log_clientapi", out var isLogClientApi);
 
+                options.GlobalOptions.TryGetValue("apigeneratr_transpiler_active", out var isTranspilerActive);
+
                 options.GlobalOptions.TryGetValue("apigeneratr_com_channels", out var comChannels);
 
                 if (comChannels == null)
@@ -54,7 +56,8 @@ public static class OptionsExtensions
                     handlerProject ?? "Missing global config entry for request handler project!",
                     isLogMediator == "true",
                     isLogWebsocket == "true",
-                    isLogClientApi == "true");
+                    isLogClientApi == "true",
+                    isTranspilerActive == "true");
             });
     }
 }

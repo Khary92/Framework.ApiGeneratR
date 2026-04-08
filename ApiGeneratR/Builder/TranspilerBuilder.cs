@@ -1,10 +1,24 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using ApiGeneratR.Mapper;
 
 namespace ApiGeneratR.Builder;
 
 public class TranspilerBuilder
 {
+    public const string TranspilerNamespace = "ApiGeneratR.Transpiler";
+    private const string Pattern = @"global::(?:[\w\.]+\.)([\w]+)";
+
+    private readonly List<string> _toBeReplacedNameSpaces = [];
+
+    public TranspilerBuilder(GlobalOptions options)
+    {
+        _toBeReplacedNameSpaces.Add(options.DefinitionsProject);
+        _toBeReplacedNameSpaces.Add(options.HandlerProject);
+        _toBeReplacedNameSpaces.AddRange(options.ClientProjects);
+    }
+
     private readonly Dictionary<string, string> _files = new();
 
     public void AddFile(string fileName, string code) => _files.Add(fileName, code);
@@ -25,8 +39,18 @@ public class TranspilerBuilder
 
         foreach (var sourceFile in _files)
         {
+            var cleanedContent = Regex.Replace(sourceFile.Value, Pattern, "$1");
+
+            foreach (var toBeReplacedNameSpace in _toBeReplacedNameSpaces)
+            {
+                if (cleanedContent.Contains(toBeReplacedNameSpace))
+                {
+                    cleanedContent = cleanedContent.Replace(toBeReplacedNameSpace, TranspilerNamespace);
+                }
+            }
+
             scb.AddLine($"[\"{sourceFile.Key}\"] = \"\"\"");
-            foreach (var line in sourceFile.Value.Split(["\n", "\r"], StringSplitOptions.None)) scb.AddLine(line);
+            foreach (var line in cleanedContent.Split(["\n", "\r"], StringSplitOptions.None)) scb.AddLine(line);
             scb.AddLine("\"\"\",");
             scb.AddLine();
         }

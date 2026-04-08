@@ -144,7 +144,7 @@ public static class PostInitializationOutputExtensions
 
             scb.SetNamespace("ApiGeneratR.Attributes");
 
-            scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
+            scb.AddLine("[AttributeUsage(AttributeTargets.Enum)]");
             scb.AddLine("internal class ApiEnumAttribute : Attribute;");
 
             ctx.AddSource("ApiEnumAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));

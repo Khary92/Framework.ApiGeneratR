@@ -11,7 +11,8 @@ public record GlobalOptions(
     string HandlerProject,
     bool IsLogMediator,
     bool IsLogWebsockets,
-    bool IsLogApiClient)
+    bool IsLogApiClient,
+    bool IsTranspilerActive)
 {
     public string GetLoggerForType(string className) => $"Microsoft.Extensions.Logging.ILogger<{className}>";
 
