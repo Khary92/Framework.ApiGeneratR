@@ -12,7 +12,7 @@ public static class DtoSymbolExtensions
         this IncrementalGeneratorInitializationContext context)
     {
         return context.SyntaxProvider.ForAttributeWithMetadataName(
-                "ApiGeneratR.Attributes.DTOAttribute",
+                "ApiGeneratR.Attributes.DataTransferObjectAttribute",
                 (node, _) => node is ClassDeclarationSyntax or RecordDeclarationSyntax,
                 (ctx, _) =>
                 {

@@ -2,7 +2,7 @@ using ApiGeneratR.Attributes;
 
 namespace Api.Definitions.Dto;
 
-[DTO]
+[DataTransferObject]
 public record UserDto(
     Guid Id,
     string LoginName,

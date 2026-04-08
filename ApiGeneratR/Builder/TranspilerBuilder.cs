@@ -12,19 +12,15 @@ public class TranspilerBuilder
     public string GetStaticSourceFile()
     {
         SourceCodeBuilder scb = new();
-        // Diese Usings sind KRITISCH, damit der Transpiler selbst kompiliert
         scb.SetUsings([
             "System",
             "System.Collections.Generic",
             "System.IO",
-            "Microsoft.Extensions.DependencyInjection", // Für IServiceCollection
-            "Microsoft.Extensions.Logging" // Für ILogger
         ]);
 
         scb.SetNamespace("Api.Definitions.Generated");
         scb.StartScope("public static class GeneratedTranspiler");
 
-        // WICHTIG: Semikolon am Ende des Dictionary-Initialisierers
         scb.StartScope("private static readonly Dictionary<string, string> _files = new()");
 
         foreach (var sourceFile in _files)

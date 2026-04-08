@@ -130,30 +130,25 @@ public static class PostInitializationOutputExtensions
             scb.SetNamespace("ApiGeneratR.Attributes");
 
             scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
-            scb.AddLine("internal class DTOAttribute : Attribute;");
+            scb.AddLine("internal class DataTransferObjectAttribute : Attribute;");
 
             ctx.AddSource("DtoAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         });
     }
-
-    public static void GenerateTranspilerBase(this IncrementalGeneratorInitializationContext context)
+    
+    public static void GenerateApiEnumAttributeAttribute(this IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(static ctx =>
         {
             var scb = new SourceCodeBuilder();
 
-            scb.SetNamespace(TranspilerStatics.TranspilerNamespace);
+            scb.SetNamespace("ApiGeneratR.Attributes");
 
-            scb.StartScope(TranspilerStatics.TranspilerClassSignature);
-            scb.StartScope("public static void EmitTranspiledFiles(string path)");
-            scb.AddLine(TranspilerStatics.EmitApiMethodCall);
-            scb.AddLine(TranspilerStatics.EmitDtoMethodCall);
-            scb.EndScope();
-            scb.AddLine(TranspilerStatics.PartialBaseApiMethodSignature);
-            scb.AddLine(TranspilerStatics.PartialBaseDtoMethodSignature);
-            scb.EndScope();
+            scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
+            scb.AddLine("internal class ApiEnumAttribute : Attribute;");
 
-            ctx.AddSource("TranspilerStaticBase.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+            ctx.AddSource("ApiEnumAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         });
     }
+    
 }

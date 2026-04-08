@@ -2,5 +2,5 @@ using ApiGeneratR.Attributes;
 
 namespace Api.Definitions.Dto;
 
-[DTO]
+[DataTransferObject]
 public record CommandResponse(bool IsSuccessful, string Message = "");

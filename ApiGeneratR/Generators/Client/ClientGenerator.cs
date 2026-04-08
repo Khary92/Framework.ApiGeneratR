@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using ApiGeneratR.Builder;
 using ApiGeneratR.Helpers;
+using ApiGeneratR.Helpers.Extractors.Api;
 using ApiGeneratR.Mapper;
 using Microsoft.CodeAnalysis;
 
@@ -20,6 +21,7 @@ public class ClientGenerator : IIncrementalGenerator
         var eventSourceData = context.GetEventSourceData();
         var dtoSourceData = context.GetDtoData();
         var globalOptions = context.GetGlobalOptions();
+        var apiEnumSourceData = context.GetApiEnumData();
 
         context.RegisterSourceOutput(attributedClientServices.Combine(assemblyName).Combine(globalOptions),
             static (spc, source) =>
@@ -36,11 +38,10 @@ public class ClientGenerator : IIncrementalGenerator
                         Location.None, ex.Message));
                 }
             });
-
         var combinedApiData = apiSourceData
             .Combine(assemblyName)
             .Combine(eventSourceData)
-            .Combine(globalOptions.Combine(dtoSourceData));
+            .Combine(globalOptions.Combine(dtoSourceData).Combine(apiEnumSourceData));
 
         context.RegisterSourceOutput(combinedApiData,
             static (spc, source) =>
@@ -50,10 +51,12 @@ public class ClientGenerator : IIncrementalGenerator
                     var apiData = source.Left.Left.Left;
                     var assembly = source.Left.Left.Right;
                     var eventData = source.Left.Right;
-                    var options = source.Right.Left;
-                    var dtos = source.Right.Right;
 
-                    ExecuteApiContainerGeneration(spc, apiData, assembly, eventData, dtos, options);
+                    var options = source.Right.Left.Left;
+                    var dtos = source.Right.Left.Right;
+                    var enums = source.Right.Right;
+
+                    ExecuteApiContainerGeneration(spc, apiData, assembly, eventData, dtos, enums, options);
                 }
                 catch (Exception ex)
                 {
@@ -77,6 +80,7 @@ public class ClientGenerator : IIncrementalGenerator
     private static void ExecuteApiContainerGeneration(SourceProductionContext ctx,
         ImmutableArray<RequestData> requestData,
         string? projectNamespace, ImmutableArray<EventData> eventData, ImmutableArray<DtoData> dtoData,
+        ImmutableArray<ApiEnumData> apiEnumData,
         GlobalOptions options)
     {
         if (requestData.IsDefaultOrEmpty || eventData.IsDefaultOrEmpty ||
@@ -104,7 +108,7 @@ public class ClientGenerator : IIncrementalGenerator
 
         //Statics
         ctx.CreateApiDocumentation(projectNamespace, eventData, requestData);
-        transpilerBuilder.AddTranspiledDtos(dtoData, eventData, requestData);
+        transpilerBuilder.AddTranspiledDtos(dtoData, eventData, requestData, apiEnumData);
         ctx.CreateTranspilerStatic(transpilerBuilder);
     }
 }
