@@ -38,7 +38,7 @@ public static class PostInitializationOutputExtensions
             ctx.AddSource("RequestHandlerAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         });
     }
-    
+
     public static void GenerateRequestAttribute(this IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(static ctx =>
@@ -104,7 +104,7 @@ public static class PostInitializationOutputExtensions
         });
     }
 
-    public static void GenerateEventAttributeAttribute(this IncrementalGeneratorInitializationContext context)
+    public static void GenerateEventAttribute(this IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(static ctx =>
         {
@@ -118,6 +118,42 @@ public static class PostInitializationOutputExtensions
             scb.EndScope();
 
             ctx.AddSource("EventAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        });
+    }
+
+    public static void GenerateDtoAttributeAttribute(this IncrementalGeneratorInitializationContext context)
+    {
+        context.RegisterPostInitializationOutput(static ctx =>
+        {
+            var scb = new SourceCodeBuilder();
+
+            scb.SetNamespace("ApiGeneratR.Attributes");
+
+            scb.AddLine("[AttributeUsage(AttributeTargets.Class)]");
+            scb.AddLine("internal class DTOAttribute : Attribute;");
+
+            ctx.AddSource("DtoAttribute.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        });
+    }
+
+    public static void GenerateTranspilerBase(this IncrementalGeneratorInitializationContext context)
+    {
+        context.RegisterPostInitializationOutput(static ctx =>
+        {
+            var scb = new SourceCodeBuilder();
+
+            scb.SetNamespace(TranspilerStatics.TranspilerNamespace);
+
+            scb.StartScope(TranspilerStatics.TranspilerClassSignature);
+            scb.StartScope("public static void EmitTranspiledFiles(string path)");
+            scb.AddLine(TranspilerStatics.EmitApiMethodCall);
+            scb.AddLine(TranspilerStatics.EmitDtoMethodCall);
+            scb.EndScope();
+            scb.AddLine(TranspilerStatics.PartialBaseApiMethodSignature);
+            scb.AddLine(TranspilerStatics.PartialBaseDtoMethodSignature);
+            scb.EndScope();
+
+            ctx.AddSource("TranspilerStaticBase.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
         });
     }
 }

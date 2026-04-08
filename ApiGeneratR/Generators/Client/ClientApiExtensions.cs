@@ -11,7 +11,8 @@ namespace ApiGeneratR.Generators.Client;
 
 public static class ClientApiExtensions
 {
-    public static void CreateApiContainer(this SourceProductionContext ctx, string projectNamespace)
+    public static void CreateApiContainer(this SourceProductionContext ctx, string projectNamespace,
+        TranspilerBuilder transpilerBuilder)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -46,11 +47,12 @@ public static class ClientApiExtensions
         scb.EndScope();
 
         AddSource(ctx, "ApiContainer.g.cs", scb.ToString());
+        transpilerBuilder.AddFile("ApiContainer.g.cs", scb.ToString());
     }
 
     public static void CreateClientApiExtensions(this SourceProductionContext ctx,
         ImmutableArray<RequestData> requests,
-        string projectNamespace)
+        string projectNamespace, TranspilerBuilder transpilerBuilder)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -89,11 +91,13 @@ public static class ClientApiExtensions
         scb.EndScope();
 
         AddSource(ctx, "ApiContainerExtensions.g.cs", scb.ToString());
+        transpilerBuilder.AddFile("ApiContainerExtensions.g.cs", scb.ToString());
     }
 
 
     public static void GenerateWebsocketReceiver(this SourceProductionContext ctx,
-        ImmutableArray<EventSourceData> events, string projectNamespace, GlobalOptions options)
+        ImmutableArray<EventData> events, string projectNamespace, GlobalOptions options,
+        TranspilerBuilder transpilerBuilder)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -200,9 +204,11 @@ public static class ClientApiExtensions
         scb.EndScope();
 
         AddSource(ctx, "WebSocketService.g.cs", scb.ToString());
+        transpilerBuilder.AddFile("WebSocketService.g.cs", scb.ToString());
     }
 
-    public static void CreateTokenInjectorBaseClass(this SourceProductionContext context, string projectNamespace)
+    public static void CreateTokenInjectorBaseClass(this SourceProductionContext context, string projectNamespace,
+        TranspilerBuilder transpilerBuilder)
     {
         var scb = new SourceCodeBuilder();
 
@@ -218,10 +224,12 @@ public static class ClientApiExtensions
         scb.EndScope();
 
         AddSource(context, "TokenInjection.g.cs", scb.ToString());
+        transpilerBuilder.AddFile("TokenInjection.g.cs", scb.ToString());
     }
 
     public static void CreateAtomicRequestSenderWithInterfaces(this SourceProductionContext context,
-        ImmutableArray<RequestData> requests, string projectNamespace, GlobalOptions options)
+        ImmutableArray<RequestData> requests, string projectNamespace, GlobalOptions options,
+        TranspilerBuilder transpilerBuilder)
     {
         foreach (var request in requests)
         {
@@ -287,23 +295,24 @@ public static class ClientApiExtensions
             scb.EndScope();
 
             AddSource(context, $"Generated{request.RequestShortName}Sender.g.cs", scb.ToString());
+            transpilerBuilder.AddFile($"Generated{request.RequestShortName}Sender.g.cs", scb.ToString());
         }
     }
 
     public static void CreateCommandSenderFacade(this SourceProductionContext context,
-        ImmutableArray<RequestData> requests, string projectNamespace)
+        ImmutableArray<RequestData> requests, string projectNamespace, TranspilerBuilder transpilerBuilder)
     {
-        context.InternalCreateRequestSenderFacades(requests, projectNamespace, "Command");
+        context.InternalCreateRequestSenderFacades(requests, projectNamespace, "Command", transpilerBuilder);
     }
 
     public static void CreateQuerySenderFacade(this SourceProductionContext context,
-        ImmutableArray<RequestData> requests, string projectNamespace)
+        ImmutableArray<RequestData> requests, string projectNamespace, TranspilerBuilder transpilerBuilder)
     {
-        context.InternalCreateRequestSenderFacades(requests, projectNamespace, "Query");
+        context.InternalCreateRequestSenderFacades(requests, projectNamespace, "Query", transpilerBuilder);
     }
 
     private static void InternalCreateRequestSenderFacades(this SourceProductionContext context,
-        ImmutableArray<RequestData> requests, string projectNamespace, string type)
+        ImmutableArray<RequestData> requests, string projectNamespace, string type, TranspilerBuilder transpilerBuilder)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings([
@@ -365,9 +374,11 @@ public static class ClientApiExtensions
         scb.EndScope();
 
         AddSource(context, $"{type}Sender.g.cs", scb.ToString());
+        transpilerBuilder.AddFile($"{type}Sender.g.cs", scb.ToString());
     }
 
-    public static void CreateWebsocketInterface(this SourceProductionContext context, string projectNamespace)
+    public static void CreateWebsocketInterface(this SourceProductionContext context, string projectNamespace,
+        TranspilerBuilder transpilerBuilder)
     {
         var scb = new SourceCodeBuilder();
 
@@ -381,9 +392,11 @@ public static class ClientApiExtensions
         scb.EndScope();
 
         AddSource(context, "IEventReceiver.g.cs", scb.ToString());
+        transpilerBuilder.AddFile("IEventReceiver.g.cs", scb.ToString());
     }
 
-    public static void CreateApiClientWithInterface(this SourceProductionContext context, string projectNamespace)
+    public static void CreateApiClientWithInterface(this SourceProductionContext context, string projectNamespace,
+        TranspilerBuilder transpilerBuilder)
     {
         var scb = new SourceCodeBuilder();
         scb.SetUsings(["System.Net.Http"]);
@@ -398,10 +411,11 @@ public static class ClientApiExtensions
         scb.EndScope();
 
         AddSource(context, "ApiClient.g.cs", scb.ToString());
+        transpilerBuilder.AddFile("ApiClient.g.cs", scb.ToString());
     }
 
     public static void CreateEventBusWithInterfaces(this SourceProductionContext context, string? projectNamespace,
-        GlobalOptions options)
+        GlobalOptions options, TranspilerBuilder transpilerBuilder)
     {
         if (projectNamespace != options.DefinitionsProject) return;
 
@@ -457,6 +471,7 @@ public static class ClientApiExtensions
         scb.EndScope();
 
         AddSource(context, "EventBus.g.cs", scb.ToString());
+        transpilerBuilder.AddFile("EventBus.g.cs", scb.ToString());
     }
 
     private static void AddSource(SourceProductionContext context, string fileName, string sourceCode)

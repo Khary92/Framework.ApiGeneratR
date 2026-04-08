@@ -12,6 +12,7 @@ public class AttributeGenerator : IIncrementalGenerator
         context.GenerateRequestAttribute();
         context.GenerateApiConsumerAttribute();
         context.GenerateRequestTypeAttribute();
-        context.GenerateEventAttributeAttribute();
+        context.GenerateEventAttribute();
+        context.GenerateDtoAttributeAttribute();
     }
 }

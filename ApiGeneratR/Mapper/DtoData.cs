@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 
 namespace ApiGeneratR.Mapper;
 
-public record EventSourceData(
+public record DtoData(
     string Namespace,
     string TypeName,
     string FullTypeName,

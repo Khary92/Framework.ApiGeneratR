@@ -105,7 +105,7 @@ public static class ServerApiExtensions
     }
 
     public static void CreateWebsocketsExtensions(this SourceProductionContext ctx,
-        ImmutableArray<EventSourceData> events, string? projectNamespace, GlobalOptions options)
+        ImmutableArray<EventData> events, string? projectNamespace, GlobalOptions options)
     {
         if (events.IsDefaultOrEmpty) return;
 

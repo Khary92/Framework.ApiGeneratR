@@ -30,13 +30,13 @@ public static class RequestSymbolExtensions
 
                     var fullName = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-                    var arrayBuilder = ImmutableArray.CreateBuilder<string>();
+                    var fieldsBuilder = ImmutableArray.CreateBuilder<FieldData>();
                     foreach (var member in symbol.GetMembers().OfType<IPropertySymbol>())
                     {
                         if (member.DeclaredAccessibility != Accessibility.Public) continue;
                         if (member.IsStatic || member.IsIndexer) continue;
 
-                        arrayBuilder.Add($"public {member.Type.ToDisplayString()} {member.Name} {{ get; }}");
+                        fieldsBuilder.Add(new FieldData(member.Name, member.Type.ToDisplayString()));
                     }
 
                     var route = attribute.ConstructorArguments[0].Value?.ToString() ?? "/unknown";
@@ -58,7 +58,6 @@ public static class RequestSymbolExtensions
                         }
                     }
 
-
                     var hasIdentityId = symbol.GetMembers().Any(m => m.Name == "IdentityId");
                     var type = symbol.IsRecord ? "Record" : "Class";
 
@@ -70,8 +69,9 @@ public static class RequestSymbolExtensions
                         symbol.Name,
                         fullName,
                         returnValueFullName.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                        arrayBuilder.ToImmutable(),
-                        type);
+                        type,
+                        fieldsBuilder.ToImmutable()
+                    );
                 })
             .Where(x => x is not null)
             .Select((x, _) => x!)

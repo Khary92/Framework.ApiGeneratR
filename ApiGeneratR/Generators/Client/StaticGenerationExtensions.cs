@@ -9,31 +9,36 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace ApiGeneratR.Generators.Client;
 
-public static class DocumentationExtensions
+public static class StaticGenerationExtensions
 {
-    public static void CreateStaticServices(this SourceProductionContext ctx, string projectNamespace,
-        ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests, GlobalOptions options)
+    public static void CreateApiDocumentation(this SourceProductionContext ctx, string projectNamespace,
+        ImmutableArray<EventData> events, ImmutableArray<RequestData> requests)
     {
         SourceCodeBuilder scb = new();
         scb.SetNamespace($"{projectNamespace}.Generated");
         scb.StartScope("public static class GeneratedDocumentation");
         scb.AddLine();
-        
+
         scb.AddLine("private static string Markdown => \"\"\"");
         var lines = GetMarkdownText(events, requests).Split(["\n", "\r"], StringSplitOptions.None);
         foreach (var line in lines) scb.AddLine(line);
         scb.AddLine("\"\"\";");
-        
+
         scb.AddLine();
         scb.StartScope("public static void PrintDocumentationToPath(string path)");
         scb.AddLine("File.WriteAllText(path, Markdown);");
         scb.EndScope();
         scb.EndScope();
-        
+
         ctx.AddSource("GeneratedDocumentation.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
     }
+    
+    public static void CreateTranspilerStatic(this SourceProductionContext ctx, TranspilerBuilder transpilerBuilder)
+    {
+        ctx.AddSource("GeneratedTranspiler.g.cs", SourceText.From(transpilerBuilder.GetStaticSourceFile(), Encoding.UTF8));
+    }
 
-    private static string GetMarkdownText(ImmutableArray<EventSourceData> events, ImmutableArray<RequestData> requests)
+    private static string GetMarkdownText(ImmutableArray<EventData> events, ImmutableArray<RequestData> requests)
     {
         var mdb = new MarkdownBuilder();
         mdb.AddHeader("API Documentation");
@@ -56,7 +61,7 @@ public static class DocumentationExtensions
                     request.DataStructureType
                 ]);
 
-            mdb.AddTable(new List<string> {"Auth Policy", "Route", "Command/Record", "Type" }, rows);
+            mdb.AddTable(new List<string> { "Auth Policy", "Route", "Command/Record", "Type" }, rows);
 
             mdb.AddHorizontalRule();
             mdb.AddHeader("Request Definitions", 2);
@@ -71,7 +76,8 @@ public static class DocumentationExtensions
                 mdb.StartCodeBlock();
                 mdb.AddLine($"// Structure of {request.RequestShortName}");
 
-                foreach (var member in request.Members) mdb.AddLine(member);
+                foreach (var member in request.Properties)
+                    mdb.AddLine("public " + member.Type + " " + member.Name + " { get; }");
 
                 mdb.EndCodeBlock();
             }

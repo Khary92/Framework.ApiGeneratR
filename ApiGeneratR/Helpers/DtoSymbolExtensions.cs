@@ -6,13 +6,13 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ApiGeneratR.Helpers;
 
-public static class EventAttributeRetriever
+public static class DtoSymbolExtensions
 {
-    public static IncrementalValueProvider<ImmutableArray<EventData>> GetEventSourceData(
+    public static IncrementalValueProvider<ImmutableArray<DtoData>> GetDtoData(
         this IncrementalGeneratorInitializationContext context)
     {
         return context.SyntaxProvider.ForAttributeWithMetadataName(
-                "ApiGeneratR.Attributes.EventAttribute",
+                "ApiGeneratR.Attributes.DTOAttribute",
                 (node, _) => node is ClassDeclarationSyntax or RecordDeclarationSyntax,
                 (ctx, _) =>
                 {
@@ -36,7 +36,7 @@ public static class EventAttributeRetriever
                         ? attribute.ConstructorArguments[0].Value?.ToString() ?? "EventTypeError"
                         : "EventTypeError";
 
-                    return new EventData(
+                    return new DtoData(
                         @namespace,
                         symbol.Name,
                         symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),

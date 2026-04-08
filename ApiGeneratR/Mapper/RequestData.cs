@@ -10,5 +10,5 @@ public record RequestData(
     string RequestShortName,
     string RequestFullName,
     string ReturnValueFullName,
-    ImmutableArray<string> Members,
-    string DataStructureType);
+    string DataStructureType,
+    ImmutableArray<FieldData> Properties);

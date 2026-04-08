@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using ApiGeneratR.Builder;
 using ApiGeneratR.Helpers;
 using ApiGeneratR.Mapper;
 using Microsoft.CodeAnalysis;
@@ -17,6 +18,7 @@ public class ClientGenerator : IIncrementalGenerator
         var attributedClientServices = context.GetConsumerApiSourceData();
         var apiSourceData = context.GetRequestSourceData();
         var eventSourceData = context.GetEventSourceData();
+        var dtoSourceData = context.GetDtoData();
         var globalOptions = context.GetGlobalOptions();
 
         context.RegisterSourceOutput(attributedClientServices.Combine(assemblyName).Combine(globalOptions),
@@ -35,21 +37,30 @@ public class ClientGenerator : IIncrementalGenerator
                 }
             });
 
-        context.RegisterSourceOutput(
-            apiSourceData.Combine(assemblyName).Combine(eventSourceData).Combine(globalOptions),
+        var combinedApiData = apiSourceData
+            .Combine(assemblyName)
+            .Combine(eventSourceData)
+            .Combine(globalOptions.Combine(dtoSourceData));
+
+        context.RegisterSourceOutput(combinedApiData,
             static (spc, source) =>
             {
                 try
                 {
-                    ExecuteApiContainerGeneration(spc, source.Left.Left.Left, source.Left.Left.Right, source.Left.Right,
-                        source.Right);
+                    var apiData = source.Left.Left.Left;
+                    var assembly = source.Left.Left.Right;
+                    var eventData = source.Left.Right;
+                    var options = source.Right.Left;
+                    var dtos = source.Right.Right;
+
+                    ExecuteApiContainerGeneration(spc, apiData, assembly, eventData, dtos, options);
                 }
                 catch (Exception ex)
                 {
                     spc.ReportDiagnostic(Diagnostic.Create(
-                        new DiagnosticDescriptor("GEN002", "Api Container Generator Error",
-                            "Error generating api container code: {0}", "Generator", DiagnosticSeverity.Error, true),
-                        Location.None, ex.Message));
+                        new DiagnosticDescriptor("GEN002", "Error", ex.Message, "Generator", DiagnosticSeverity.Error,
+                            true),
+                        Location.None));
                 }
             });
     }
@@ -65,30 +76,35 @@ public class ClientGenerator : IIncrementalGenerator
 
     private static void ExecuteApiContainerGeneration(SourceProductionContext ctx,
         ImmutableArray<RequestData> requestData,
-        string? projectNamespace, ImmutableArray<EventSourceData> eventData, GlobalOptions options)
+        string? projectNamespace, ImmutableArray<EventData> eventData, ImmutableArray<DtoData> dtoData,
+        GlobalOptions options)
     {
         if (requestData.IsDefaultOrEmpty || eventData.IsDefaultOrEmpty ||
             projectNamespace != options.DefinitionsProject) return;
-        
+
+        var transpilerBuilder = new TranspilerBuilder();
+
         // API container
-        ctx.CreateApiContainer(projectNamespace);
-        ctx.CreateClientApiExtensions(requestData, projectNamespace);
+        ctx.CreateApiContainer(projectNamespace, transpilerBuilder);
+        ctx.CreateClientApiExtensions(requestData, projectNamespace, transpilerBuilder);
 
         // Request senders
-        ctx.CreateApiClientWithInterface(projectNamespace);
-        ctx.CreateTokenInjectorBaseClass(projectNamespace);
-        ctx.CreateAtomicRequestSenderWithInterfaces(requestData, projectNamespace, options);
-        ctx.CreateCommandSenderFacade(requestData, projectNamespace);
-        ctx.CreateQuerySenderFacade(requestData, projectNamespace);
+        ctx.CreateApiClientWithInterface(projectNamespace, transpilerBuilder);
+        ctx.CreateTokenInjectorBaseClass(projectNamespace, transpilerBuilder);
+        ctx.CreateAtomicRequestSenderWithInterfaces(requestData, projectNamespace, options, transpilerBuilder);
+        ctx.CreateCommandSenderFacade(requestData, projectNamespace, transpilerBuilder);
+        ctx.CreateQuerySenderFacade(requestData, projectNamespace, transpilerBuilder);
 
         // Websocket
-        ctx.GenerateWebsocketReceiver(eventData, projectNamespace, options);
-        ctx.CreateWebsocketInterface(projectNamespace);
+        ctx.GenerateWebsocketReceiver(eventData, projectNamespace, options, transpilerBuilder);
+        ctx.CreateWebsocketInterface(projectNamespace, transpilerBuilder);
 
         // EventBus
-        ctx.CreateEventBusWithInterfaces(projectNamespace, options);
-        
-        //Documentation
-        ctx.CreateStaticServices(projectNamespace, eventData, requestData, options);
+        ctx.CreateEventBusWithInterfaces(projectNamespace, options, transpilerBuilder);
+
+        //Statics
+        ctx.CreateApiDocumentation(projectNamespace, eventData, requestData);
+        transpilerBuilder.AddTranspiledDtos(dtoData, eventData, requestData);
+        ctx.CreateTranspilerStatic(transpilerBuilder);
     }
 }
