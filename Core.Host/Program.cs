@@ -21,8 +21,8 @@ public static class Program
 
     private static WebApplication BuildServerApp(string[] args)
     {
-        GeneratedDocumentation.PrintDocumentationToPath("Documentation.md");
-        GeneratedTranspiler.EmitToPath("/home/jannic/Documents/Export_test");
+        GeneratedTranspiler.EmitToPath("./Generated");
+        GeneratedDocumentation.PrintDocumentationToPath("./Generated/Documentation.md");
         
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {

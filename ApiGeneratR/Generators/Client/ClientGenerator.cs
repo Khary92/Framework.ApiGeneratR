@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Immutable;
-using ApiGeneratR.Builder;
+using ApiGeneratR.Code;
+using ApiGeneratR.Code.Api;
+using ApiGeneratR.Code.Builder;
+using ApiGeneratR.Code.Client;
+using ApiGeneratR.Code.Documentation;
 using ApiGeneratR.Helpers;
 using ApiGeneratR.Helpers.Extractors.Api;
 using ApiGeneratR.Mapper;
@@ -88,27 +92,53 @@ public class ClientGenerator : IIncrementalGenerator
 
         var transpilerBuilder = new TranspilerBuilder(options);
 
+        if (options.IsTranspilerActive)
+        {
+            // API container
+            transpilerBuilder.AddFile(ApiContainerCodeGen.Create(Language.CSharpTranspiled, projectNamespace));
+            transpilerBuilder.AddFile(ApiContainerDependencyInjectionCodeGen.Create(Language.CSharpTranspiled,
+                requestData, projectNamespace));
+
+            // Request senders
+            transpilerBuilder.AddFile(HttpSenderCodeGen.Create(Language.CSharpTranspiled, projectNamespace));
+            transpilerBuilder.AddFile(TokenInjectorBaseCodeGen.Create(Language.CSharpTranspiled, projectNamespace));
+            transpilerBuilder.AddFiles(RequestDispatcherCodeGen.Create(Language.CSharpTranspiled, requestData, options,
+                projectNamespace));
+            transpilerBuilder.AddFiles(
+                RequestSenderFacadesCodeGen.Create(Language.CSharpTranspiled, requestData, projectNamespace));
+
+            // Websocket
+            transpilerBuilder.AddFile(WebSocketReceiverCodeGen.Create(Language.CSharpTranspiled, options, eventData,
+                projectNamespace));
+
+            // Api definitions copy
+            transpilerBuilder.AddFiles(ApiClassCodeGen.Create(dtoData, eventData, requestData, apiEnumData));
+            transpilerBuilder.AddFile(EventSerializationCodeGen.Create(projectNamespace));
+
+            // EventBus
+            transpilerBuilder.AddFile(EventBusCodeGen.Create(Language.CSharpTranspiled, projectNamespace));
+        }
+
         // API container
-        ctx.CreateApiContainer(options, transpilerBuilder, projectNamespace);
-        ctx.CreateClientApiExtensions(options, requestData, transpilerBuilder, projectNamespace);
+        ctx.AddFile(ApiContainerCodeGen.Create(Language.CSharpWeb, projectNamespace));
+        ctx.AddFile(ApiContainerDependencyInjectionCodeGen.Create(Language.CSharpWeb, requestData, projectNamespace));
 
         // Request senders
-        ctx.CreateApiClientWithInterface(options, transpilerBuilder, projectNamespace);
-        ctx.CreateTokenInjectorBaseClass(options, projectNamespace, transpilerBuilder);
-        ctx.CreateAtomicRequestSenderWithInterfaces(requestData, options, transpilerBuilder, projectNamespace);
-        ctx.CreateCommandSenderFacade(options, requestData, projectNamespace, transpilerBuilder);
-        ctx.CreateQuerySenderFacade(options, requestData, projectNamespace, transpilerBuilder);
+        ctx.AddFile(HttpSenderCodeGen.Create(Language.CSharpWeb, projectNamespace));
+        ctx.AddFile(TokenInjectorBaseCodeGen.Create(Language.CSharpWeb, projectNamespace));
+        ctx.AddFiles(RequestDispatcherCodeGen.Create(Language.CSharpWeb, requestData, options, projectNamespace));
+        ctx.AddFiles(RequestSenderFacadesCodeGen.Create(Language.CSharpWeb, requestData, projectNamespace));
 
         // Websocket
-        ctx.GenerateWebsocketReceiver(options, eventData, transpilerBuilder, projectNamespace);
-        ctx.CreateWebsocketInterface(options, transpilerBuilder,projectNamespace);
+        ctx.AddFile(WebSocketReceiverCodeGen.Create(Language.CSharpWeb, options, eventData, projectNamespace));
 
         // EventBus
-        ctx.CreateEventBusWithInterfaces(projectNamespace, options, transpilerBuilder);
+        ctx.AddFile(EventBusCodeGen.Create(Language.CSharpWeb, projectNamespace));
 
-        //Statics
-        ctx.CreateApiDocumentation(projectNamespace, eventData, requestData);
-        transpilerBuilder.AddTranspiledDtos(dtoData, eventData, requestData, apiEnumData);
-        ctx.CreateTranspilerStatic(transpilerBuilder);
+        // Documentation
+        ctx.AddFile(DocumentationCodeGen.Create(Language.CSharpWeb, projectNamespace, eventData, requestData));
+
+        // Transpiler
+        ctx.AddFile(transpilerBuilder.GetStaticSourceCode());
     }
 }

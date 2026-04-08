@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using ApiGeneratR.Builder;
 using ApiGeneratR.Mapper;
 
-namespace ApiGeneratR.Builder;
+namespace ApiGeneratR.Code.Builder;
 
 public class TranspilerBuilder
 {
@@ -21,9 +22,10 @@ public class TranspilerBuilder
 
     private readonly Dictionary<string, string> _files = new();
 
-    public void AddFile(string fileName, string code) => _files.Add(fileName, code);
+    public void AddFile(SourceCodeFile code) => _files.Add(code.FileName, code.Content);
+    public void AddFiles(List<SourceCodeFile> code) => code.ForEach(AddFile);
 
-    public string GetStaticSourceFile()
+    public SourceCodeFile GetStaticSourceCode()
     {
         SourceCodeBuilder scb = new();
         scb.SetUsings([
@@ -65,6 +67,7 @@ public class TranspilerBuilder
         scb.EndScope();
 
         scb.EndScope();
-        return scb.ToString();
+        
+        return new SourceCodeFile("GeneratedTranspiler.g.cs", scb.ToString());
     }
 }

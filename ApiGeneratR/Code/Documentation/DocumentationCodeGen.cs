@@ -1,21 +1,35 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Text;
 using ApiGeneratR.Builder;
+using ApiGeneratR.Code.Builder;
 using ApiGeneratR.Mapper;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 
-namespace ApiGeneratR.Generators.Client;
+namespace ApiGeneratR.Code.Documentation;
 
-public static class StaticGenerationExtensions
+public static class DocumentationCodeGen
 {
-    public static void CreateApiDocumentation(this SourceProductionContext ctx, string projectNamespace,
+    public static SourceCodeFile Create(Language targetLanguage, string projectNamespace,
+        ImmutableArray<EventData> events, ImmutableArray<RequestData> requests)
+    {
+        switch (targetLanguage)
+        {
+            case Language.CSharpWeb:
+                return CreateCsharpApiDocumentation(projectNamespace + ".Generated", events, requests);
+            case Language.CSharpTranspiled:
+                return CreateCsharpApiDocumentation(TranspilerBuilder.TranspilerNamespace + ".Generated", events,
+                    requests);
+            default:
+                throw new NotSupportedException(
+                    $"Language {targetLanguage} is not supported for ApiContainer generation.");
+        }
+    }
+
+    private static SourceCodeFile CreateCsharpApiDocumentation(string projectNamespace,
         ImmutableArray<EventData> events, ImmutableArray<RequestData> requests)
     {
         SourceCodeBuilder scb = new();
-        scb.SetNamespace($"{projectNamespace}.Generated");
+        scb.SetNamespace(projectNamespace);
         scb.StartScope("public static class GeneratedDocumentation");
         scb.AddLine();
 
@@ -30,12 +44,7 @@ public static class StaticGenerationExtensions
         scb.EndScope();
         scb.EndScope();
 
-        ctx.AddSource("GeneratedDocumentation.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
-    }
-    
-    public static void CreateTranspilerStatic(this SourceProductionContext ctx, TranspilerBuilder transpilerBuilder)
-    {
-        ctx.AddSource("GeneratedTranspiler.g.cs", SourceText.From(transpilerBuilder.GetStaticSourceFile(), Encoding.UTF8));
+        return new SourceCodeFile("GeneratedDocumentation.g.cs", scb.ToString());
     }
 
     private static string GetMarkdownText(ImmutableArray<EventData> events, ImmutableArray<RequestData> requests)

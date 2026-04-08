@@ -18,7 +18,7 @@ public static class ModelExtensions
         return new UserModel(@event.Id, @event.LoginName, @event.FirstName,
             @event.LastName);
     }
-    
+
     public static UserModel ToUserModel(this UserUpdatedEvent @event)
     {
         return new UserModel(@event.Id, @event.LoginName, @event.FirstName,
