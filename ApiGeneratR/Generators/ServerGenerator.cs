@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Immutable;
+using ApiGeneratR.Code;
+using ApiGeneratR.Code.Api;
+using ApiGeneratR.Code.Server;
 using ApiGeneratR.Helpers;
 using ApiGeneratR.Helpers.Extractors.Api;
 using ApiGeneratR.Helpers.Extractors.Server;
@@ -25,7 +28,8 @@ public class ServerGenerator : IIncrementalGenerator
             {
                 try
                 {
-                    spc.CreateWebsocketsExtensions(source.Left.Left, source.Left.Right, source.Right);
+                    spc.AddFiles(WebSocketDependencyInjectionCodeGen.Create(source.Left.Left, source.Left.Right,
+                        source.Right));
                 }
                 catch (Exception ex)
                 {
@@ -66,6 +70,36 @@ public class ServerGenerator : IIncrementalGenerator
                         Location.None, ex.Message));
                 }
             });
+
+
+        var combined = assemblyName.Combine(context.GetGlobalOptions());
+
+        context.RegisterSourceOutput(combined,
+            static (spc, combined) =>
+            {
+                try
+                {
+                    CreateWebSockets(spc, combined.Left, combined.Right);
+                }
+                catch (Exception ex)
+                {
+                    spc.ReportDiagnostic(Diagnostic.Create(
+                        new DiagnosticDescriptor("GEN001", "WebSocketGenerator Error",
+                            "Error generating websocket code: {0}", "Generator", DiagnosticSeverity.Error, true),
+                        Location.None, ex.Message));
+                }
+            });
+    }
+
+    private static void CreateWebSockets(SourceProductionContext context, string? projectNamespace,
+        GlobalOptions options)
+    {
+        if (projectNamespace != options.DefinitionsProject) return;
+
+        context.AddFile(WebSocketCodeGen.CreateSocketConnectionService(projectNamespace, options));
+        context.AddFile(WebSocketCodeGen.CreateExtensions(projectNamespace, options));
+        context.AddFile(EventSerializationCodeGen.Create(projectNamespace));
+        context.AddFiles(WebSocketCodeGen.CreateInterface(projectNamespace, options));
     }
 
     private static void CreateSourceMediator(SourceProductionContext context,
@@ -73,9 +107,9 @@ public class ServerGenerator : IIncrementalGenerator
     {
         if (requestHandlerData.IsDefaultOrEmpty) return;
         if (projectNamespace == null || projectNamespace != options.HandlerProject) return;
-        
-        context.CreateSourceMediator(requestHandlerData, projectNamespace, options);
-        context.CreateMediatorExtensions(requestHandlerData, projectNamespace, options);
+
+        context.AddFile(MediatorCodeGen.Create(requestHandlerData, projectNamespace, options));
+        context.AddFile(MediatorDependencyInjectionCodeGen.Create(requestHandlerData, projectNamespace, options));
     }
 
     private static void CreateEndpoints(SourceProductionContext context,
@@ -84,7 +118,7 @@ public class ServerGenerator : IIncrementalGenerator
         if (requests.IsDefaultOrEmpty) return;
         if (projectNamespace != options.DefinitionsProject) return;
 
-        context.CreateEndpoints(requests, projectNamespace, options);
-        context.CreateMediatorInterface(requests, projectNamespace);
+        context.AddFile(MinimalApiEndpointsCodeGen.Create(requests, projectNamespace, options));
+        context.AddFiles(MediatorInterfaceCodeGen.Create(requests, projectNamespace));
     }
 }

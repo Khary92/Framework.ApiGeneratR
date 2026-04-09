@@ -1,4 +1,4 @@
-namespace ApiGeneratR.Code;
+namespace ApiGeneratR.Code.Client;
 
 public enum Language
 {

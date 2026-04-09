@@ -20,6 +20,11 @@
         </PackageReference>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Generators\DataContext\" />
+      <Folder Include="Generators\Server\" />
+    </ItemGroup>
+
     <PropertyGroup>
         <NoWarn>$(NoWarn);RS2000;RS2007;RS2008</NoWarn>
     </PropertyGroup>

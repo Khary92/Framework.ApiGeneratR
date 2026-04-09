@@ -28,21 +28,40 @@ public class ClientGenerator : IIncrementalGenerator
         var globalOptions = context.GetGlobalOptions();
         var apiEnumSourceData = context.GetApiEnumData();
 
-        context.RegisterSourceOutput(attributedClientServices.Combine(assemblyName).Combine(globalOptions),
-            static (spc, source) =>
+        context.RegisterSourceOutput(
+            attributedClientServices
+                .Combine(assemblyName)
+                .Combine(globalOptions)
+                .Select((source, _) => new PartialClientContext(source.Left.Left, source.Left.Right, source.Right
+                )),
+            static (spc, contextData) =>
             {
                 try
                 {
-                    ExecutePartialClientClassGeneration(spc, source.Left.Left, source.Left.Right, source.Right);
+                    ExecutePartialClientClassGeneration(
+                        spc,
+                        contextData.ConsumerData,
+                        contextData.NameSpace,
+                        contextData.Options
+                    );
                 }
                 catch (Exception ex)
                 {
                     spc.ReportDiagnostic(Diagnostic.Create(
-                        new DiagnosticDescriptor("GEN001", "Api Injection Generator Error",
-                            "Error generating api injection code: {0}", "Generator", DiagnosticSeverity.Error, true),
-                        Location.None, ex.Message));
+                        new DiagnosticDescriptor(
+                            "GEN001",
+                            "Api Injection Generator Error",
+                            "Error generating api injection code: {0}",
+                            "Generator",
+                            DiagnosticSeverity.Error,
+                            true
+                        ),
+                        Location.None,
+                        ex.Message
+                    ));
                 }
             });
+
         var combinedApiData = apiSourceData
             .Combine(assemblyName)
             .Combine(eventSourceData)

@@ -1,54 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ApiGeneratR.Code.Builder;
-using ApiGeneratR.Helpers;
 using ApiGeneratR.Mapper;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace ApiGeneratR.Generators.Server;
+namespace ApiGeneratR.Code.Server;
 
-[Generator(LanguageNames.CSharp)]
-public class WebSocketGenerator : IIncrementalGenerator
+public static class WebSocketCodeGen
 {
-    public void Initialize(IncrementalGeneratorInitializationContext context)
-    {
-        var assemblyName = context.CompilationProvider
-            .Select(static (compilation, _) => compilation.AssemblyName);
-
-        var combined = assemblyName.Combine(context.GetGlobalOptions());
-
-        context.RegisterSourceOutput(combined,
-            static (spc, combined) =>
-            {
-                try
-                {
-                    Execute(spc, combined.Left, combined.Right);
-                }
-                catch (Exception ex)
-                {
-                    spc.ReportDiagnostic(Diagnostic.Create(
-                        new DiagnosticDescriptor("GEN001", "WebSocketGenerator Error",
-                            "Error generating websocket code: {0}", "Generator", DiagnosticSeverity.Error, true),
-                        Location.None, ex.Message));
-                }
-            });
-    }
-
-    private static void Execute(SourceProductionContext context, string? projectNamespace, GlobalOptions options)
-    {
-        if (projectNamespace != options.DefinitionsProject) return;
-
-        ExecuteSocketConnectionServiceGeneration(context, projectNamespace, options);
-        ExecuteExtensionsGeneration(context, projectNamespace, options);
-        ExecuteEnvelopeGeneration(context, projectNamespace);
-        ExecuteInterfaceGeneration(context, projectNamespace, options);
-    }
-
-    private static void ExecuteInterfaceGeneration(SourceProductionContext context, string projectNamespace,
+    public static List<SourceCodeFile> CreateInterface(string projectNamespace,
         GlobalOptions options)
     {
+        var result = new List<SourceCodeFile>();
         var scb = new SourceCodeBuilder();
 
         scb.SetUsings([
@@ -76,7 +41,7 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.AddLine();
 
-        context.AddSource("IEventSender.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        result.Add(new SourceCodeFile("IEventSender.g.cs", scb.ToString()));
 
         scb = new SourceCodeBuilder();
 
@@ -98,10 +63,11 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.AddLine();
 
-        context.AddSource("IIdentityIdMapper.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        result.Add(new SourceCodeFile("IIdentityIdMapper.g.cs", scb.ToString()));
+        return result;
     }
 
-    private static void ExecuteEnvelopeGeneration(SourceProductionContext context, string projectNamespace)
+    private static SourceCodeFile ExecuteEnvelopeGeneration(string projectNamespace)
     {
         var scb = new SourceCodeBuilder();
 
@@ -113,10 +79,10 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.AddLine("public DateTimeOffset Timestamp { get; set; } = timestamp;");
         scb.EndScope();
 
-        context.AddSource("EventEnvelope.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        return new SourceCodeFile("EventEnvelope.g.cs", scb.ToString());
     }
 
-    private static void ExecuteExtensionsGeneration(SourceProductionContext context, string projectNamespace,
+    public static SourceCodeFile CreateExtensions(string projectNamespace,
         GlobalOptions options)
     {
         var scb = new SourceCodeBuilder();
@@ -163,11 +129,10 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.EndScope();
 
-        context.AddSource("SocketConnectionExtensions.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        return new SourceCodeFile("SocketServiceExtensions.g.cs", scb.ToString());
     }
 
-    private static void ExecuteSocketConnectionServiceGeneration(SourceProductionContext context,
-        string projectNamespace, GlobalOptions options)
+    public static SourceCodeFile CreateSocketConnectionService(string projectNamespace, GlobalOptions options)
     {
         var scb = new SourceCodeBuilder();
 
@@ -301,17 +266,17 @@ public class WebSocketGenerator : IIncrementalGenerator
         }
 
         scb.AddLine();
-        
+
         scb.StartScope(
             "public async Task SendToIdAsync(EventEnvelope envelope, Guid userId, CancellationToken ct = default)");
-        
+
         if (options.IsLogWebsockets)
         {
             scb.AddLine(
                 "logger.LogDebug(\"Sending event of type \" + envelope.Type + \" to id \" + userId.ToString());");
             scb.AddLine();
         }
-        
+
         scb.AddLine("if (!_connectionsById.TryGetValue($\"{userId}\", out var userSockets)) return;");
         scb.AddLine();
         scb.AddLine("var json = JsonSerializer.Serialize(envelope);");
@@ -334,13 +299,14 @@ public class WebSocketGenerator : IIncrementalGenerator
 
         scb.StartScope(
             "public async Task BroadcastAsync(EventEnvelope eventEnvelope, CancellationToken ct = default)");
-       
+
         if (options.IsLogWebsockets)
         {
             scb.AddLine(
                 "logger.LogDebug(\"Global broadcasting event of type \" + eventEnvelope.Type);");
             scb.AddLine();
         }
+
         foreach (var channel in options.CommunicationChannels)
         {
             scb.AddLine($"await SendTo{channel.Channel}Async(eventEnvelope, ct);");
@@ -350,6 +316,6 @@ public class WebSocketGenerator : IIncrementalGenerator
         scb.EndScope();
         scb.AddLine();
 
-        context.AddSource("SocketConnectionService.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+        return new SourceCodeFile("SocketConnectionService.g.cs", scb.ToString());
     }
 }
