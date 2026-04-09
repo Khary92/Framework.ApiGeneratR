@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using ApiGeneratR.Builder;
 using ApiGeneratR.Code.Builder;
 using ApiGeneratR.Mapper;
 

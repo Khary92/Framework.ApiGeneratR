@@ -4,9 +4,9 @@ using ApiGeneratR.Mapper;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace ApiGeneratR.Helpers;
+namespace ApiGeneratR.Helpers.Extractors.Server;
 
-public static class RequestHandlerSymbolExtensions
+public static class RequestHandlerExtractor
 {
     public static IncrementalValueProvider<ImmutableArray<RequestHandlerData>> GetRequestHandlerSourceData(
         this IncrementalGeneratorInitializationContext context)

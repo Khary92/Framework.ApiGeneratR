@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Immutable;
 using ApiGeneratR.Helpers;
+using ApiGeneratR.Helpers.Extractors.Api;
+using ApiGeneratR.Helpers.Extractors.Server;
 using ApiGeneratR.Mapper;
 using Microsoft.CodeAnalysis;
 

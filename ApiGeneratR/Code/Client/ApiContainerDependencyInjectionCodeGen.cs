@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Immutable;
-using ApiGeneratR.Builder;
 using ApiGeneratR.Code.Builder;
 using ApiGeneratR.Mapper;
 

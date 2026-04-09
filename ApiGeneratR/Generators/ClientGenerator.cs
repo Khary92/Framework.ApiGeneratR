@@ -7,10 +7,11 @@ using ApiGeneratR.Code.Client;
 using ApiGeneratR.Code.Documentation;
 using ApiGeneratR.Helpers;
 using ApiGeneratR.Helpers.Extractors.Api;
+using ApiGeneratR.Helpers.Extractors.Client;
 using ApiGeneratR.Mapper;
 using Microsoft.CodeAnalysis;
 
-namespace ApiGeneratR.Generators.Client;
+namespace ApiGeneratR.Generators;
 
 [Generator(LanguageNames.CSharp)]
 public class ClientGenerator : IIncrementalGenerator
@@ -78,7 +79,7 @@ public class ClientGenerator : IIncrementalGenerator
     {
         if (nameSpace == null || !options.IsClientProject(nameSpace)) return;
 
-        ctx.CreatePartialClasses(consumerData, options);
+        ctx.AddFiles(PartialEventReceiverCodeGen.Create(consumerData, options));
     }
 
     private static void ExecuteApiContainerGeneration(SourceProductionContext ctx,

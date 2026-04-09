@@ -1,17 +1,22 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Text;
-using ApiGeneratR.Builder;
+using ApiGeneratR.Code.Builder;
 using ApiGeneratR.Mapper;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 
-namespace ApiGeneratR.Generators.Client;
+namespace ApiGeneratR.Code.Client;
 
-public static class PartialApiInjectionExtensions
+public class PartialEventReceiverCodeGen
 {
-    public static void CreatePartialClasses(this SourceProductionContext ctx,
-        ImmutableArray<ApiConsumerData> consumerData, GlobalOptions options)
+    public static List<SourceCodeFile> Create(ImmutableArray<ApiConsumerData> consumerData, GlobalOptions options)
     {
+        return CreateCSharpPartialClasses(consumerData, options);
+    }
+
+    private static List<SourceCodeFile> CreateCSharpPartialClasses(ImmutableArray<ApiConsumerData> consumerData,
+        GlobalOptions options)
+    {
+        var result = new List<SourceCodeFile>();
+
         foreach (var consumer in consumerData)
         {
             if (consumer == null) continue;
@@ -26,11 +31,14 @@ public static class PartialApiInjectionExtensions
 
             scb.StartScope($"public partial class {consumer.ConsumerClassName} : IDisposable");
             scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IApiContainer _container; ");
-            scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IEventReceiver EventReceiver;");
+            scb.AddLine(
+                $"private readonly global::{options.DefinitionsProject}.Generated.IEventReceiver EventReceiver;");
             scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.ICommandSender Commands;");
             scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IQuerySender Queries;");
-            scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IEventPublisher EventPublisher;");
-            scb.AddLine($"private readonly global::{options.DefinitionsProject}.Generated.IEventSubscriber EventSubscriber;");
+            scb.AddLine(
+                $"private readonly global::{options.DefinitionsProject}.Generated.IEventPublisher EventPublisher;");
+            scb.AddLine(
+                $"private readonly global::{options.DefinitionsProject}.Generated.IEventSubscriber EventSubscriber;");
             scb.AddLine();
             scb.StartScope(
                 $"public {consumer.ConsumerClassName}(global::{options.DefinitionsProject}.Generated.IApiContainer container)");
@@ -67,10 +75,13 @@ public static class PartialApiInjectionExtensions
                 scb.AddLine(
                     $"EventSubscriber.Unsubscribe<{registeredEvent.EventLongName}>(Handle{registeredEvent.EventShortName}Async);");
             }
+
             scb.EndScope();
             scb.EndScope();
 
-            ctx.AddSource($"{consumer.ConsumerClassName}.g.cs", SourceText.From(scb.ToString(), Encoding.UTF8));
+            result.Add(new SourceCodeFile($"{consumer.ConsumerClassName}.g.cs", scb.ToString()));
         }
+
+        return result;
     }
 }

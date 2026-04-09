@@ -1,5 +1,4 @@
 using System;
-using ApiGeneratR.Builder;
 using ApiGeneratR.Code.Builder;
 
 namespace ApiGeneratR.Code.Client;

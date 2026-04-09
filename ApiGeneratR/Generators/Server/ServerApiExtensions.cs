@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using ApiGeneratR.Builder;
+using ApiGeneratR.Code.Builder;
 using ApiGeneratR.Mapper;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;

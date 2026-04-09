@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Text;
-using ApiGeneratR.Builder;
+using ApiGeneratR.Code.Builder;
 using ApiGeneratR.Helpers;
 using ApiGeneratR.Mapper;
 using Microsoft.CodeAnalysis;

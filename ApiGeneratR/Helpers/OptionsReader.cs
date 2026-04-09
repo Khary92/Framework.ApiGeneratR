@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 
 namespace ApiGeneratR.Helpers;
 
-public static class OptionsExtensions
+public static class OptionsReader
 {
     public static IncrementalValueProvider<GlobalOptions> GetGlobalOptions(
         this IncrementalGeneratorInitializationContext context)

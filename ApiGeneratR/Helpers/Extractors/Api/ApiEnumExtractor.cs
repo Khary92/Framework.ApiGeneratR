@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ApiGeneratR.Helpers.Extractors.Api;
 
-public static class ApiEnumSymbolExtensions
+public static class ApiEnumExtractor
 {
     public static IncrementalValueProvider<ImmutableArray<ApiEnumData>> GetApiEnumData(
         this IncrementalGeneratorInitializationContext context)

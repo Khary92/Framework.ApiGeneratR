@@ -1,5 +1,5 @@
 using System.Text;
-using ApiGeneratR.Builder;
+using ApiGeneratR.Code.Builder;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 

@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 using System.Text;
-using ApiGeneratR.Builder;
+using ApiGeneratR.Code.Builder;
 using ApiGeneratR.Mapper;
 using Microsoft.CodeAnalysis.Text;
 
